@@ -14,6 +14,7 @@ import {
     CreditBucketError,
 } from '../lib/membership-credits.js';
 import { selectBucketForClassType } from '../lib/credit-buckets.js';
+import { getSetting } from '../lib/settings.js';
 
 const router = Router();
 
@@ -989,7 +990,8 @@ router.get('/:id/cancel-preview', authenticate, async (req: Request, res: Respon
         const classDateTime = new Date(`${dateStr}T${timeStr}:00-06:00`);
         const hoursUntilClass = (classDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-        const CANCELLATION_WINDOW_HOURS = 5;
+        const bookingPolicies = await getSetting('booking_policies');
+        const CANCELLATION_WINDOW_HOURS = bookingPolicies.cancellation_hours;
         const isWithinWindow = hoursUntilClass >= CANCELLATION_WINDOW_HOURS;
 
         let willRefund = false;
@@ -998,7 +1000,7 @@ router.get('/:id/cancel-preview', authenticate, async (req: Request, res: Respon
         let reason = '';
 
         if (isAdmin) {
-            // Admin respeta las mismas reglas que el cliente: ventana de 5h
+            // Admin respeta las mismas reglas que el cliente: ventana configurable
             // y limite de cancelaciones. La cancelacion siempre se ejecuta,
             // pero solo se reembolsa si ambas condiciones se cumplen.
             if (!isWithinWindow) {
@@ -1112,11 +1114,17 @@ router.post('/:id/cancel', authenticate, async (req: Request, res: Response) => 
         // Calculate hours until class
         const hoursUntilClass = (classDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-        // Cancellation policy: 5 hours minimum notice
-        const CANCELLATION_WINDOW_HOURS = 5;
+        // Cancellation policy: configurable minimum notice (default 12h)
+        const cancelPolicies = await getSetting('booking_policies');
+        const CANCELLATION_WINDOW_HOURS = cancelPolicies.cancellation_hours;
         const isWithinWindow = hoursUntilClass >= CANCELLATION_WINDOW_HOURS;
 
-        // Note: We allow cancellation even outside the window, but without refund
+        // Non-admin users cannot cancel within the cutoff window
+        if (!isAdmin && !isWithinWindow) {
+            return res.status(400).json({
+                error: `Solo puedes cancelar con al menos ${CANCELLATION_WINDOW_HOURS} horas de anticipación.`,
+            });
+        }
 
         let shouldRefund = false;
         let refundReason = '';
@@ -1125,7 +1133,7 @@ router.post('/:id/cancel', authenticate, async (req: Request, res: Response) => 
 
         if (isAdmin) {
             // Admin cancela: respeta las MISMAS reglas que el cliente:
-            //   1) Debe estar dentro de la ventana de 5h para reembolsar.
+            //   1) Debe estar dentro de la ventana configurable para reembolsar.
             //   2) cancellations_used debe ser < cancellation_limit.
             // Siempre consume una cancelacion (incrementa cancellations_used)
             // mientras este dentro de la ventana, para reflejar el uso real.
@@ -1175,60 +1183,54 @@ router.post('/:id/cancel', authenticate, async (req: Request, res: Response) => 
                 shouldRefund = true;
             }
         } else {
-            if (isWithinWindow) {
-                // Check cancellation limits if it's a membership booking
-                if (booking.membership_id) {
-                    const membership = await queryOne(
-                        `SELECT id, cancellations_used, cancellation_limit, classes_remaining 
-                         FROM memberships WHERE id = $1`,
-                        [booking.membership_id]
-                    );
+            // Non-admin: already rejected above if outside window, so we are within window here.
+            // Check cancellation limits if it's a membership booking
+            if (booking.membership_id) {
+                const membership = await queryOne(
+                    `SELECT id, cancellations_used, cancellation_limit, classes_remaining
+                     FROM memberships WHERE id = $1`,
+                    [booking.membership_id]
+                );
 
-                    if (membership) {
-                        cancellationsUsed = membership.cancellations_used || 0;
-                        cancellationLimit = membership.cancellation_limit || 2;
+                if (membership) {
+                    cancellationsUsed = membership.cancellations_used || 0;
+                    cancellationLimit = membership.cancellation_limit || 2;
 
-                        // We check if it's a reposicion? (Not implemented in schema yet, assumed normal)
-
-                        if (cancellationsUsed < cancellationLimit) {
-                            shouldRefund = true;
-                            // Increment cancellation usage
+                    if (cancellationsUsed < cancellationLimit) {
+                        shouldRefund = true;
+                        // Increment cancellation usage
+                        await query(
+                            `UPDATE memberships
+                             SET cancellations_used = cancellations_used + 1
+                             WHERE id = $1`,
+                            [booking.membership_id]
+                        );
+                        // Also refund the credit
+                        if (booking.credit_bucket_id) {
+                            // Type-aware: refund the exact bucket this booking consumed,
+                            // then recompute the derived classes_remaining total.
+                            await refundBucket(pool, booking.credit_bucket_id);
+                            await recomputeClassesRemaining(pool, booking.membership_id);
+                        } else if (membership.classes_remaining !== null) {
+                            // Legacy booking (no bucket recorded) → generic refund.
                             await query(
-                                `UPDATE memberships 
-                                 SET cancellations_used = cancellations_used + 1 
+                                `UPDATE memberships
+                                 SET classes_remaining = classes_remaining + 1
                                  WHERE id = $1`,
                                 [booking.membership_id]
                             );
-                            // Also refund the credit
-                            if (booking.credit_bucket_id) {
-                                // Type-aware: refund the exact bucket this booking consumed,
-                                // then recompute the derived classes_remaining total.
-                                await refundBucket(pool, booking.credit_bucket_id);
-                                await recomputeClassesRemaining(pool, booking.membership_id);
-                            } else if (membership.classes_remaining !== null) {
-                                // Legacy booking (no bucket recorded) → generic refund.
-                                await query(
-                                    `UPDATE memberships
-                                     SET classes_remaining = classes_remaining + 1
-                                     WHERE id = $1`,
-                                    [booking.membership_id]
-                                );
-                            }
-                        } else {
-                            shouldRefund = false;
-                            refundReason = `Límite de cancelaciones alcanzado (${cancellationLimit})`;
                         }
                     } else {
-                        // Should not happen if constraint exists
-                        shouldRefund = true;
+                        shouldRefund = false;
+                        refundReason = `Límite de cancelaciones alcanzado (${cancellationLimit})`;
                     }
                 } else {
-                    // No membership? Maybe pay-as-you-go. Refund enabled.
+                    // Should not happen if constraint exists
                     shouldRefund = true;
                 }
             } else {
-                shouldRefund = false;
-                refundReason = `Fuera de tiempo (menos de ${CANCELLATION_WINDOW_HOURS}h)`;
+                // No membership? Maybe pay-as-you-go. Refund enabled.
+                shouldRefund = true;
             }
         }
 

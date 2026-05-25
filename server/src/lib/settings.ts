@@ -110,7 +110,7 @@ const DEFAULTS: SettingsMap = {
         social_media: { instagram: '', facebook: '', whatsapp: '' },
     },
     booking_policies: {
-        cancellation_hours: 5,
+        cancellation_hours: 12,
         no_show_penalty: true,
         max_advance_days: 14,
         min_hours_before_booking: 0,
