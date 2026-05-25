@@ -5,7 +5,8 @@ DELETE FROM plans WHERE name IN (
   'Clase Muestra',
   'Clase Suelta - Sculpt-Funcional',
   'Clase Suelta - Surf-Pilates',
-  'Clase Suelta - Yoga'
+  'Clase Suelta - Yoga',
+  'Inscripción'
 );
 
 -- Clase Muestra (prueba) $300 — 1 clase, cualquiera de los 3 tipos
@@ -36,12 +37,18 @@ INSERT INTO plan_credit_buckets (plan_id, allowed_class_type_ids, credit_count, 
 SELECT (SELECT id FROM plans WHERE name='Clase Suelta - Yoga'),
        ARRAY(SELECT id FROM class_types WHERE name='Yoga'), 1, 0;
 
+-- Inscripción (pago único) $500 — enrollment fee, grants NO class credits (class_limit=0, no buckets).
+-- The booking engine excludes class_limit=0 plans from being used to book classes.
+INSERT INTO plans (name, price, currency, duration_days, class_limit, description, features, is_active, sort_order)
+VALUES ('Inscripción', 500.00, 'MXN', 365, 0, 'Inscripción · pago único', '["Pago único de inscripción","Vigencia 1 año"]'::jsonb, true, 5);
+
 -- Deactivate any non-Sunrise plans (Catarsis defaults seeded by schema_complete.sql),
--- so only the Sunrise catalog (12 packages + 4 singles = 16) is active.
+-- so only the Sunrise catalog (12 packages + 4 singles + inscripción = 17) is active.
 UPDATE plans SET is_active = false
 WHERE name NOT IN (
   'Sunrise Pack','Golden Hour','Sunset Flow','Full Day Experience',
   'Wave Starter','Ocean Flow','Deep Flow','Endless Waves',
   'Balanced Flow','Elevate Experience','Full Experience','Sunrise Sunset Combo',
-  'Clase Muestra','Clase Suelta - Sculpt-Funcional','Clase Suelta - Surf-Pilates','Clase Suelta - Yoga'
+  'Clase Muestra','Clase Suelta - Sculpt-Funcional','Clase Suelta - Surf-Pilates','Clase Suelta - Yoga',
+  'Inscripción'
 );
