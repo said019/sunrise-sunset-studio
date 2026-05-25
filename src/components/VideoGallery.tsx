@@ -62,7 +62,7 @@ const fallbackVideos: VideoItem[] = [
   },
 ];
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://valiant-imagination-production-0462.up.railway.app/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const VideoGallery = () => {
   // Fetch published videos from API

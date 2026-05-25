@@ -2,7 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { ApiError } from '@/types/auth';
 
 // API base URL - change in production
-const API_URL = import.meta.env.VITE_API_URL || 'https://valiant-imagination-production-0462.up.railway.app/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 // Create axios instance
 const api = axios.create({
