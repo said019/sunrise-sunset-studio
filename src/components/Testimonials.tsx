@@ -37,13 +37,13 @@ const Testimonials = () => {
       <div className="container mx-auto px-4 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-sm font-body text-catarsis-olive tracking-widest uppercase mb-4 block">
+          <span className="text-sm font-body text-coral tracking-widest uppercase mb-4 block">
             Testimonios
           </span>
           <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-light text-foreground">
             Lo que dicen
             <br />
-            <span className="font-semibold text-catarsis-olive">nuestros miembros</span>
+            <span className="font-semibold text-coral">nuestros miembros</span>
           </h2>
         </div>
 
@@ -60,7 +60,7 @@ const Testimonials = () => {
                 {[...Array(testimonial.rating)].map((_, i) => (
                   <Star
                     key={i}
-                    className="w-5 h-5 fill-catarsis-olive text-catarsis-olive"
+                    className="w-5 h-5 fill-coral text-coral"
                   />
                 ))}
               </div>
@@ -100,7 +100,7 @@ const Testimonials = () => {
               href="https://www.instagram.com/sunrisesunsetstudio"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-catarsis-olive font-body hover:underline"
+              className="text-coral font-body hover:underline"
             >
               @sunrisesunsetstudio
             </a>

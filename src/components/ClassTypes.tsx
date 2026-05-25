@@ -116,13 +116,13 @@ const ClassTypes = () => {
       <div className="container mx-auto px-4 lg:px-8">
         {/* Section Header */}
         <div className="max-w-3xl mb-16">
-          <span className="text-sm font-body text-catarsis-olive tracking-widest uppercase mb-4 block">
+          <span className="text-sm font-body text-coral tracking-widest uppercase mb-4 block">
             Nuestro Método
           </span>
           <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-light text-foreground mb-6">
             Clases diseñadas para
             <br />
-            <span className="font-semibold text-catarsis-olive">cada objetivo</span>
+            <span className="font-semibold text-coral">cada objetivo</span>
           </h2>
           <p className="font-body text-lg text-muted-foreground">
             Barré, Pilates Mat, Yoga Sculpt y Sculpt conviven en un mismo
@@ -144,7 +144,7 @@ const ClassTypes = () => {
             {displayClassTypes.map((classType, index) => (
               <div
                 key={classType.id}
-                className="group relative bg-card rounded-sm p-5 sm:p-8 border border-border hover:border-catarsis-olive/40 transition-all duration-500 hover:shadow-lg cursor-pointer overflow-hidden"
+                className="group relative bg-card rounded-sm p-5 sm:p-8 border border-border hover:border-coral/40 transition-all duration-500 hover:shadow-lg cursor-pointer overflow-hidden"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {/* Color accent bar */}
@@ -182,7 +182,7 @@ const ClassTypes = () => {
                   </h3>
 
                   {(classType as any).tagline && (
-                    <span className="text-xs font-heading italic text-catarsis-olive mb-2 block">
+                    <span className="text-xs font-heading italic text-coral mb-2 block">
                       {(classType as any).tagline}
                     </span>
                   )}

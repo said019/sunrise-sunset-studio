@@ -128,13 +128,13 @@ export default function WalletRewards() {
             <div className="flex flex-col gap-2 sm:items-end">
               <div className="rounded-xl border bg-card px-4 py-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Star className="h-4 w-4 text-catarsis-gold fill-catarsis-gold" />
+                  <Star className="h-4 w-4 text-amber fill-amber" />
                   Puntos disponibles
                 </div>
                 {walletLoading ? (
                   <Skeleton className="mt-2 h-7 w-24" />
                 ) : (
-                  <p className="mt-1 text-2xl font-bold text-catarsis-gold">
+                  <p className="mt-1 text-2xl font-bold text-amber">
                     {pointsBalance} pts
                   </p>
                 )}
@@ -206,7 +206,7 @@ export default function WalletRewards() {
                       </p>
                       <div className="flex items-center justify-between rounded-xl border bg-background/70 p-3">
                         <span className="text-sm text-muted-foreground">Costo</span>
-                        <span className="font-semibold text-catarsis-gold">{reward.points_cost} pts</span>
+                        <span className="font-semibold text-amber">{reward.points_cost} pts</span>
                       </div>
                       {reward.stock !== null && (
                         <p className="text-xs text-muted-foreground">

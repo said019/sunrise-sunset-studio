@@ -44,13 +44,13 @@ const Instructors = () => {
       <div className="container mx-auto px-4 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-sm font-body text-catarsis-olive tracking-widest uppercase mb-4 block">
+          <span className="text-sm font-body text-coral tracking-widest uppercase mb-4 block">
             Nuestro Equipo
           </span>
           <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-light text-foreground mb-6">
             Instructores que
             <br />
-            <span className="font-semibold text-catarsis-olive">transforman vidas</span>
+            <span className="font-semibold text-coral">transforman vidas</span>
           </h2>
           <p className="font-body text-lg text-muted-foreground">
             Cada uno de nuestros instructores está certificado internacionalmente
@@ -107,14 +107,14 @@ const Instructors = () => {
 
                 {/* Info */}
                 <div>
-                  <span className="text-xs font-body text-catarsis-olive tracking-widest uppercase">
+                  <span className="text-xs font-body text-coral tracking-widest uppercase">
                     Instructor
                   </span>
                   <h3 className="font-heading text-2xl font-semibold text-foreground mt-1 mb-2">
                     {instructor.display_name}
                   </h3>
                   {instructor.specialties && instructor.specialties.length > 0 && (
-                    <span className="text-sm font-body text-catarsis-olive mb-3 block">
+                    <span className="text-sm font-body text-coral mb-3 block">
                       {instructor.specialties.slice(0, 2).join(' & ')}
                     </span>
                   )}

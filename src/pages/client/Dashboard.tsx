@@ -126,22 +126,22 @@ export default function ClientDashboard() {
       <ClientLayout>
         <div className="space-y-6">
           {/* Header with gradient */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-catarsis-dark via-[#3D3229] to-catarsis-dark p-6">
-            <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-catarsis-gold/[0.08] blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-catarsis-olive/[0.1] blur-3xl" />
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chocolate via-[#3D3229] to-chocolate p-6">
+            <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-amber/[0.08] blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-coral/[0.1] blur-3xl" />
             <div className="relative z-10">
               <h1 className="text-2xl font-heading font-bold text-white">
                 ¡Hola, {user?.display_name?.split(' ')[0] || 'bienvenido'}! 👋
               </h1>
-              <p className="text-catarsis-sand/60 font-body text-sm mt-1">
+              <p className="text-cream/60 font-body text-sm mt-1">
                 Bienvenido de vuelta a Sunrise Sunset
               </p>
             </div>
           </div>
 
           {/* Membership Card — Premium feel */}
-          <Card className={`relative overflow-hidden ${isExpiredOrCancelled || isOutOfCredits ? 'border-amber-300/40 bg-gradient-to-br from-amber-50/80 via-white to-orange-50/30' : 'border-catarsis-gold/20 bg-gradient-to-br from-catarsis-cream via-white to-catarsis-sand/10'}`}>
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-catarsis-gold/[0.06] blur-2xl" />
+          <Card className={`relative overflow-hidden ${isExpiredOrCancelled || isOutOfCredits ? 'border-amber-300/40 bg-gradient-to-br from-amber-50/80 via-white to-orange-50/30' : 'border-amber/20 bg-gradient-to-br from-blush via-white to-cream/10'}`}>
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-amber/[0.06] blur-2xl" />
             <CardHeader className="pb-2 relative z-10">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-heading">Tu Membresía</CardTitle>
@@ -182,7 +182,7 @@ export default function ClientDashboard() {
                       </p>
                     </div>
                   </div>
-                  <Button asChild className="w-full rounded-xl bg-catarsis-gold hover:bg-catarsis-gold/90 shadow-md">
+                  <Button asChild className="w-full rounded-xl bg-amber hover:bg-amber/90 shadow-md">
                     <Link to="/app/checkout">
                       <Plus className="h-4 w-4 mr-2" />
                       Comprar más clases
@@ -202,7 +202,7 @@ export default function ClientDashboard() {
                       </p>
                     </div>
                   </div>
-                  <Button asChild className="w-full rounded-xl bg-catarsis-gold hover:bg-catarsis-gold/90 shadow-md">
+                  <Button asChild className="w-full rounded-xl bg-amber hover:bg-amber/90 shadow-md">
                     <Link to="/app/checkout">
                       <RefreshCw className="h-4 w-4 mr-2" />
                       Renovar membresía
@@ -259,15 +259,15 @@ export default function ClientDashboard() {
           </Card>
 
           <div className="grid grid-cols-2 gap-3">
-            <Button asChild size="lg" className="h-auto py-5 flex-col gap-2 rounded-xl bg-catarsis-gold hover:bg-catarsis-gold/90 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+            <Button asChild size="lg" className="h-auto py-5 flex-col gap-2 rounded-xl bg-amber hover:bg-amber/90 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
               <Link to="/app/book">
                 <Plus className="h-5 w-5" />
                 <span className="font-body font-semibold">Reservar Clase</span>
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="h-auto py-5 flex-col gap-2 rounded-xl border-catarsis-sand/40 hover:border-catarsis-gold/40 hover:bg-catarsis-gold/5 transition-all duration-300 hover:-translate-y-0.5">
+            <Button asChild variant="outline" size="lg" className="h-auto py-5 flex-col gap-2 rounded-xl border-cream/40 hover:border-amber/40 hover:bg-amber/5 transition-all duration-300 hover:-translate-y-0.5">
               <Link to="/app/wallet">
-                <Gift className="h-5 w-5 text-catarsis-gold" />
+                <Gift className="h-5 w-5 text-amber" />
                 <span className="font-body font-semibold">WalletClub</span>
               </Link>
             </Button>
@@ -347,8 +347,8 @@ export default function ClientDashboard() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg flex items-center gap-2 font-heading">
-                    <div className="h-8 w-8 rounded-xl bg-catarsis-gold/10 flex items-center justify-center">
-                      <Play className="h-4 w-4 text-catarsis-gold" />
+                    <div className="h-8 w-8 rounded-xl bg-amber/10 flex items-center justify-center">
+                      <Play className="h-4 w-4 text-amber" />
                     </div>
                     Videos On-Demand
                   </CardTitle>
@@ -399,14 +399,14 @@ export default function ClientDashboard() {
             </Card>
           )}
 
-          <Card className="border-catarsis-gold/20 hover:shadow-md transition-shadow duration-300">
+          <Card className="border-amber/20 hover:shadow-md transition-shadow duration-300">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2 font-heading">
-                  <Sparkles className="h-5 w-5 text-catarsis-gold" />
+                  <Sparkles className="h-5 w-5 text-amber" />
                   WalletClub
                 </CardTitle>
-                <span className="text-2xl font-bold text-catarsis-gold font-heading">{pointsBalance} pts</span>
+                <span className="text-2xl font-bold text-amber font-heading">{pointsBalance} pts</span>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -435,7 +435,7 @@ export default function ClientDashboard() {
                   Sin recompensas configuradas por ahora.
                 </div>
               )}
-              <Button variant="outline" asChild className="w-full rounded-xl border-catarsis-gold/20 hover:border-catarsis-gold/40 hover:bg-catarsis-gold/5 font-body">
+              <Button variant="outline" asChild className="w-full rounded-xl border-amber/20 hover:border-amber/40 hover:bg-amber/5 font-body">
                 <Link to="/app/wallet">
                   Ver recompensas
                   <ChevronRight className="ml-1 h-4 w-4" />

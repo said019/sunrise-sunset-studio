@@ -327,8 +327,8 @@ export function TemplateFormDialog({
                                             variant={isSelected ? 'default' : 'outline'}
                                             className={`cursor-pointer rounded-lg font-body text-xs transition-all ${
                                                 isSelected
-                                                    ? 'bg-catarsis-gold hover:bg-catarsis-gold/90 text-white border-catarsis-gold'
-                                                    : 'hover:border-catarsis-gold/50 hover:text-catarsis-gold'
+                                                    ? 'bg-amber hover:bg-amber/90 text-white border-amber'
+                                                    : 'hover:border-amber/50 hover:text-amber'
                                             }`}
                                             onClick={() => {
                                                 const current = form.getValues('equipmentNeeded') || [];
@@ -358,8 +358,8 @@ export function TemplateFormDialog({
                                             variant={isSelected ? 'secondary' : 'outline'}
                                             className={`cursor-pointer rounded-lg font-body text-xs transition-all ${
                                                 isSelected
-                                                    ? 'bg-catarsis-gold/15 text-catarsis-gold border-catarsis-gold/30'
-                                                    : 'hover:border-catarsis-gold/50 hover:text-catarsis-gold'
+                                                    ? 'bg-amber/15 text-amber border-amber/30'
+                                                    : 'hover:border-amber/50 hover:text-amber'
                                             }`}
                                             onClick={() => {
                                                 const current = form.getValues('tags') || [];
@@ -399,7 +399,7 @@ export function TemplateFormDialog({
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    className="rounded-xl font-body border-catarsis-gold/30 text-catarsis-gold hover:bg-catarsis-gold/10"
+                                    className="rounded-xl font-body border-amber/30 text-amber hover:bg-amber/10"
                                     onClick={() => append({
                                         name: '',
                                         description: '',
@@ -435,7 +435,7 @@ export function TemplateFormDialog({
                                             className="border border-border/40 rounded-xl p-4 space-y-3 bg-muted/10 hover:border-border/60 transition-colors"
                                         >
                                             <div className="flex items-start gap-3">
-                                                <span className="flex-shrink-0 h-7 w-7 rounded-lg bg-catarsis-gold/10 text-catarsis-gold text-xs font-semibold flex items-center justify-center mt-1">
+                                                <span className="flex-shrink-0 h-7 w-7 rounded-lg bg-amber/10 text-amber text-xs font-semibold flex items-center justify-center mt-1">
                                                     {index + 1}
                                                 </span>
                                                 <div className="flex-1 grid gap-3 sm:grid-cols-2">
@@ -518,7 +518,7 @@ export function TemplateFormDialog({
                     <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl font-body border-border/60">
                         Cancelar
                     </Button>
-                    <Button type="submit" form="template-form" disabled={isLoading} className="bg-catarsis-gold hover:bg-catarsis-gold/90 rounded-xl font-body">
+                    <Button type="submit" form="template-form" disabled={isLoading} className="bg-amber hover:bg-amber/90 rounded-xl font-body">
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {template ? 'Guardar Cambios' : 'Crear Plantilla'}
                     </Button>

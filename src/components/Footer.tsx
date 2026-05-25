@@ -141,7 +141,7 @@ const Footer = () => {
           </p>
           <p className="font-body text-sm text-primary-foreground/50">
             Powered by{" "}
-            <span className="text-catarsis-olive font-semibold">WalletClub</span>
+            <span className="text-coral font-semibold">WalletClub</span>
           </p>
         </div>
       </div>

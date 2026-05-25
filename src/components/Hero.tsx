@@ -26,7 +26,7 @@ const Hero = () => {
             <h1 className="font-heading text-4xl md:text-6xl lg:text-7xl font-light text-white leading-[1.1] mb-5 animate-fade-up">
               Tu mejor versión
               <br />
-              <span className="font-semibold italic text-catarsis-olive">
+              <span className="font-semibold italic text-coral">
                 empieza aquí
               </span>
             </h1>
@@ -39,7 +39,7 @@ const Hero = () => {
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3 animate-fade-up delay-200">
-              <Button variant="hero" size="xl" asChild className="bg-catarsis-olive hover:bg-catarsis-olive/90 w-full sm:w-auto text-center justify-center">
+              <Button variant="hero" size="xl" asChild className="bg-coral hover:bg-coral/90 w-full sm:w-auto text-center justify-center">
                 <a href="#precios">Prueba tu primera clase — $150</a>
               </Button>
               <Button

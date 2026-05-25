@@ -152,7 +152,7 @@ const Pricing = () => {
       <div className="container mx-auto px-4 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-sm font-body text-catarsis-olive tracking-widest uppercase mb-4 block">
+          <span className="text-sm font-body text-coral tracking-widest uppercase mb-4 block">
             Membresías
           </span>
           <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-light text-foreground mb-6">
@@ -165,7 +165,7 @@ const Pricing = () => {
         </div>
 
         {/* First Time Banner */}
-        <div className="bg-catarsis-gold text-white rounded-xl sm:rounded-sm p-6 lg:p-8 mb-12 flex flex-col lg:flex-row items-center justify-between gap-6 text-center lg:text-left">
+        <div className="bg-amber text-white rounded-xl sm:rounded-sm p-6 lg:p-8 mb-12 flex flex-col lg:flex-row items-center justify-between gap-6 text-center lg:text-left">
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <Star className="w-10 h-10 sm:w-12 sm:h-12 shrink-0" />
             <div>
@@ -181,7 +181,7 @@ const Pricing = () => {
             <span className="font-heading text-3xl font-bold">$150</span>
             <Button
               size="lg"
-              className="bg-white text-catarsis-gold hover:bg-white/90 font-semibold"
+              className="bg-white text-amber hover:bg-white/90 font-semibold"
               asChild
             >
               <Link to="/register?returnUrl=/app/book">Reservar clase de prueba</Link>
@@ -198,12 +198,12 @@ const Pricing = () => {
                 key={plan.name}
                 className={`relative bg-background rounded-xl border flex-shrink-0 w-[280px] snap-center ${
                   plan.popular
-                    ? "border-catarsis-olive shadow-lg ring-2 ring-catarsis-olive/20"
+                    ? "border-coral shadow-lg ring-2 ring-coral/20"
                     : "border-border"
                 } p-6 flex flex-col`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-catarsis-olive text-white px-4 py-1 rounded-full text-xs font-body tracking-wide whitespace-nowrap">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-coral text-white px-4 py-1 rounded-full text-xs font-body tracking-wide whitespace-nowrap">
                     Más Popular
                   </div>
                 )}
@@ -227,7 +227,7 @@ const Pricing = () => {
                     </span>
                   </div>
                   {plan.pricePerClass && (
-                    <span className="text-xs font-body text-catarsis-olive font-medium">
+                    <span className="text-xs font-body text-coral font-medium">
                       ${plan.pricePerClass}/clase
                     </span>
                   )}
@@ -239,7 +239,7 @@ const Pricing = () => {
                       key={feature}
                       className="flex items-start gap-2 text-sm font-body text-foreground/80"
                     >
-                      <Check className="w-4 h-4 text-catarsis-olive flex-shrink-0 mt-0.5" />
+                      <Check className="w-4 h-4 text-coral flex-shrink-0 mt-0.5" />
                       {feature}
                     </li>
                   ))}
@@ -259,7 +259,7 @@ const Pricing = () => {
           {/* Scroll hint */}
           <div className="flex justify-center gap-1 mt-2">
             {plans.map((_, i) => (
-              <div key={i} className="w-1.5 h-1.5 rounded-full bg-catarsis-sand/40" />
+              <div key={i} className="w-1.5 h-1.5 rounded-full bg-cream/40" />
             ))}
           </div>
         </div>
@@ -271,12 +271,12 @@ const Pricing = () => {
               key={plan.name}
               className={`relative bg-background rounded-sm border ${
                 plan.popular
-                  ? "border-catarsis-olive shadow-lg scale-105"
+                  ? "border-coral shadow-lg scale-105"
                   : "border-border"
               } p-8 flex flex-col`}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-catarsis-olive text-white px-4 py-1 rounded-full text-xs font-body tracking-wide">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-coral text-white px-4 py-1 rounded-full text-xs font-body tracking-wide">
                   Más Popular
                 </div>
               )}
@@ -300,7 +300,7 @@ const Pricing = () => {
                   </span>
                 </div>
                 {plan.pricePerClass && (
-                  <span className="text-sm font-body text-catarsis-olive font-medium">
+                  <span className="text-sm font-body text-coral font-medium">
                     ${plan.pricePerClass}/clase
                   </span>
                 )}
@@ -312,7 +312,7 @@ const Pricing = () => {
                     key={feature}
                     className="flex items-start gap-3 text-sm font-body text-foreground/80"
                   >
-                    <Check className="w-5 h-5 text-catarsis-olive flex-shrink-0 mt-0.5" />
+                    <Check className="w-5 h-5 text-coral flex-shrink-0 mt-0.5" />
                     {feature}
                   </li>
                 ))}

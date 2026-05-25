@@ -22,7 +22,7 @@ const features = [
 
 const WalletClub = () => {
   return (
-    <section id="wallet" className="py-16 lg:py-20 bg-catarsis-olive text-white">
+    <section id="wallet" className="py-16 lg:py-20 bg-coral text-white">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="grid lg:grid-cols-5 gap-8 lg:gap-10 items-center">
           {/* Content - takes 2 cols */}
@@ -39,7 +39,7 @@ const WalletClub = () => {
               <Button
                 variant="secondary"
                 size="sm"
-                className="bg-white text-catarsis-olive hover:bg-white/90 font-semibold"
+                className="bg-white text-coral hover:bg-white/90 font-semibold"
                 asChild
               >
                 <Link to="/app/wallet">Descargar pase</Link>

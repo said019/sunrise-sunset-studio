@@ -23,9 +23,7 @@ export default function StudioPricing() {
 
   return (
     <StudioLayout>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
-      `}</style>
+      {/* Fonts loaded via global index.css — Fraunces (heading) + Inter (body) */}
 
       <section className="min-h-screen bg-[#E8E4DD] py-16 lg:py-20">
         <div className="container mx-auto px-4 lg:px-8 space-y-16">
@@ -38,19 +36,18 @@ export default function StudioPricing() {
               className="max-w-4xl mx-auto bg-gradient-to-r from-[#6B5B4F] to-[#8B7B6F] text-white p-8 md:p-12 rounded-lg shadow-xl"
             >
               <div className="text-center">
-                <p className="text-xs uppercase tracking-[0.3em] mb-3 text-white/80" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                <p className="text-xs uppercase tracking-[0.3em] mb-3 text-white/80 font-body">
                   {welcomeOffer.description}
                 </p>
-                <h2 className="text-3xl md:text-4xl font-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                <h2 className="text-3xl md:text-4xl font-light mb-4 font-heading">
                   {welcomeOffer.name} por solo ${Number(welcomeOffer.price).toLocaleString('es-MX', { minimumFractionDigits: 0 })}
                 </h2>
-                <p className="text-lg mb-8 text-white/90" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                <p className="text-lg mb-8 text-white/90 font-body">
                   Prueba el método sin compromiso
                 </p>
                 <Link
                   to={`${basePath}/buy/${welcomeOffer.id}`}
-                  className="inline-block px-8 py-4 bg-white text-[#6B5B4F] font-semibold uppercase tracking-wider hover:bg-[#F5F1E8] transition-colors"
-                  style={{ fontFamily: "'DM Sans', sans-serif" }}
+                  className="inline-block px-8 py-4 bg-white text-[#6B5B4F] font-semibold uppercase tracking-wider hover:bg-[#F5F1E8] transition-colors font-body"
                 >
                   Activar Oferta
                 </Link>
@@ -92,29 +89,29 @@ export default function StudioPricing() {
                     {/* Popular Badge */}
                     {isPopular && (
                       <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                        <span className="bg-[#6B5B4F] text-white px-4 py-1 text-xs uppercase tracking-wider" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                        <span className="bg-[#6B5B4F] text-white px-4 py-1 text-xs uppercase tracking-wider font-body">
                           Más Popular
                         </span>
                       </div>
                     )}
 
                     {/* Plan Category */}
-                    <p className="text-xs text-[#9A9A9A] uppercase tracking-wider mb-2" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                    <p className="text-xs text-[#9A9A9A] uppercase tracking-wider mb-2 font-body">
                       {plan.duration_days} días
                     </p>
 
                     {/* Plan Name */}
-                    <h3 className="text-xl font-semibold text-[#2A2A2A] mb-4 min-h-[56px]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                    <h3 className="text-xl font-semibold text-[#2A2A2A] mb-4 min-h-[56px] font-body">
                       {plan.name}
                     </h3>
 
                     {/* Price */}
                     <div className="mb-2">
-                      <span className="text-4xl font-bold text-[#2A2A2A]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                      <span className="text-4xl font-bold text-[#2A2A2A] font-body">
                         ${Number(plan.price).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                       </span>
                       {plan.class_limit === null && (
-                        <span className="text-sm text-[#7A7A7A] ml-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                        <span className="text-sm text-[#7A7A7A] ml-1 font-body">
                           /mensual
                         </span>
                       )}
@@ -123,12 +120,12 @@ export default function StudioPricing() {
                     {/* Price per class */}
                     <div className="h-6 mb-6">
                       {pricePerClass && (
-                        <p className="text-sm text-[#7A7A7A]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                        <p className="text-sm text-[#7A7A7A] font-body">
                           {pricePerClass}
                         </p>
                       )}
                       {!pricePerClass && plan.class_limit === null && (
-                        <p className="text-sm text-[#7A7A7A]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                        <p className="text-sm text-[#7A7A7A] font-body">
                           Clases ilimitadas
                         </p>
                       )}
@@ -139,8 +136,7 @@ export default function StudioPricing() {
                       {(features.length > 0 ? features : [plan.description]).map((feature, idx) => (
                         <li
                           key={idx}
-                          className="flex items-start text-sm text-[#5A5A5A]"
-                          style={{ fontFamily: "'DM Sans', sans-serif" }}
+                          className="flex items-start text-sm text-[#5A5A5A] font-body"
                         >
                           <svg className="w-5 h-5 text-[#6B5B4F] mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -153,13 +149,12 @@ export default function StudioPricing() {
                     {/* CTA Button */}
                     <Link
                       to={`${basePath}/buy/${plan.id}`}
-                      className={`block w-full py-3 px-6 text-center text-sm font-semibold uppercase tracking-wider transition-colors ${isPopular
+                      className={`block w-full py-3 px-6 text-center text-sm font-semibold uppercase tracking-wider transition-colors font-body ${isPopular
                         ? 'bg-[#6B5B4F] text-white hover:bg-[#5A4A3F]'
                         : plan.name.toLowerCase().includes('suelta')
                           ? 'bg-white border-2 border-[#5A5A5A] text-[#5A5A5A] hover:bg-[#F5F1E8]'
                           : 'bg-[#5A5A5A] text-white hover:bg-[#2A2A2A]'
                         }`}
-                      style={{ fontFamily: "'DM Sans', sans-serif" }}
                     >
                       {plan.name.toLowerCase().includes('suelta') ? 'Reservar Clase' : 'Comprar Pack'}
                     </Link>
@@ -171,7 +166,7 @@ export default function StudioPricing() {
 
           {/* Footer Note */}
           <div className="text-center">
-            <p className="text-sm text-[#7A7A7A]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            <p className="text-sm text-[#7A7A7A] font-body">
               Todos los precios en MXN. Pago seguro con tarjeta de crédito, débito o transferencia. Facturación disponible.
             </p>
           </div>

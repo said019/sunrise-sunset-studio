@@ -18,10 +18,10 @@ export default function StudioClasses() {
 
           {/* Header */}
           <div className="text-center max-w-2xl mx-auto">
-            <h1 className="text-3xl md:text-5xl font-light text-[#5A5A5A] mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            <h1 className="text-3xl md:text-5xl font-light text-[#5A5A5A] mb-4 font-body">
               Clases diseñadas para cada objetivo
             </h1>
-            <p className="text-sm text-[#7A7A7A]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            <p className="text-sm text-[#7A7A7A] font-body">
               Barré, Pilates Mat, Yoga Sculpt y Sculpt conviven en un mismo espacio. Todas nuestras sesiones están limitadas a 8 personas para garantizar atención personalizada.
             </p>
           </div>
@@ -38,7 +38,7 @@ export default function StudioClasses() {
                 <svg className="w-16 h-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                 </svg>
-                <p className="text-sm" style={{ fontFamily: "'DM Sans', sans-serif" }}>Espacio para foto del estudio</p>
+                <p className="text-sm font-body">Espacio para foto del estudio</p>
               </div>
             </div>
           </motion.div>
@@ -57,14 +57,14 @@ export default function StudioClasses() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
                 </svg>
               </div>
-              <span className="text-xs text-[#5A5A5A] uppercase tracking-wider block mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <span className="text-xs text-[#5A5A5A] uppercase tracking-wider block mb-1 font-body">
                 Lunes, Miércoles y Viernes
               </span>
-              <h3 className="text-xl font-semibold text-[#2A2A2A] mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <h3 className="text-xl font-semibold text-[#2A2A2A] mb-1 font-body">
                 Barré
               </h3>
-              <p className="text-xs italic text-[#8C8475] mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>elegance in motion</p>
-              <p className="text-sm text-[#5A5A5A] leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <p className="text-xs italic text-[#8C8475] mb-3 font-body">elegance in motion</p>
+              <p className="text-sm text-[#5A5A5A] leading-relaxed font-body">
                 Combina lo mejor del ballet, pilates y ejercicios funcionales. Se realizan ejercicios isométricos y pulsos, cuidando siempre el equilibrio y la carga. Las series serán de repeticiones altas con cargas prolongadas, los movimientos más cortos y controlados para poder trabajar más a fondo los músculos. El objetivo principal es aislar grupos de músculos para llegar al punto de máxima tensión permitiendo tonificar, alargar y compactar todo el cuerpo. Es una práctica efectiva que se siente como un entrenamiento y una danza a la vez.
               </p>
             </motion.div>
@@ -81,14 +81,14 @@ export default function StudioClasses() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                 </svg>
               </div>
-              <span className="text-xs text-[#5A5A5A] uppercase tracking-wider block mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <span className="text-xs text-[#5A5A5A] uppercase tracking-wider block mb-1 font-body">
                 Martes y Jueves
               </span>
-              <h3 className="text-xl font-semibold text-[#2A2A2A] mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <h3 className="text-xl font-semibold text-[#2A2A2A] mb-1 font-body">
                 Pilates Mat
               </h3>
-              <p className="text-xs italic text-[#A2A88B] mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>strength meets precision</p>
-              <p className="text-sm text-[#5A5A5A] leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <p className="text-xs italic text-[#A2A88B] mb-3 font-body">strength meets precision</p>
+              <p className="text-sm text-[#5A5A5A] leading-relaxed font-body">
                 A diferencia del pilates reformer, la resistencia proviene principalmente del peso corporal, la gravedad y la contracción muscular. Es una práctica en el piso diseñada para fortalecer y tonificar tu cuerpo, especialmente los músculos más profundos del core (abdomen, espalda baja y pelvis) fundamentales para el movimiento. Combina elongación y contracción, buscando siempre la conexión mente-cuerpo y una ejecución lenta y controlada con esto mejoras tu flexibilidad, postura y equilibrio, mientras trabajas con precisión y concentración.
               </p>
             </motion.div>
@@ -105,14 +105,14 @@ export default function StudioClasses() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
                 </svg>
               </div>
-              <span className="text-xs text-[#5A5A5A] uppercase tracking-wider block mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <span className="text-xs text-[#5A5A5A] uppercase tracking-wider block mb-1 font-body">
                 Sábados
               </span>
-              <h3 className="text-xl font-semibold text-[#2A2A2A] mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <h3 className="text-xl font-semibold text-[#2A2A2A] mb-1 font-body">
                 Yoga Sculpt
               </h3>
-              <p className="text-xs italic text-[#D4A574] mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>energy unleashed</p>
-              <p className="text-sm text-[#5A5A5A] leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <p className="text-xs italic text-[#D4A574] mb-3 font-body">energy unleashed</p>
+              <p className="text-sm text-[#5A5A5A] leading-relaxed font-body">
                 Es una versión más dinámica y energizante del yoga tradicional. Con secuencias rápidas y posturas retadoras, yoga sculpt te hará sudar mientras te diviertes. Es ideal para aumentar tu fuerza, flexibilidad y concentración, además de brindarte un desafío emocionante que te hará sentirte lleno de energía.
               </p>
             </motion.div>
@@ -130,14 +130,14 @@ export default function StudioClasses() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z" />
                 </svg>
               </div>
-              <span className="text-xs text-[#5A5A5A] uppercase tracking-wider block mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <span className="text-xs text-[#5A5A5A] uppercase tracking-wider block mb-1 font-body">
                 Domingos
               </span>
-              <h3 className="text-xl font-semibold text-[#2A2A2A] mb-1" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <h3 className="text-xl font-semibold text-[#2A2A2A] mb-1 font-body">
                 Sculpt
               </h3>
-              <p className="text-xs italic text-[#C6A77A] mb-3" style={{ fontFamily: "'DM Sans', sans-serif" }}>energy unleashed</p>
-              <p className="text-sm text-[#5A5A5A] leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+              <p className="text-xs italic text-[#C6A77A] mb-3 font-body">energy unleashed</p>
+              <p className="text-sm text-[#5A5A5A] leading-relaxed font-body">
                 Es un entrenamiento de cuerpo completo (full body) o enfocado en grupos musculares específicos con movimientos controlados, sentadillas, planchas y ejercicios con resistencia para tonificar. Fusiona elementos de fuerza, entrenamiento funcional, pilates y a veces yoga o HIIT. Nuestras sesiones pueden incluir cardio ligero o intervalos para acelerar el metabolismo y la quema de grasa. Mejora la fuerza, potencia, resistencia, flexibilidad y quema calorías, ayudando a la definición muscular.
               </p>
             </motion.div>

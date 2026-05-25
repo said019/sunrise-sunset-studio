@@ -197,38 +197,38 @@ export default function Schedule() {
   return (
     <section id="horarios" className="bg-background py-0">
       {/* ─── Elegant header with week selector ─── */}
-      <div className="bg-gradient-to-br from-catarsis-dark via-[#3D3229] to-catarsis-dark relative overflow-hidden">
+      <div className="bg-gradient-to-br from-chocolate via-[#3D3229] to-chocolate relative overflow-hidden">
         {/* Decorative accents */}
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-catarsis-gold/[0.06] blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-catarsis-olive/[0.08] blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 rounded-full bg-catarsis-sand/[0.03] blur-3xl" />
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-amber/[0.06] blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-coral/[0.08] blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 rounded-full bg-cream/[0.03] blur-3xl" />
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-8 relative z-10">
           {/* Title */}
           <div className="text-center mb-10">
-            <p className="text-[10px] sm:text-xs uppercase tracking-[4px] text-catarsis-gold/60 font-semibold mb-2 font-body">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[4px] text-amber/60 font-semibold mb-2 font-body">
               Sunrise Sunset
             </p>
             <h2 className="text-3xl sm:text-4xl font-heading font-bold text-white tracking-tight">
               Horario de clases
             </h2>
-            <div className="w-12 h-0.5 bg-catarsis-gold/40 mx-auto mt-4" />
+            <div className="w-12 h-0.5 bg-amber/40 mx-auto mt-4" />
           </div>
 
           {/* Month navigation */}
           <div className="flex items-center justify-center gap-5 mb-8">
             <button
               onClick={() => setWeekStart((prev) => subWeeks(prev, 1))}
-              className="w-9 h-9 rounded-full bg-catarsis-gold/10 border border-catarsis-gold/20 flex items-center justify-center text-catarsis-gold hover:bg-catarsis-gold/20 transition-all"
+              className="w-9 h-9 rounded-full bg-amber/10 border border-amber/20 flex items-center justify-center text-amber hover:bg-amber/20 transition-all"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-catarsis-sand text-sm font-semibold tracking-[2px] uppercase font-body min-w-[160px] text-center">
+            <span className="text-cream text-sm font-semibold tracking-[2px] uppercase font-body min-w-[160px] text-center">
               {safeFormat(selectedDate, 'MMMM yyyy')}
             </span>
             <button
               onClick={() => setWeekStart((prev) => addWeeks(prev, 1))}
-              className="w-9 h-9 rounded-full bg-catarsis-gold/10 border border-catarsis-gold/20 flex items-center justify-center text-catarsis-gold hover:bg-catarsis-gold/20 transition-all"
+              className="w-9 h-9 rounded-full bg-amber/10 border border-amber/20 flex items-center justify-center text-amber hover:bg-amber/20 transition-all"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -255,25 +255,25 @@ export default function Schedule() {
                   className={`
                     flex-shrink-0 min-w-[52px] sm:min-w-0 sm:flex-1 flex flex-col items-center py-3 sm:py-4 rounded-2xl transition-all duration-300
                     ${isSelected
-                      ? 'bg-catarsis-gold text-white shadow-lg shadow-catarsis-gold/20 scale-[1.03]'
+                      ? 'bg-amber text-white shadow-lg shadow-amber/20 scale-[1.03]'
                       : dayIsToday && !isSelected
-                        ? 'bg-catarsis-gold/10 border border-catarsis-gold/30 cursor-pointer hover:bg-catarsis-gold/20'
+                        ? 'bg-amber/10 border border-amber/30 cursor-pointer hover:bg-amber/20'
                         : dayIsPast
                           ? 'bg-white/[0.03] opacity-30 cursor-not-allowed'
-                          : 'bg-white/[0.05] hover:bg-white/[0.10] cursor-pointer border border-transparent hover:border-catarsis-sand/20'
+                          : 'bg-white/[0.05] hover:bg-white/[0.10] cursor-pointer border border-transparent hover:border-cream/20'
                     }
                   `}
                 >
                   <span
                     className={`text-[9px] sm:text-[10px] font-semibold tracking-[1.5px] uppercase font-body ${
-                      isSelected ? 'text-white/80' : dayIsToday ? 'text-catarsis-gold/70' : 'text-white/35'
+                      isSelected ? 'text-white/80' : dayIsToday ? 'text-amber/70' : 'text-white/35'
                     }`}
                   >
                     {safeFormat(day, 'EEE')}
                   </span>
                   <span
                     className={`text-xl sm:text-2xl font-extrabold leading-tight mt-0.5 ${
-                      isSelected ? 'text-white' : dayIsToday ? 'text-catarsis-gold' : 'text-white/80'
+                      isSelected ? 'text-white' : dayIsToday ? 'text-amber' : 'text-white/80'
                     }`}
                   >
                     {format(day, 'd')}
@@ -285,14 +285,14 @@ export default function Schedule() {
                         <div
                           key={i}
                           className={`w-1 h-1 rounded-full ${
-                            isSelected ? 'bg-white/60' : dayIsToday ? 'bg-catarsis-gold/50' : 'bg-catarsis-sand/30'
+                            isSelected ? 'bg-white/60' : dayIsToday ? 'bg-amber/50' : 'bg-cream/30'
                           }`}
                         />
                       ))}
                       {count > 4 && (
                         <span
                           className={`text-[7px] font-bold leading-[4px] ${
-                            isSelected ? 'text-white/60' : 'text-catarsis-sand/30'
+                            isSelected ? 'text-white/60' : 'text-cream/30'
                           }`}
                         >
                           +
@@ -328,8 +328,8 @@ export default function Schedule() {
               onClick={() => setFilter('all')}
               className={`shrink-0 px-5 py-2 rounded-full text-xs font-semibold font-body transition-all ${
                 filter === 'all'
-                  ? 'bg-catarsis-gold text-white shadow-sm'
-                  : 'bg-card text-muted-foreground border border-border hover:border-catarsis-gold/40 hover:text-catarsis-gold'
+                  ? 'bg-amber text-white shadow-sm'
+                  : 'bg-card text-muted-foreground border border-border hover:border-amber/40 hover:text-amber'
               }`}
             >
               Todas
@@ -340,8 +340,8 @@ export default function Schedule() {
                 onClick={() => setFilter(type)}
                 className={`shrink-0 px-5 py-2 rounded-full text-xs font-semibold font-body transition-all ${
                   filter === type
-                    ? 'bg-catarsis-gold text-white shadow-sm'
-                    : 'bg-card text-muted-foreground border border-border hover:border-catarsis-gold/40 hover:text-catarsis-gold'
+                    ? 'bg-amber text-white shadow-sm'
+                    : 'bg-card text-muted-foreground border border-border hover:border-amber/40 hover:text-amber'
                 }`}
               >
                 {type}
@@ -353,7 +353,7 @@ export default function Schedule() {
         {/* Loading */}
         {isLoading && (
           <div className="flex justify-center py-16">
-            <Loader2 className="h-7 w-7 animate-spin text-catarsis-gold" />
+            <Loader2 className="h-7 w-7 animate-spin text-amber" />
           </div>
         )}
 
@@ -375,9 +375,9 @@ export default function Schedule() {
                   className={`
                     group relative bg-card rounded-2xl overflow-hidden
                     border border-border/80 shadow-sm
-                    transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 hover:border-catarsis-gold/30
+                    transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 hover:border-amber/30
                     ${isFull || classPast || classInProgress ? 'opacity-55' : ''}
-                    ${classInProgress ? 'ring-2 ring-catarsis-gold/40 border-catarsis-gold/30' : ''}
+                    ${classInProgress ? 'ring-2 ring-amber/40 border-amber/30' : ''}
                   `}
                 >
                   {/* Color accent top bar */}
@@ -396,12 +396,12 @@ export default function Schedule() {
                             ${classPast
                               ? 'bg-muted/80 text-muted-foreground'
                               : classInProgress
-                                ? 'bg-catarsis-gold/15 text-catarsis-gold animate-pulse'
+                                ? 'bg-amber/15 text-amber animate-pulse'
                                 : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
                             }
                           `}
                         >
-                          {classInProgress && <span className="w-1.5 h-1.5 rounded-full bg-catarsis-gold" />}
+                          {classInProgress && <span className="w-1.5 h-1.5 rounded-full bg-amber" />}
                           {!classPast && !classInProgress && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
                           {timeStatus.label}
                         </span>
@@ -414,11 +414,11 @@ export default function Schedule() {
                           {cls.name}
                         </h3>
                         <div className="flex items-center gap-2 mt-1.5 text-muted-foreground">
-                          <Clock className="w-3.5 h-3.5 shrink-0 text-catarsis-olive" />
+                          <Clock className="w-3.5 h-3.5 shrink-0 text-coral" />
                           <span className="text-[13px] font-semibold font-body">
                             {formatTime(cls.time)} — {cls.endTime}
                           </span>
-                          <span className="w-[3px] h-[3px] rounded-full bg-catarsis-sand/60" />
+                          <span className="w-[3px] h-[3px] rounded-full bg-cream/60" />
                           <span className="text-xs font-body flex items-center gap-1 truncate">
                             {cls.instructorPhoto ? (
                               <img
@@ -427,7 +427,7 @@ export default function Schedule() {
                                 className="w-4 h-4 rounded-full object-cover shrink-0"
                               />
                             ) : (
-                              <User className="w-3 h-3 shrink-0 text-catarsis-olive" />
+                              <User className="w-3 h-3 shrink-0 text-coral" />
                             )}
                             {cls.instructor}
                           </span>
@@ -446,8 +446,8 @@ export default function Schedule() {
                       ) : (
                         <button
                           onClick={() => handleBook(cls)}
-                          className="shrink-0 px-5 py-2.5 rounded-xl bg-catarsis-gold text-white text-xs font-bold font-body
-                                     hover:bg-catarsis-gold/90 active:scale-[0.97] transition-all shadow-sm"
+                          className="shrink-0 px-5 py-2.5 rounded-xl bg-amber text-white text-xs font-bold font-body
+                                     hover:bg-amber/90 active:scale-[0.97] transition-all shadow-sm"
                         >
                           Reservar
                         </button>
@@ -456,7 +456,7 @@ export default function Schedule() {
 
                     {/* Capacity bar */}
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 h-1.5 rounded-full bg-catarsis-sand/20 overflow-hidden">
+                      <div className="flex-1 h-1.5 rounded-full bg-cream/20 overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
@@ -503,7 +503,7 @@ export default function Schedule() {
             {filter !== 'all' && (
               <button
                 onClick={() => setFilter('all')}
-                className="mt-3 px-5 py-2 rounded-xl bg-catarsis-gold text-white text-xs font-semibold font-body hover:bg-catarsis-gold/90 transition-all"
+                className="mt-3 px-5 py-2 rounded-xl bg-amber text-white text-xs font-semibold font-body hover:bg-amber/90 transition-all"
               >
                 Ver todas
               </button>
@@ -512,16 +512,16 @@ export default function Schedule() {
         )}
 
         {/* CTA */}
-        <div className="mt-12 p-8 rounded-2xl bg-gradient-to-br from-catarsis-cream to-catarsis-sand/20 border border-catarsis-sand/30 text-center">
-          <p className="font-heading text-xl text-catarsis-dark mb-1">
+        <div className="mt-12 p-8 rounded-2xl bg-gradient-to-br from-blush to-cream/20 border border-cream/30 text-center">
+          <p className="font-heading text-xl text-chocolate mb-1">
             ¿Primera vez en Sunrise Sunset?
           </p>
-          <p className="text-sm font-body text-catarsis-olive mb-5">
+          <p className="text-sm font-body text-coral mb-5">
             Prueba una clase sin compromiso
           </p>
           <Link
             to="/register?returnUrl=/app/book"
-            className="inline-flex items-center gap-2 px-7 py-3.5 bg-catarsis-gold text-white rounded-xl text-sm font-semibold font-body hover:bg-catarsis-gold/90 transition-all shadow-md hover:shadow-lg"
+            className="inline-flex items-center gap-2 px-7 py-3.5 bg-amber text-white rounded-xl text-sm font-semibold font-body hover:bg-amber/90 transition-all shadow-md hover:shadow-lg"
           >
             Reservar clase de prueba
             <span className="text-white/70 font-normal">$150</span>

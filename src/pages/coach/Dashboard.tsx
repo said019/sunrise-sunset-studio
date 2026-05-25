@@ -185,20 +185,20 @@ export default function CoachDashboard() {
             <CoachLayout>
                 <div className="space-y-6">
                     {/* Header with gradient */}
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-catarsis-dark via-[#3D3229] to-catarsis-dark p-6 sm:p-8">
-                        <div className="absolute top-0 right-0 w-56 h-56 rounded-full bg-catarsis-gold/[0.08] blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-catarsis-olive/[0.1] blur-3xl" />
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chocolate via-[#3D3229] to-chocolate p-6 sm:p-8">
+                        <div className="absolute top-0 right-0 w-56 h-56 rounded-full bg-amber/[0.08] blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-coral/[0.1] blur-3xl" />
                         <div className="relative z-10">
                             <div className="flex items-center gap-2 mb-1">
-                                <Flame className="h-4 w-4 text-catarsis-gold/70" />
-                                <p className="text-[10px] uppercase tracking-[3px] text-catarsis-gold/60 font-semibold font-body">
+                                <Flame className="h-4 w-4 text-amber/70" />
+                                <p className="text-[10px] uppercase tracking-[3px] text-amber/60 font-semibold font-body">
                                     Coach Panel
                                 </p>
                             </div>
                             <h1 className="font-heading text-2xl sm:text-3xl font-bold text-white">
                                 Hola, {user?.display_name?.split(' ')[0]} 👋
                             </h1>
-                            <p className="text-catarsis-sand/60 font-body text-sm mt-1">
+                            <p className="text-cream/60 font-body text-sm mt-1">
                                 {safeFormat(new Date(), "EEEE, d 'de' MMMM 'de' yyyy")}
                             </p>
                         </div>
@@ -207,7 +207,7 @@ export default function CoachDashboard() {
                     {/* Stats Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {[
-                            { label: 'Clases hoy', value: stats?.classes_today || 0, icon: Calendar, color: 'bg-catarsis-gold/10 text-catarsis-gold', border: 'border-catarsis-gold/20' },
+                            { label: 'Clases hoy', value: stats?.classes_today || 0, icon: Calendar, color: 'bg-amber/10 text-amber', border: 'border-amber/20' },
                             { label: 'Esta semana', value: stats?.classes_this_week || 0, icon: Clock, color: 'bg-blue-500/10 text-blue-600', border: 'border-blue-500/20' },
                             { label: 'Reservaciones', value: stats?.bookings_this_week || 0, icon: Users, color: 'bg-emerald-500/10 text-emerald-600', border: 'border-emerald-500/20' },
                             { label: 'Ocupación', value: `${stats?.avg_occupancy || 0}%`, icon: TrendingUp, color: 'bg-violet-500/10 text-violet-600', border: 'border-violet-500/20' },
@@ -236,8 +236,8 @@ export default function CoachDashboard() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <CardTitle className="flex items-center gap-2 text-lg font-heading">
-                                        <div className="h-8 w-8 rounded-xl bg-catarsis-gold/10 flex items-center justify-center">
-                                            <Calendar className="h-4 w-4 text-catarsis-gold" />
+                                        <div className="h-8 w-8 rounded-xl bg-amber/10 flex items-center justify-center">
+                                            <Calendar className="h-4 w-4 text-amber" />
                                         </div>
                                         Tu día
                                     </CardTitle>
@@ -283,7 +283,7 @@ export default function CoachDashboard() {
                                         if (isPast) {
                                             timeBadge = <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-body">Finalizada</span>;
                                         } else if (isNow) {
-                                            timeBadge = <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-catarsis-gold/15 text-catarsis-gold animate-pulse font-body">● En curso</span>;
+                                            timeBadge = <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber/15 text-amber animate-pulse font-body">● En curso</span>;
                                         } else if (isSoon) {
                                             timeBadge = <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-body">En {minsUntil}m</span>;
                                         }
@@ -294,7 +294,7 @@ export default function CoachDashboard() {
                                                 to={`/coach/class/${classItem.id}`}
                                                 className="block"
                                             >
-                                                <div className={`flex items-center justify-between p-4 rounded-xl border hover:bg-muted/50 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm ${isPast ? 'opacity-50' : ''} ${isNow ? 'ring-2 ring-catarsis-gold/30 border-catarsis-gold/20' : ''}`}>
+                                                <div className={`flex items-center justify-between p-4 rounded-xl border hover:bg-muted/50 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm ${isPast ? 'opacity-50' : ''} ${isNow ? 'ring-2 ring-amber/30 border-amber/20' : ''}`}>
                                                     <div className="flex items-center gap-4">
                                                         <div className="text-center min-w-[60px]">
                                                             <p className="text-lg font-bold font-heading">

@@ -141,13 +141,13 @@ const VideoGallery = () => {
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           {/* Section Header */}
           <div className="max-w-3xl mb-16">
-            <span className="text-sm font-body text-catarsis-olive tracking-widest uppercase mb-4 block">
+            <span className="text-sm font-body text-coral tracking-widest uppercase mb-4 block">
               Experiencia Visual
             </span>
             <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-light text-primary-foreground mb-6">
               Conoce nuestras
               <br />
-              <span className="font-semibold italic text-catarsis-olive">clases en acción</span>
+              <span className="font-semibold italic text-coral">clases en acción</span>
             </h2>
             <p className="font-body text-lg text-primary-foreground/60">
               Descubre la energía, la técnica y el ambiente de cada disciplina a

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,121 +6,123 @@
 
 @layer base {
   :root {
-    /* Catarsis Studio Palette 2026
-     * Dorado cálido: #A48550 → HSL: 38 34% 48%  — Primary (botones, acentos)
-     * Verde oliva:   #81836F → HSL: 66 8% 47%   — Secondary (complementos)
-     * Arena suave:   #D3C39F → HSL: 42 37% 73%  — Accent (fondos sutiles)
-     * Crema claro:   #F6F6EA → HSL: 60 40% 94%  — Background
-     * Chocolate:     #322A1E → HSL: 36 25% 16%  — Foreground (textos)
+    /* Sunrise Sunset Palette
+     * Coral:      #E36F4C → HSL: 16 72% 59%   — Primary (buttons, accents)
+     * Amber:      #F8B069 → HSL: 30 91% 69%   — Secondary (highlights)
+     * Wine:       #7B0000 → HSL: 0 100% 24%   — Destructive / strong contrast
+     * Chocolate:  #6E4528 → HSL: 25 46% 30%   — Dark text / dark sections
+     * Rose:       #C67E6F → HSL: 10 44% 60%   — Muted / soft support
+     * Cream:      #EFE7D9 → HSL: 36 39% 89%   — Light backgrounds
+     * Blush:      #FEF3F4 → HSL: 352 100% 98% — Soft surfaces / cards
      */
-    --background: 60 40% 94%;
-    --foreground: 36 25% 16%;
+    --background: 36 39% 89%;
+    --foreground: 25 46% 30%;
 
-    --card: 60 30% 98%;
-    --card-foreground: 36 25% 16%;
+    --card: 352 100% 98%;
+    --card-foreground: 25 46% 30%;
 
-    --popover: 60 40% 97%;
-    --popover-foreground: 36 25% 16%;
+    --popover: 352 80% 99%;
+    --popover-foreground: 25 46% 30%;
 
-    --primary: 38 34% 48%;
-    --primary-foreground: 60 40% 97%;
+    --primary: 16 72% 59%;
+    --primary-foreground: 36 39% 95%;
 
-    --secondary: 66 8% 47%;
-    --secondary-foreground: 60 40% 97%;
+    --secondary: 30 91% 69%;
+    --secondary-foreground: 25 46% 20%;
 
-    --muted: 42 25% 90%;
-    --muted-foreground: 36 15% 40%;
+    --muted: 10 30% 88%;
+    --muted-foreground: 25 35% 40%;
 
-    --accent: 42 37% 73%;
-    --accent-foreground: 36 25% 16%;
+    --accent: 16 72% 59%;
+    --accent-foreground: 36 39% 95%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 60 40% 98%;
+    --destructive: 0 100% 24%;
+    --destructive-foreground: 36 39% 95%;
 
-    --border: 42 25% 85%;
-    --input: 42 25% 85%;
-    --ring: 38 34% 48%;
+    --border: 16 40% 82%;
+    --input: 16 40% 82%;
+    --ring: 16 72% 59%;
 
     --radius: 0.5rem;
 
-    /* Custom tokens — Catarsis Studio */
-    --hero-gradient: linear-gradient(135deg, hsl(60 40% 94%) 0%, hsl(42 37% 90%) 50%, hsl(66 8% 88%) 100%);
-    --card-gradient: linear-gradient(180deg, hsl(60 40% 97%) 0%, hsl(42 30% 93%) 100%);
-    --overlay-dark: linear-gradient(180deg, hsla(36, 25%, 16%, 0.2) 0%, hsla(36, 25%, 16%, 0.55) 100%);
-    --glow-sage: 0 12px 32px hsla(66, 8%, 47%, 0.2);
-    --glow-warm: 0 12px 32px hsla(38, 34%, 48%, 0.18);
+    /* Custom tokens — Sunrise Sunset Studio */
+    --hero-gradient: linear-gradient(135deg, hsl(36 39% 89%) 0%, hsl(30 60% 88%) 50%, hsl(16 50% 85%) 100%);
+    --card-gradient: linear-gradient(180deg, hsl(352 100% 98%) 0%, hsl(36 39% 93%) 100%);
+    --overlay-dark: linear-gradient(180deg, hsla(25, 46%, 30%, 0.2) 0%, hsla(25, 46%, 30%, 0.55) 100%);
+    --glow-sage: 0 12px 32px hsla(10, 44%, 60%, 0.2);
+    --glow-warm: 0 12px 32px hsla(16, 72%, 59%, 0.25);
 
     /* Typography */
-    --font-heading: 'Cormorant', serif;
-    --font-body: 'Outfit', sans-serif;
+    --font-heading: 'Fraunces', serif;
+    --font-body: 'Inter', sans-serif;
 
     /* Animations */
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-    /* Catarsis semantic status colors — verde oliva #81836F */
-    --success: 66 8% 47%;
-    --success-foreground: 60 40% 97%;
-    --warning: 38 50% 52%;
-    --warning-foreground: 36 25% 16%;
-    --info: 42 30% 60%;
-    --info-foreground: 36 25% 16%;
+    /* Sunrise Sunset semantic status colors */
+    --success: 140 40% 38%;
+    --success-foreground: 36 39% 95%;
+    --warning: 30 91% 69%;
+    --warning-foreground: 25 46% 20%;
+    --info: 200 50% 50%;
+    --info-foreground: 25 46% 20%;
 
-    --sidebar-background: 60 30% 98%;
-    --sidebar-foreground: 36 25% 16%;
-    --sidebar-primary: 38 34% 48%;
-    --sidebar-primary-foreground: 60 40% 97%;
-    --sidebar-accent: 42 25% 93%;
-    --sidebar-accent-foreground: 36 25% 16%;
-    --sidebar-border: 42 20% 88%;
-    --sidebar-ring: 38 34% 48%;
+    --sidebar-background: 352 100% 98%;
+    --sidebar-foreground: 25 46% 30%;
+    --sidebar-primary: 16 72% 59%;
+    --sidebar-primary-foreground: 36 39% 95%;
+    --sidebar-accent: 36 39% 92%;
+    --sidebar-accent-foreground: 25 46% 30%;
+    --sidebar-border: 16 35% 86%;
+    --sidebar-ring: 16 72% 59%;
   }
 
   .dark {
-    /* Catarsis Studio Dark Mode */
-    --background: 36 25% 8%;
-    --foreground: 42 30% 92%;
+    /* Sunrise Sunset Dark Mode — warm chocolate/wine base, coral accents */
+    --background: 25 40% 10%;
+    --foreground: 36 39% 88%;
 
-    --card: 36 20% 11%;
-    --card-foreground: 42 30% 92%;
+    --card: 25 35% 13%;
+    --card-foreground: 36 39% 88%;
 
-    --popover: 36 25% 9%;
-    --popover-foreground: 42 30% 92%;
+    --popover: 25 40% 11%;
+    --popover-foreground: 36 39% 88%;
 
-    --primary: 38 40% 55%;
-    --primary-foreground: 36 25% 8%;
+    --primary: 16 72% 62%;
+    --primary-foreground: 25 40% 10%;
 
-    --secondary: 66 10% 55%;
-    --secondary-foreground: 42 30% 92%;
+    --secondary: 30 80% 60%;
+    --secondary-foreground: 36 39% 88%;
 
-    --muted: 36 15% 16%;
-    --muted-foreground: 42 15% 55%;
+    --muted: 25 25% 18%;
+    --muted-foreground: 36 25% 58%;
 
-    --accent: 42 25% 28%;
-    --accent-foreground: 42 30% 92%;
+    --accent: 16 50% 28%;
+    --accent-foreground: 36 39% 88%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 60 40% 98%;
+    --destructive: 0 80% 35%;
+    --destructive-foreground: 36 39% 95%;
 
-    --border: 36 15% 18%;
-    --input: 36 15% 18%;
-    --ring: 38 40% 55%;
+    --border: 25 25% 20%;
+    --input: 25 25% 20%;
+    --ring: 16 72% 62%;
 
-    --success: 66 10% 55%;
-    --success-foreground: 36 25% 8%;
-    --warning: 38 45% 55%;
-    --warning-foreground: 36 25% 8%;
-    --info: 42 25% 50%;
-    --info-foreground: 36 25% 8%;
+    --success: 140 40% 42%;
+    --success-foreground: 25 40% 10%;
+    --warning: 30 80% 60%;
+    --warning-foreground: 25 40% 10%;
+    --info: 200 45% 50%;
+    --info-foreground: 25 40% 10%;
 
-    --sidebar-background: 36 25% 8%;
-    --sidebar-foreground: 42 20% 92%;
-    --sidebar-primary: 38 40% 55%;
-    --sidebar-primary-foreground: 36 25% 8%;
-    --sidebar-accent: 36 15% 14%;
-    --sidebar-accent-foreground: 42 20% 92%;
-    --sidebar-border: 36 15% 16%;
-    --sidebar-ring: 38 40% 55%;
+    --sidebar-background: 25 40% 10%;
+    --sidebar-foreground: 36 30% 88%;
+    --sidebar-primary: 16 72% 62%;
+    --sidebar-primary-foreground: 25 40% 10%;
+    --sidebar-accent: 25 25% 16%;
+    --sidebar-accent-foreground: 36 30% 88%;
+    --sidebar-border: 25 25% 18%;
+    --sidebar-ring: 16 72% 62%;
   }
 }
 

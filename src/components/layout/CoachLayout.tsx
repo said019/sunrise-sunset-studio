@@ -87,10 +87,10 @@ export default function CoachLayout({ children }: CoachLayoutProps) {
                                 <img
                                     src="/catarsis.jpg"
                                     alt="Sunrise Sunset"
-                                    className="h-9 w-9 rounded-xl object-cover ring-2 ring-catarsis-gold/20"
+                                    className="h-9 w-9 rounded-xl object-cover ring-2 ring-amber/20"
                                 />
-                                <span className="font-heading text-xl font-bold text-catarsis-gold">Sunrise Sunset</span>
-                                <span className="text-[10px] font-body font-semibold text-catarsis-gold uppercase tracking-[2px] bg-catarsis-gold/10 px-2.5 py-1 rounded-lg">
+                                <span className="font-heading text-xl font-bold text-amber">Sunrise Sunset</span>
+                                <span className="text-[10px] font-body font-semibold text-amber uppercase tracking-[2px] bg-amber/10 px-2.5 py-1 rounded-lg">
                                     Coach
                                 </span>
                             </Link>
@@ -107,7 +107,7 @@ export default function CoachLayout({ children }: CoachLayoutProps) {
                                             className={cn(
                                                 'flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200',
                                                 isActive
-                                                    ? 'bg-catarsis-gold/10 text-catarsis-gold'
+                                                    ? 'bg-amber/10 text-amber'
                                                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                                             )}
                                         >
@@ -175,9 +175,9 @@ export default function CoachLayout({ children }: CoachLayoutProps) {
                                     <img
                                         src="/catarsis.jpg"
                                         alt="Sunrise Sunset"
-                                        className="h-9 w-9 rounded-xl object-cover ring-2 ring-catarsis-gold/20"
+                                        className="h-9 w-9 rounded-xl object-cover ring-2 ring-amber/20"
                                     />
-                                    <span className="font-heading text-lg font-bold text-catarsis-gold">Sunrise Sunset Coach</span>
+                                    <span className="font-heading text-lg font-bold text-amber">Sunrise Sunset Coach</span>
                                 </div>
                                 <Button
                                     variant="ghost"
@@ -199,7 +199,7 @@ export default function CoachLayout({ children }: CoachLayoutProps) {
                                             className={cn(
                                                 'flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200',
                                                 isActive
-                                                    ? 'bg-catarsis-gold/10 text-catarsis-gold'
+                                                    ? 'bg-amber/10 text-amber'
                                                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                                             )}
                                         >

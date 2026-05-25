@@ -88,20 +88,20 @@ export default function AdminDashboard() {
             <AdminLayout>
                 <div className="space-y-6">
                     {/* Header with gradient */}
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-catarsis-dark via-[#3D3229] to-catarsis-dark p-6 sm:p-8">
-                        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-catarsis-gold/[0.08] blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-catarsis-olive/[0.1] blur-3xl" />
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chocolate via-[#3D3229] to-chocolate p-6 sm:p-8">
+                        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-amber/[0.08] blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-coral/[0.1] blur-3xl" />
                         <div className="relative z-10">
                             <div className="flex items-center gap-2 mb-1">
-                                <Sparkles className="h-4 w-4 text-catarsis-gold/60" />
-                                <p className="text-[10px] uppercase tracking-[3px] text-catarsis-gold/60 font-semibold font-body">
+                                <Sparkles className="h-4 w-4 text-amber/60" />
+                                <p className="text-[10px] uppercase tracking-[3px] text-amber/60 font-semibold font-body">
                                     Panel de Control
                                 </p>
                             </div>
                             <h1 className="text-2xl sm:text-3xl font-heading font-bold text-white">
                                 Bienvenido, {user?.display_name?.split(' ')[0]}
                             </h1>
-                            <p className="text-catarsis-sand/60 font-body text-sm mt-1">
+                            <p className="text-cream/60 font-body text-sm mt-1">
                                 {safeFormat(new Date(), "EEEE d 'de' MMMM, yyyy")}
                             </p>
                         </div>
@@ -109,16 +109,16 @@ export default function AdminDashboard() {
 
                     {/* Alerts */}
                     {pendingVerificationOrders.length > 0 && (
-                        <div className="bg-catarsis-olive/10 border border-catarsis-olive/30 text-foreground p-4 rounded-xl flex items-center justify-between animate-fade-in">
+                        <div className="bg-coral/10 border border-coral/30 text-foreground p-4 rounded-xl flex items-center justify-between animate-fade-in">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-full bg-catarsis-olive/15 flex items-center justify-center shrink-0">
-                                    <Banknote className="h-5 w-5 text-catarsis-olive" />
+                                <div className="h-10 w-10 rounded-full bg-coral/15 flex items-center justify-center shrink-0">
+                                    <Banknote className="h-5 w-5 text-coral" />
                                 </div>
                                 <span className="font-medium text-sm">
                                     {pendingVerificationOrders.length} pago{pendingVerificationOrders.length > 1 ? 's' : ''} pendiente{pendingVerificationOrders.length > 1 ? 's' : ''} de verificación
                                 </span>
                             </div>
-                            <Button variant="default" size="sm" className="bg-catarsis-olive hover:bg-catarsis-olive/90 rounded-xl" asChild>
+                            <Button variant="default" size="sm" className="bg-coral hover:bg-coral/90 rounded-xl" asChild>
                                 <Link to="/admin/orders">
                                     Verificar <ChevronRight className="ml-1 h-4 w-4" />
                                 </Link>
@@ -152,16 +152,16 @@ export default function AdminDashboard() {
                                 value: stats?.scheduledClasses || 0,
                                 subtitle: 'programadas',
                                 icon: Calendar,
-                                color: 'bg-catarsis-gold/10 text-catarsis-gold',
-                                border: 'border-catarsis-gold/20',
+                                color: 'bg-amber/10 text-amber',
+                                border: 'border-amber/20',
                             },
                             {
                                 title: 'Reservas',
                                 value: stats?.confirmedBookings || 0,
                                 subtitle: 'confirmadas',
                                 icon: Users,
-                                color: 'bg-catarsis-olive/10 text-catarsis-olive',
-                                border: 'border-catarsis-olive/20',
+                                color: 'bg-coral/10 text-coral',
+                                border: 'border-coral/20',
                             },
                             {
                                 title: 'Membresías Activas',
@@ -234,8 +234,8 @@ export default function AdminDashboard() {
                                     ) : recentMemberships.length > 0 ? (
                                         recentMemberships.map((membership) => (
                                             <div key={membership.id} className="flex items-start gap-4 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
-                                                <div className="h-9 w-9 rounded-xl bg-catarsis-gold/10 flex items-center justify-center mt-0.5 shrink-0">
-                                                    <UserPlus className="h-4 w-4 text-catarsis-gold" />
+                                                <div className="h-9 w-9 rounded-xl bg-amber/10 flex items-center justify-center mt-0.5 shrink-0">
+                                                    <UserPlus className="h-4 w-4 text-amber" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-semibold font-body">{membership.user_name}</p>
@@ -305,7 +305,7 @@ export default function AdminDashboard() {
                                                     <Receipt className="h-4 w-4 text-warning" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold font-body group-hover:text-catarsis-gold transition-colors">
+                                                    <p className="text-sm font-semibold font-body group-hover:text-amber transition-colors">
                                                         {order.user_name}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground font-body">
@@ -313,7 +313,7 @@ export default function AdminDashboard() {
                                                     </p>
                                                 </div>
                                                 <div className="text-right shrink-0">
-                                                    <Badge variant="outline" className={`text-[10px] rounded-lg ${order.status === 'pending_verification' ? 'bg-warning/10 text-warning border-warning/30' : 'bg-catarsis-olive/10 text-catarsis-olive border-catarsis-olive/30'}`}>
+                                                    <Badge variant="outline" className={`text-[10px] rounded-lg ${order.status === 'pending_verification' ? 'bg-warning/10 text-warning border-warning/30' : 'bg-coral/10 text-coral border-coral/30'}`}>
                                                         <Clock className="h-3 w-3 mr-1" />
                                                         {order.status === 'pending_verification' ? 'Verificar' : 'Por cobrar'}
                                                     </Badge>
@@ -333,7 +333,7 @@ export default function AdminDashboard() {
                                                     <Ticket className="h-4 w-4 text-pink-500" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold font-body group-hover:text-catarsis-gold transition-colors">
+                                                    <p className="text-sm font-semibold font-body group-hover:text-amber transition-colors">
                                                         {reg.user_name}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground font-body">

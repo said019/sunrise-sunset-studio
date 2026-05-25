@@ -210,18 +210,18 @@ export function ClientLayout({ children }: ClientLayoutProps) {
                                 to={item.href}
                                 className={cn(
                                     'flex flex-col items-center gap-0.5 min-w-[56px] py-2 text-[10px] font-medium transition-all duration-200 rounded-xl relative active:scale-95',
-                                    isActive ? 'text-catarsis-gold' : 'text-muted-foreground'
+                                    isActive ? 'text-amber' : 'text-muted-foreground'
                                 )}
                             >
                                 <div className={cn(
                                     'p-1.5 rounded-xl transition-all duration-200',
-                                    isActive ? 'bg-catarsis-gold/10 scale-110' : ''
+                                    isActive ? 'bg-amber/10 scale-110' : ''
                                 )}>
                                     <Icon className="h-5 w-5" />
                                 </div>
                                 <span className="font-body">{item.label}</span>
                                 {isActive && (
-                                    <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-catarsis-gold" />
+                                    <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-amber" />
                                 )}
                             </Link>
                         );

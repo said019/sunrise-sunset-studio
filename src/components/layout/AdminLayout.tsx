@@ -177,7 +177,7 @@ function SidebarContent({
                                     className={cn(
                                         'flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
                                         hasActiveChild
-                                            ? 'bg-catarsis-gold/10 text-catarsis-gold'
+                                            ? 'bg-amber/10 text-amber'
                                             : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                     )}
                                 >
@@ -201,7 +201,7 @@ function SidebarContent({
                                                 className={cn(
                                                     'block rounded-xl px-3 py-2 text-sm transition-all duration-200',
                                                     isActive(child.href)
-                                                        ? 'bg-catarsis-gold/10 text-catarsis-gold font-medium'
+                                                        ? 'bg-amber/10 text-amber font-medium'
                                                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                                 )}
                                             >
@@ -222,7 +222,7 @@ function SidebarContent({
                             className={cn(
                                 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
                                 isActive(item.href!)
-                                    ? 'bg-catarsis-gold/10 text-catarsis-gold'
+                                    ? 'bg-amber/10 text-amber'
                                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                             )}
                         >
@@ -435,10 +435,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             <img
                                 src="/catarsis.jpg"
                                 alt="Sunrise Sunset"
-                                className="h-9 w-9 rounded-xl object-cover ring-2 ring-catarsis-gold/20"
+                                className="h-9 w-9 rounded-xl object-cover ring-2 ring-amber/20"
                             />
                             <div className="flex flex-col">
-                                <span className="font-heading text-lg font-bold text-catarsis-gold leading-none">Sunrise Sunset</span>
+                                <span className="font-heading text-lg font-bold text-amber leading-none">Sunrise Sunset</span>
                                 <span className="font-body text-[10px] uppercase tracking-[2px] text-muted-foreground">Admin</span>
                             </div>
                         </Link>
@@ -484,7 +484,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             className="h-8 w-8 rounded-full object-cover"
                         />
                         <div className="flex flex-col">
-                            <span className="font-heading text-lg font-bold text-catarsis-olive leading-none">Sunrise Sunset</span>
+                            <span className="font-heading text-lg font-bold text-coral leading-none">Sunrise Sunset</span>
                             <span className="font-heading text-xs text-muted-foreground">Admin</span>
                         </div>
                     </Link>
@@ -526,7 +526,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             <input
                                 type="search"
                                 placeholder="Buscar clientes, clases..."
-                                className="h-9 w-full rounded-xl border border-input bg-muted/30 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-catarsis-gold/30 focus:border-catarsis-gold/40 transition-all font-body"
+                                className="h-9 w-full rounded-xl border border-input bg-muted/30 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber/40 transition-all font-body"
                             />
                         </div>
                     </div>
@@ -568,8 +568,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                                         <UserPlus className="h-4 w-4 text-info" />
                                                     </div>
                                                 ) : (
-                                                    <div className="h-8 w-8 rounded-full bg-catarsis-olive/10 flex items-center justify-center shrink-0">
-                                                        <CalendarCheck className="h-4 w-4 text-catarsis-olive" />
+                                                    <div className="h-8 w-8 rounded-full bg-coral/10 flex items-center justify-center shrink-0">
+                                                        <CalendarCheck className="h-4 w-4 text-coral" />
                                                     </div>
                                                 );
 
@@ -586,7 +586,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                                         key={`${n.type}-${n.id}`}
                                                         className={cn(
                                                             "flex items-start gap-3 px-4 py-3 hover:bg-muted/50 cursor-pointer transition-colors",
-                                                            isRecent && "bg-catarsis-olive/5"
+                                                            isRecent && "bg-coral/5"
                                                         )}
                                                         onClick={() => {
                                                             setNotifOpen(false);
@@ -612,7 +612,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                                    <Avatar className="h-9 w-9 ring-2 ring-offset-2 ring-offset-background ring-catarsis-olive/20">
+                                    <Avatar className="h-9 w-9 ring-2 ring-offset-2 ring-offset-background ring-coral/20">
                                         <AvatarImage src={user?.photo_url || undefined} alt={user?.display_name} />
                                         <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                                             {user?.display_name ? getInitials(user.display_name) : 'A'}
@@ -638,7 +638,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                             <p className="text-sm font-medium leading-none">{user?.display_name}</p>
                                             <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                                             <div className="flex items-center gap-1 mt-1">
-                                                <span className="inline-flex items-center rounded-md bg-catarsis-olive/10 px-2 py-0.5 text-xs font-medium text-catarsis-olive capitalize">
+                                                <span className="inline-flex items-center rounded-md bg-coral/10 px-2 py-0.5 text-xs font-medium text-coral capitalize">
                                                     {user?.role}
                                                 </span>
                                                 {user?.is_instructor && (

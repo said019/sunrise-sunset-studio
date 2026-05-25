@@ -197,27 +197,27 @@ export default function CoachTemplates() {
             <CoachLayout>
                 <div className="space-y-6">
                     {/* Header with gradient */}
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-catarsis-dark via-[#3D3229] to-catarsis-dark p-6 sm:p-8">
-                        <div className="absolute top-0 right-0 w-56 h-56 rounded-full bg-catarsis-gold/[0.08] blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-catarsis-olive/[0.1] blur-3xl" />
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chocolate via-[#3D3229] to-chocolate p-6 sm:p-8">
+                        <div className="absolute top-0 right-0 w-56 h-56 rounded-full bg-amber/[0.08] blur-3xl" />
+                        <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-coral/[0.1] blur-3xl" />
                         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                    <Dumbbell className="h-4 w-4 text-catarsis-gold/70" />
-                                    <p className="text-[10px] uppercase tracking-[3px] text-catarsis-gold/60 font-semibold font-body">
+                                    <Dumbbell className="h-4 w-4 text-amber/70" />
+                                    <p className="text-[10px] uppercase tracking-[3px] text-amber/60 font-semibold font-body">
                                         Coach
                                     </p>
                                 </div>
                                 <h1 className="text-2xl sm:text-3xl font-heading font-bold text-white">
                                     Plantillas de Rutinas
                                 </h1>
-                                <p className="text-catarsis-sand/60 font-body text-sm mt-1">
+                                <p className="text-cream/60 font-body text-sm mt-1">
                                     Explora y crea rutinas para planear tus clases
                                 </p>
                             </div>
                             <Button 
                                 onClick={handleCreateNew}
-                                className="bg-catarsis-gold hover:bg-catarsis-gold/90 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 font-body"
+                                className="bg-amber hover:bg-amber/90 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 font-body"
                             >
                                 <Plus className="mr-2 h-4 w-4" />
                                 Nueva Plantilla
@@ -233,7 +233,7 @@ export default function CoachTemplates() {
                                 placeholder="Buscar plantillas..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 rounded-xl bg-muted/30 border-border/60 focus:ring-2 focus:ring-catarsis-gold/30 focus:border-catarsis-gold/40 font-body"
+                                className="pl-10 rounded-xl bg-muted/30 border-border/60 focus:ring-2 focus:ring-amber/30 focus:border-amber/40 font-body"
                             />
                         </div>
                         <Select value={filterClassType || 'all'} onValueChange={(v) => setFilterClassType(v === 'all' ? '' : v)}>
@@ -263,13 +263,13 @@ export default function CoachTemplates() {
                     {/* Tabs */}
                     <Tabs value={activeTab} onValueChange={setActiveTab}>
                         <TabsList className="bg-muted/50 rounded-xl p-1">
-                            <TabsTrigger value="all" className="rounded-lg font-body text-sm data-[state=active]:bg-catarsis-gold data-[state=active]:text-white">
+                            <TabsTrigger value="all" className="rounded-lg font-body text-sm data-[state=active]:bg-amber data-[state=active]:text-white">
                                 Todas
                             </TabsTrigger>
-                            <TabsTrigger value="my" className="rounded-lg font-body text-sm data-[state=active]:bg-catarsis-gold data-[state=active]:text-white">
+                            <TabsTrigger value="my" className="rounded-lg font-body text-sm data-[state=active]:bg-amber data-[state=active]:text-white">
                                 Mis Plantillas
                             </TabsTrigger>
-                            <TabsTrigger value="favorites" className="rounded-lg font-body text-sm data-[state=active]:bg-catarsis-gold data-[state=active]:text-white">
+                            <TabsTrigger value="favorites" className="rounded-lg font-body text-sm data-[state=active]:bg-amber data-[state=active]:text-white">
                                 Favoritos
                             </TabsTrigger>
                         </TabsList>
@@ -277,7 +277,7 @@ export default function CoachTemplates() {
                         <TabsContent value={activeTab} className="mt-6">
                             {isLoading ? (
                                 <div className="flex justify-center py-16">
-                                    <Loader2 className="h-8 w-8 animate-spin text-catarsis-gold" />
+                                    <Loader2 className="h-8 w-8 animate-spin text-amber" />
                                 </div>
                             ) : templates?.length === 0 ? (
                                 <div className="text-center py-16">
@@ -291,7 +291,7 @@ export default function CoachTemplates() {
                                             : 'No se encontraron plantillas con estos filtros'}
                                     </p>
                                     {activeTab === 'my' && (
-                                        <Button onClick={handleCreateNew} className="bg-catarsis-gold hover:bg-catarsis-gold/90 rounded-xl font-body">
+                                        <Button onClick={handleCreateNew} className="bg-amber hover:bg-amber/90 rounded-xl font-body">
                                             <Plus className="mr-2 h-4 w-4" />
                                             Crear Plantilla
                                         </Button>
@@ -302,7 +302,7 @@ export default function CoachTemplates() {
                                     {templates?.map((template) => (
                                         <Card
                                             key={template.id}
-                                            className="group border-border/60 hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:border-catarsis-gold/30 rounded-2xl overflow-hidden"
+                                            className="group border-border/60 hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:border-amber/30 rounded-2xl overflow-hidden"
                                             onClick={() => handleView(template)}
                                         >
                                             {/* Color accent bar */}
@@ -420,7 +420,7 @@ export default function CoachTemplates() {
                                                             <Users className="h-3 w-3" />
                                                             {template.uses_count}
                                                         </span>
-                                                        <ChevronRight className="h-4 w-4 text-catarsis-gold/60 group-hover:text-catarsis-gold transition-colors" />
+                                                        <ChevronRight className="h-4 w-4 text-amber/60 group-hover:text-amber transition-colors" />
                                                     </div>
                                                 </div>
                                             </CardFooter>
@@ -514,14 +514,14 @@ export default function CoachTemplates() {
                                         {selectedTemplate.music_playlist_url && (
                                             <div>
                                                 <h4 className="font-heading font-semibold mb-2 flex items-center gap-2">
-                                                    <Music className="h-4 w-4 text-catarsis-gold" />
+                                                    <Music className="h-4 w-4 text-amber" />
                                                     Playlist
                                                 </h4>
                                                 <a
                                                     href={selectedTemplate.music_playlist_url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="text-sm text-catarsis-gold hover:underline font-body"
+                                                    className="text-sm text-amber hover:underline font-body"
                                                 >
                                                     Abrir playlist →
                                                 </a>
@@ -606,7 +606,7 @@ export default function CoachTemplates() {
 
                                     {isOwner(selectedTemplate) ? (
                                         <Button
-                                            className="flex-1 bg-catarsis-gold hover:bg-catarsis-gold/90 rounded-xl font-body"
+                                            className="flex-1 bg-amber hover:bg-amber/90 rounded-xl font-body"
                                             onClick={() => {
                                                 setIsViewOpen(false);
                                                 handleEdit(selectedTemplate);

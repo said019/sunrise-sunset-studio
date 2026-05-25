@@ -152,7 +152,7 @@ export default function POSPage() {
                             onClick={() => setSearchParams({})}
                             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                                 activeTab === 'terminal'
-                                    ? 'border-catarsis-gold text-catarsis-gold'
+                                    ? 'border-amber text-amber'
                                     : 'border-transparent text-muted-foreground hover:text-foreground'
                             }`}
                         >
@@ -163,7 +163,7 @@ export default function POSPage() {
                             onClick={() => setSearchParams({ tab: 'inventory' })}
                             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                                 activeTab === 'inventory'
-                                    ? 'border-catarsis-gold text-catarsis-gold'
+                                    ? 'border-amber text-amber'
                                     : 'border-transparent text-muted-foreground hover:text-foreground'
                             }`}
                         >
@@ -275,7 +275,7 @@ export default function POSPage() {
                     {selectedUser ? (
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
-                                <UserIcon className="h-4 w-4 text-catarsis-olive" />
+                                <UserIcon className="h-4 w-4 text-coral" />
                                 <span className="text-sm font-medium">{selectedUser.display_name}</span>
                             </div>
                             <Button variant="ghost" size="icon" onClick={() => setSelectedUser(null)} className="h-6 w-6">
@@ -439,7 +439,7 @@ function UserSearchDialog({ open, onOpenChange, onSelect }: any) {
                                 className="flex items-center gap-3 p-2 hover:bg-muted rounded-md cursor-pointer"
                                 onClick={() => onSelect(user)}
                             >
-                                <div className="h-8 w-8 rounded-full bg-catarsis-olive/10 flex items-center justify-center text-catarsis-olive text-xs font-bold">
+                                <div className="h-8 w-8 rounded-full bg-coral/10 flex items-center justify-center text-coral text-xs font-bold">
                                     {user.display_name.substring(0, 2).toUpperCase()}
                                 </div>
                                 <div>

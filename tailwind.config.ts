@@ -15,7 +15,9 @@ export default {
     extend: {
       fontFamily: {
         heading: ["var(--font-heading)", "serif"],
+        display: ["var(--font-heading)", "serif"],
         body: ["var(--font-body)", "sans-serif"],
+        sans: ["var(--font-body)", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -63,13 +65,14 @@ export default {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
-        catarsis: {
-          dark: "#322A1E",
-          olive: "#81836F",
-          cream: "#F6F6EA",
-          gold: "#A48550",
-          sand: "#D3C39F",
-        },
+        /* Sunrise Sunset Palette */
+        coral:     "#E36F4C",
+        amber:     "#F8B069",
+        wine:      "#7B0000",
+        chocolate: "#6E4528",
+        rose:      "#C67E6F",
+        cream:     "#EFE7D9",
+        blush:     "#FEF3F4",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
