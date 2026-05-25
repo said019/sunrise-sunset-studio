@@ -1,6 +1,49 @@
 import type { PoolClient } from 'pg';
 import { awardPaymentLoyaltyPoints } from './loyalty.js';
 
+/**
+ * Copies a plan's credit buckets into membership_credits for the given membership,
+ * then recomputes classes_remaining as the derived total (NULL if any bucket is unlimited).
+ * If the plan has no buckets, this is a no-op and the existing classes_remaining is untouched.
+ *
+ * Must be called inside the same transaction as the membership creation/activation.
+ */
+export async function copyPlanBucketsToMembership(
+    db: { query(text: string, params?: any[]): Promise<any> },
+    membershipId: string,
+    planId: string
+): Promise<void> {
+    // Copy plan buckets into membership_credits
+    const insertResult = await db.query(
+        `INSERT INTO membership_credits (membership_id, allowed_class_type_ids, remaining, sort_order)
+         SELECT $1, allowed_class_type_ids, credit_count, sort_order
+         FROM plan_credit_buckets WHERE plan_id = $2`,
+        [membershipId, planId]
+    );
+
+    // Only recompute classes_remaining if at least one bucket was inserted.
+    // If the plan has no buckets (legacy/uncovered plan), leave classes_remaining untouched.
+    const rowsInserted = insertResult.rowCount ?? 0;
+    if (rowsInserted > 0) {
+        await db.query(
+            `UPDATE memberships m SET classes_remaining =
+               CASE WHEN EXISTS (
+                        SELECT 1 FROM membership_credits c
+                        WHERE c.membership_id = m.id AND c.remaining IS NULL
+                    )
+                    THEN NULL
+                    ELSE (
+                        SELECT COALESCE(SUM(remaining), 0)
+                        FROM membership_credits c
+                        WHERE c.membership_id = m.id
+                    )
+               END
+             WHERE m.id = $1`,
+            [membershipId]
+        );
+    }
+}
+
 export interface CreateMembershipParams {
     userId: string;
     plan: { id: string; price: number | string; currency: string; class_limit: number | null; duration_days: number };
@@ -46,6 +89,11 @@ export async function createMembershipWithPayment(
         ]
     );
     const membership = membershipResult.rows[0];
+
+    // Copy plan credit buckets into membership_credits when activating
+    if (status === 'active') {
+        await copyPlanBucketsToMembership(client, membership.id, plan.id);
+    }
 
     if (normalizedPaymentMethod) {
         const payResult = await client.query(

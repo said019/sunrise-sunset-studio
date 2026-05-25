@@ -6,6 +6,7 @@ import { applyDiscountToOrder } from './discount-codes.js';
 import { sendMembershipActivatedEmail, sendOrderRejectedEmail } from '../services/email.js';
 import { sendMembershipActivatedNotice, sendWhatsAppMessage } from '../lib/whatsapp.js';
 import { awardPaymentLoyaltyPoints } from '../lib/loyalty.js';
+import { copyPlanBucketsToMembership } from '../lib/memberships.js';
 import { notifyMembershipRenewed } from '../lib/notifications.js';
 import { isGoogleDriveConfigured, uploadBufferToGoogleDrive } from '../lib/googleDrive.js';
 
@@ -605,6 +606,9 @@ router.post('/:id/approve', authenticate, requireRole('admin', 'super_admin'), a
                 `Orden ${order.order_number} aprobada - ${order.plan_name}`,
                 JSON.stringify({ membership_id: membershipId, start_date: start, end_date: end })
             ]);
+
+            // Copy plan credit buckets into membership_credits (no-op if plan has no buckets)
+            await copyPlanBucketsToMembership(client, membershipId, order.plan_id);
 
             await client.query('COMMIT');
 

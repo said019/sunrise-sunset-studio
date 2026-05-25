@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { sendMembershipActivatedEmail } from '../services/email.js';
 import { sendMembershipActivatedNotice } from '../lib/whatsapp.js';
 import { notifyMembershipRenewed } from '../lib/notifications.js';
-import { createMembershipWithPayment } from '../lib/memberships.js';
+import { createMembershipWithPayment, copyPlanBucketsToMembership } from '../lib/memberships.js';
 
 const router = Router();
 
@@ -443,6 +443,9 @@ router.post('/:id/activate', authenticate, requireRole('admin'), async (req: Req
                     [membership.user_id, welcomeBonus]
                 );
             }
+
+            // Copy plan credit buckets into membership_credits (no-op if plan has no buckets)
+            await copyPlanBucketsToMembership(client, membership.id, membership.plan_id);
 
             await client.query('COMMIT');
 

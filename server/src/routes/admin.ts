@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { query, queryOne } from '../config/database.js';
+import { query, queryOne, pool } from '../config/database.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { z } from 'zod';
 import { isGoogleDriveConfigured, uploadBufferToGoogleDrive } from '../lib/googleDrive.js';
+import { copyPlanBucketsToMembership } from '../lib/memberships.js';
 
 const router = Router();
 
@@ -347,6 +348,11 @@ router.post('/physical-sale', async (req: Request, res: Response) => {
             paymentMethod || 'cash',
             reference || null
         ]);
+
+        // Copy plan credit buckets into membership_credits (no-op if plan has no buckets)
+        if (membership) {
+            await copyPlanBucketsToMembership(pool, membership.id, planId);
+        }
 
         // Create order record for reporting
         const order = await queryOne(`

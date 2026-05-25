@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { pool, query, queryOne } from '../config/database.js';
+import { copyPlanBucketsToMembership } from '../lib/memberships.js';
 import { createCheckoutLink, ClipError } from '../lib/clip.js';
 import { sendMembershipActivatedEmail } from '../services/email.js';
 import { sendMembershipActivatedNotice } from '../lib/whatsapp.js';
@@ -394,6 +395,11 @@ export async function markPaymentCompleted(paymentId: string, webhookPayload: an
                     `UPDATE payments SET membership_id = $1 WHERE id = $2`,
                     [activatedMembershipId, paymentId]
                 );
+
+                // Copy plan credit buckets into membership_credits (no-op if plan has no buckets)
+                if (activatedMembershipId) {
+                    await copyPlanBucketsToMembership(client, activatedMembershipId, order.plan_id);
+                }
             }
         }
 
@@ -422,6 +428,10 @@ export async function markPaymentCompleted(paymentId: string, webhookPayload: an
                 );
                 if (updated.rows[0]) {
                     activatedMembershipId = updated.rows[0].id;
+                    // Copy plan credit buckets into membership_credits (no-op if plan has no buckets)
+                    if (activatedMembershipId && payment.membership_plan_id) {
+                        await copyPlanBucketsToMembership(client, activatedMembershipId, payment.membership_plan_id);
+                    }
                 }
             }
         }
