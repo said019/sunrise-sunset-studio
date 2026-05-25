@@ -5,6 +5,15 @@ import { z } from 'zod';
 import { sendBookingConfirmation, sendCancellationNotice, sendWhatsAppMessage } from '../lib/whatsapp.js';
 import { notifyAllUserDevices } from '../lib/apple-wallet.js';
 import { upsertGoogleLoyaltyObject } from '../lib/google-wallet.js';
+import {
+    loadMembershipBuckets,
+    recomputeClassesRemaining,
+    reserveBucketInMemory,
+    applyBucketDeductions,
+    refundBucket,
+    CreditBucketError,
+} from '../lib/membership-credits.js';
+import { selectBucketForClassType } from '../lib/credit-buckets.js';
 
 const router = Router();
 
@@ -243,19 +252,52 @@ router.post('/bulk-month', authenticate, requireRole('admin'), async (req: Reque
             return res.status(400).json({ error: 'No se encontró una membresía válida con suficientes créditos para las clases seleccionadas.' });
         }
 
-        if (membership.classes_remaining !== null && membership.classes_remaining < targetClasses.length) {
-            await client.query('ROLLBACK');
-            return res.status(400).json({
-                error: `Membresía insuficiente. Se requieren ${targetClasses.length} créditos, tiene ${membership.classes_remaining}.`
-            });
-        }
+        // Type-aware credit buckets are the source of truth when present.
+        // Legacy fallback: if the membership has NO buckets, keep the old
+        // generic classes_remaining behavior so old plans don't break.
+        const mcBuckets = await loadMembershipBuckets(client, membership.id);
+        const useBuckets = mcBuckets.length > 0;
 
-        // Deduct credits (only if bounded)
-        if (membership.classes_remaining !== null) {
-            await client.query(
-                `UPDATE memberships SET classes_remaining = classes_remaining - $1 WHERE id = $2`,
-                [targetClasses.length, membership.id]
-            );
+        // Map of bucketId -> credits to deduct (only bounded buckets), plus the
+        // bucket each booking consumed so cancel can refund the right one.
+        const bucketDeductions = new Map<string, number>();
+        const bookingBucketByClassId = new Map<string, string | null>();
+        const classTypeId = String(schedule.class_type_id);
+        const classTypeName = targetClasses[0]?.class_type_name ?? null;
+
+        if (useBuckets) {
+            // All classes in a bulk-month request share the schedule's class type.
+            // Reserve in-memory per class so we can't over-spend a bounded bucket,
+            // and reject the whole request (rollback) if any class has no bucket.
+            for (const cls of targetClasses) {
+                try {
+                    const { bucketId, unlimited } = reserveBucketInMemory(mcBuckets, classTypeId, classTypeName);
+                    bookingBucketByClassId.set(cls.id, bucketId);
+                    if (!unlimited) {
+                        bucketDeductions.set(bucketId, (bucketDeductions.get(bucketId) || 0) + 1);
+                    }
+                } catch (err) {
+                    if (err instanceof CreditBucketError) {
+                        await client.query('ROLLBACK');
+                        return res.status(400).json({ error: err.message });
+                    }
+                    throw err;
+                }
+            }
+        } else {
+            // Legacy: deduct generic credits up-front (bounded only).
+            if (membership.classes_remaining !== null && membership.classes_remaining < targetClasses.length) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    error: `Membresía insuficiente. Se requieren ${targetClasses.length} créditos, tiene ${membership.classes_remaining}.`
+                });
+            }
+            if (membership.classes_remaining !== null) {
+                await client.query(
+                    `UPDATE memberships SET classes_remaining = classes_remaining - $1 WHERE id = $2`,
+                    [targetClasses.length, membership.id]
+                );
+            }
         }
 
         // Create bookings. The DB trigger update_class_booking_count auto-increments
@@ -263,11 +305,18 @@ router.post('/bulk-month', authenticate, requireRole('admin'), async (req: Reque
         const bookingIds: string[] = [];
         for (const cls of targetClasses) {
             const { rows } = await client.query(
-                `INSERT INTO bookings (class_id, user_id, membership_id, status)
-                 VALUES ($1, $2, $3, 'confirmed') RETURNING id`,
-                [cls.id, userId, membership.id]
+                `INSERT INTO bookings (class_id, user_id, membership_id, status, credit_bucket_id)
+                 VALUES ($1, $2, $3, 'confirmed', $4) RETURNING id`,
+                [cls.id, userId, membership.id, bookingBucketByClassId.get(cls.id) ?? null]
             );
             bookingIds.push(rows[0].id);
+        }
+
+        if (useBuckets) {
+            // Flush net per-bucket deductions, then keep classes_remaining as the
+            // derived total (sum of bucket remainings, NULL if any unlimited).
+            await applyBucketDeductions(client, bucketDeductions);
+            await recomputeClassesRemaining(client, membership.id);
         }
 
         await client.query('COMMIT');
@@ -441,24 +490,91 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
             }
         }
 
-        // 4. Create Booking & Deduct Credit (Transaction ideally)
-        // We update membership first
-        const membership = await queryOne(`SELECT classes_remaining FROM memberships WHERE id = $1`, [membershipId]);
-
-        if (membership.classes_remaining !== null) {
-            await query(
-                `UPDATE memberships SET classes_remaining = classes_remaining - 1 WHERE id = $1`,
-                [membershipId]
-            );
+        // membershipId is guaranteed resolved by both branches above.
+        if (!membershipId) {
+            return res.status(403).json({ error: 'No tienes una membresía activa o créditos disponibles.' });
         }
+        const resolvedMembershipId: string = membershipId;
 
-        // Insert booking
-        const newBooking = await queryOne(
-            `INSERT INTO bookings (class_id, user_id, membership_id, status)
-         VALUES ($1, $2, $3, 'confirmed')
-         RETURNING *`,
-            [classId, userId, membershipId]
+        // Class type (for bucket selection + clear rejection messages).
+        const classTypeId = String(classDetails.class_type_id);
+        const classTypeRow = await queryOne<{ name: string }>(
+            `SELECT name FROM class_types WHERE id = $1`,
+            [classTypeId]
         );
+        const classTypeName = classTypeRow?.name ?? null;
+
+        // 4. Create Booking & Deduct Credit — atomic, locks the membership row so
+        // concurrent bookings can't over-spend a per-type bucket. Type-aware buckets
+        // (membership_credits) are the source of truth; legacy memberships with no
+        // buckets keep the generic classes_remaining behavior.
+        const bookingClient = await pool.connect();
+        let newBooking: any;
+        try {
+            await bookingClient.query('BEGIN');
+
+            const { rows: memLock } = await bookingClient.query(
+                `SELECT id, classes_remaining FROM memberships WHERE id = $1 FOR UPDATE`,
+                [resolvedMembershipId]
+            );
+            const lockedMembership = memLock[0];
+            if (!lockedMembership) {
+                await bookingClient.query('ROLLBACK');
+                return res.status(403).json({ error: 'Membresía inválida' });
+            }
+
+            const mcBuckets = await loadMembershipBuckets(bookingClient, resolvedMembershipId);
+            const useBuckets = mcBuckets.length > 0;
+
+            let creditBucketId: string | null = null;
+            let bucketIsUnlimited = false;
+            if (useBuckets) {
+                try {
+                    const { bucketId, unlimited } = reserveBucketInMemory(mcBuckets, classTypeId, classTypeName);
+                    creditBucketId = bucketId;
+                    bucketIsUnlimited = unlimited;
+                } catch (err) {
+                    if (err instanceof CreditBucketError) {
+                        await bookingClient.query('ROLLBACK');
+                        return res.status(400).json({ error: err.message });
+                    }
+                    throw err;
+                }
+            } else if (lockedMembership.classes_remaining !== null) {
+                // Legacy generic credit — re-check under lock to avoid going negative.
+                if (lockedMembership.classes_remaining <= 0) {
+                    await bookingClient.query('ROLLBACK');
+                    return res.status(403).json({ error: 'Sin créditos disponibles en esta membresía' });
+                }
+                await bookingClient.query(
+                    `UPDATE memberships SET classes_remaining = classes_remaining - 1 WHERE id = $1`,
+                    [resolvedMembershipId]
+                );
+            }
+
+            // Insert booking (records which bucket it consumed, if any).
+            const insertRes = await bookingClient.query(
+                `INSERT INTO bookings (class_id, user_id, membership_id, status, credit_bucket_id)
+                 VALUES ($1, $2, $3, 'confirmed', $4)
+                 RETURNING *`,
+                [classId, userId, resolvedMembershipId, creditBucketId]
+            );
+            newBooking = insertRes.rows[0];
+
+            if (useBuckets && creditBucketId) {
+                if (!bucketIsUnlimited) {
+                    await applyBucketDeductions(bookingClient, new Map([[creditBucketId, 1]]));
+                }
+                await recomputeClassesRemaining(bookingClient, resolvedMembershipId);
+            }
+
+            await bookingClient.query('COMMIT');
+        } catch (txErr) {
+            try { await bookingClient.query('ROLLBACK'); } catch { /* ignore */ }
+            throw txErr;
+        } finally {
+            bookingClient.release();
+        }
 
         // Note: trigger_update_booking_count updates the classes table count automatically.
 
@@ -633,23 +749,71 @@ router.post('/bulk', authenticate, async (req: Request, res: Response) => {
             return res.status(403).json({ error: 'No tienes una membresía activa con créditos disponibles para reservar.', skipped });
         }
 
-        // 3. Crear las reservas. El trigger update_class_booking_count sube current_bookings.
+        // 3. Asignar bucket de crédito por clase (paquetes con créditos por tipo).
+        //    Fuente de verdad = membership_credits. Si la membresía NO tiene buckets,
+        //    se conserva el comportamiento legacy (classes_remaining genérico).
+        const mcBuckets = await loadMembershipBuckets(client, membership.id);
+        const useBuckets = mcBuckets.length > 0;
+
+        const bucketDeductions = new Map<string, number>();
+        const bookingBucketByClassId = new Map<string, string | null>();
+
+        if (useBuckets) {
+            // Las clases pueden ser de TIPOS distintos. Reservamos en memoria, en
+            // orden, descontando el snapshot para no gastar dos veces un bucket con
+            // un solo crédito. Si CUALQUIER clase no tiene bucket elegible, se
+            // rechaza TODO (rollback) sin descuentos parciales.
+            for (const c of bookable) {
+                try {
+                    const { bucketId, unlimited } = reserveBucketInMemory(
+                        mcBuckets,
+                        String(c.class_type_id),
+                        c.class_type_name
+                    );
+                    bookingBucketByClassId.set(c.id, bucketId);
+                    if (!unlimited) {
+                        bucketDeductions.set(bucketId, (bucketDeductions.get(bucketId) || 0) + 1);
+                    }
+                } catch (err) {
+                    if (err instanceof CreditBucketError) {
+                        await client.query('ROLLBACK');
+                        return res.status(400).json({ error: err.message, skipped });
+                    }
+                    throw err;
+                }
+            }
+        }
+
+        // 4. Crear las reservas. El trigger update_class_booking_count sube current_bookings.
         const bookedIds: string[] = [];
         for (const c of bookable) {
             const { rows } = await client.query(
-                `INSERT INTO bookings (class_id, user_id, membership_id, status)
-                 VALUES ($1, $2, $3, 'confirmed') RETURNING id`,
-                [c.id, userId, membership.id]
+                `INSERT INTO bookings (class_id, user_id, membership_id, status, credit_bucket_id)
+                 VALUES ($1, $2, $3, 'confirmed', $4) RETURNING id`,
+                [c.id, userId, membership.id, bookingBucketByClassId.get(c.id) ?? null]
             );
             bookedIds.push(rows[0].id);
         }
 
-        // 4. Descontar créditos (solo si el plan es acotado)
-        if (membership.classes_remaining !== null) {
+        // 5. Descontar créditos.
+        let finalClassesRemaining: number | null;
+        if (useBuckets) {
+            await applyBucketDeductions(client, bucketDeductions);
+            await recomputeClassesRemaining(client, membership.id);
+            const { rows: cr } = await client.query(
+                `SELECT classes_remaining FROM memberships WHERE id = $1`,
+                [membership.id]
+            );
+            finalClassesRemaining = cr[0]?.classes_remaining ?? null;
+        } else if (membership.classes_remaining !== null) {
+            // Legacy: descuento genérico (solo si el plan es acotado).
             await client.query(
                 `UPDATE memberships SET classes_remaining = classes_remaining - $1 WHERE id = $2`,
                 [bookable.length, membership.id]
             );
+            finalClassesRemaining = membership.classes_remaining - bookable.length;
+        } else {
+            finalClassesRemaining = null;
         }
 
         await client.query('COMMIT');
@@ -691,7 +855,7 @@ router.post('/bulk', authenticate, async (req: Request, res: Response) => {
             success: true,
             bookedCount: bookedIds.length,
             skipped,
-            classesRemaining: membership.classes_remaining === null ? null : membership.classes_remaining - bookable.length,
+            classesRemaining: finalClassesRemaining,
             message: `Reservaste ${bookedIds.length} clase${bookedIds.length !== 1 ? 's' : ''} exitosamente.`,
         });
     } catch (error) {
@@ -984,7 +1148,13 @@ router.post('/:id/cancel', authenticate, async (req: Request, res: Response) => 
                     cancellationLimit = membership.cancellation_limit || 2;
                     if (cancellationsUsed < cancellationLimit) {
                         shouldRefund = true;
-                        if (membership.classes_remaining !== null) {
+                        if (booking.credit_bucket_id) {
+                            // Type-aware: refund the exact bucket this booking consumed,
+                            // then recompute the derived classes_remaining total.
+                            await refundBucket(pool, booking.credit_bucket_id);
+                            await recomputeClassesRemaining(pool, booking.membership_id);
+                        } else if (membership.classes_remaining !== null) {
+                            // Legacy booking (no bucket recorded) → generic refund.
                             await query(
                                 `UPDATE memberships SET classes_remaining = classes_remaining + 1 WHERE id = $1`,
                                 [booking.membership_id]
@@ -1030,10 +1200,16 @@ router.post('/:id/cancel', authenticate, async (req: Request, res: Response) => 
                                 [booking.membership_id]
                             );
                             // Also refund the credit
-                            if (membership.classes_remaining !== null) {
+                            if (booking.credit_bucket_id) {
+                                // Type-aware: refund the exact bucket this booking consumed,
+                                // then recompute the derived classes_remaining total.
+                                await refundBucket(pool, booking.credit_bucket_id);
+                                await recomputeClassesRemaining(pool, booking.membership_id);
+                            } else if (membership.classes_remaining !== null) {
+                                // Legacy booking (no bucket recorded) → generic refund.
                                 await query(
-                                    `UPDATE memberships 
-                                     SET classes_remaining = classes_remaining + 1 
+                                    `UPDATE memberships
+                                     SET classes_remaining = classes_remaining + 1
                                      WHERE id = $1`,
                                     [booking.membership_id]
                                 );
@@ -1094,13 +1270,37 @@ router.post('/:id/cancel', authenticate, async (req: Request, res: Response) => 
 
                 // El trigger update_class_booking_count ya sumó +1 al pasar de waitlist -> confirmed.
 
-                // Deduct credit from membership
+                // Deduct credit from membership (type-aware when the membership has buckets).
                 if (nextInWaitlist.membership_id) {
-                    await query(
-                        `UPDATE memberships SET classes_remaining = GREATEST(classes_remaining - 1, 0)
-                         WHERE id = $1 AND classes_remaining IS NOT NULL AND classes_remaining > 0`,
-                        [nextInWaitlist.membership_id]
-                    );
+                    const promoBuckets = await loadMembershipBuckets(pool, nextInWaitlist.membership_id);
+                    if (promoBuckets.length > 0) {
+                        // Pick the bucket for THIS class's type. If the promoted member
+                        // has no eligible bucket, still promote (don't reject) but record
+                        // no bucket — matches the lenient legacy behavior here.
+                        const promoTypeRow = await queryOne<{ class_type_id: string }>(
+                            `SELECT class_type_id FROM classes WHERE id = $1`,
+                            [booking.class_id]
+                        );
+                        const promoBucket = promoTypeRow
+                            ? selectBucketForClassType(promoBuckets, String(promoTypeRow.class_type_id))
+                            : null;
+                        if (promoBucket) {
+                            if (promoBucket.remaining !== null) {
+                                await applyBucketDeductions(pool, new Map([[promoBucket.id, 1]]));
+                            }
+                            await query(
+                                `UPDATE bookings SET credit_bucket_id = $1 WHERE id = $2`,
+                                [promoBucket.id, nextInWaitlist.id]
+                            );
+                        }
+                        await recomputeClassesRemaining(pool, nextInWaitlist.membership_id);
+                    } else {
+                        await query(
+                            `UPDATE memberships SET classes_remaining = GREATEST(classes_remaining - 1, 0)
+                             WHERE id = $1 AND classes_remaining IS NOT NULL AND classes_remaining > 0`,
+                            [nextInWaitlist.membership_id]
+                        );
+                    }
                 }
 
                 // Get user info for notification

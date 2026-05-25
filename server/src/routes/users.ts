@@ -10,6 +10,13 @@ import { sendClientWelcomeEmail } from '../services/email.js';
 import { sendClientWelcome } from '../lib/whatsapp.js';
 import { uploadBufferToGoogleDrive, driveImageUrl, isGoogleDriveConfigured } from '../lib/googleDrive.js';
 import { createMembershipWithPayment } from '../lib/memberships.js';
+import {
+    loadMembershipBuckets,
+    recomputeClassesRemaining,
+    reserveBucketInMemory,
+    applyBucketDeductions,
+    CreditBucketError,
+} from '../lib/membership-credits.js';
 
 const router = Router();
 
@@ -248,8 +255,37 @@ router.post('/prospect-booking', requireRole('admin'), async (req: Request, res:
                 processedBy: req.user?.userId || null,
             });
 
-            // Descontar crédito (class_limit = 1 → queda 0)
-            if (membership.classes_remaining !== null) {
+            // Descontar crédito. Si el plan muestra tiene buckets por tipo,
+            // se descuenta el bucket correcto y se registra en la reserva para
+            // que una cancelación reembolse el bucket exacto. Si no, legacy.
+            const mcBuckets = await loadMembershipBuckets(client, membership.id);
+            let creditBucketId: string | null = null;
+            if (mcBuckets.length > 0) {
+                const ctRow = await client.query(
+                    `SELECT name FROM class_types WHERE id = $1`,
+                    [classDetails.class_type_id]
+                );
+                const ctName = ctRow.rows[0]?.name ?? null;
+                try {
+                    const { bucketId, unlimited } = reserveBucketInMemory(
+                        mcBuckets,
+                        String(classDetails.class_type_id),
+                        ctName
+                    );
+                    creditBucketId = bucketId;
+                    if (!unlimited) {
+                        await applyBucketDeductions(client, new Map([[bucketId, 1]]));
+                    }
+                    await recomputeClassesRemaining(client, membership.id);
+                } catch (err) {
+                    if (err instanceof CreditBucketError) {
+                        await client.query('ROLLBACK');
+                        return res.status(400).json({ error: err.message });
+                    }
+                    throw err;
+                }
+            } else if (membership.classes_remaining !== null) {
+                // Legacy (class_limit = 1 → queda 0)
                 await client.query(
                     `UPDATE memberships SET classes_remaining = classes_remaining - 1 WHERE id = $1`,
                     [membership.id]
@@ -258,10 +294,10 @@ router.post('/prospect-booking', requireRole('admin'), async (req: Request, res:
 
             // Reserva normal
             const booking = (await client.query(
-                `INSERT INTO bookings (class_id, user_id, membership_id, status)
-                 VALUES ($1, $2, $3, 'confirmed')
+                `INSERT INTO bookings (class_id, user_id, membership_id, status, credit_bucket_id)
+                 VALUES ($1, $2, $3, 'confirmed', $4)
                  RETURNING *`,
-                [classId, prospect.id, membership.id]
+                [classId, prospect.id, membership.id, creditBucketId]
             )).rows[0];
 
             await client.query('COMMIT');

@@ -1,4 +1,5 @@
-import { query, queryOne } from '../config/database.js';
+import { query, queryOne, pool } from '../config/database.js';
+import { refundBucket, recomputeClassesRemaining } from './membership-credits.js';
 
 /**
  * Cancel a class and all its active bookings, refunding membership credits.
@@ -47,14 +48,22 @@ export async function cancelClassWithRefunds(
         );
         cancelledBookings++;
 
-        // Refund credit if booking was confirmed and had a membership
+        // Refund credit if booking was confirmed and had a membership.
         if (booking.status === 'confirmed' && booking.membership_id) {
-            await query(
-                `UPDATE memberships
-                 SET classes_remaining = classes_remaining + 1
-                 WHERE id = $1 AND classes_remaining IS NOT NULL`,
-                [booking.membership_id]
-            );
+            if (booking.credit_bucket_id) {
+                // Type-aware: refund the exact bucket this booking consumed,
+                // then recompute the derived classes_remaining total.
+                await refundBucket(pool, booking.credit_bucket_id);
+                await recomputeClassesRemaining(pool, booking.membership_id);
+            } else {
+                // Legacy booking (no bucket recorded) → generic refund.
+                await query(
+                    `UPDATE memberships
+                     SET classes_remaining = classes_remaining + 1
+                     WHERE id = $1 AND classes_remaining IS NOT NULL`,
+                    [booking.membership_id]
+                );
+            }
             refundedCredits++;
         }
     }
