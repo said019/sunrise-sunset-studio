@@ -303,12 +303,27 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
         // Detect same-day trial → inscription discount.
         // Applies when the client is enrolling (Inscripción) and already has a
         // Clase Muestra membership created today in Mexico City time.
+        // KNOWN LIMITATION: trial/inscription plans are identified by name (no
+        // dedicated schema flag), so renaming these plans would silently disable
+        // this discount. Kept name-based intentionally to avoid a schema change.
         const INSCRIPTION_PLAN_NAME = 'Inscripción';
         const TRIAL_PLAN_NAME = 'Clase Muestra';
-        const TRIAL_BASE_PRICE = 300; // seeded price of Clase Muestra
+        const TRIAL_FALLBACK_PRICE = 300; // used only if the live plan price can't be read
 
         let tookTrialToday = false;
+        // Read the live trial price from the DB so the discount tracks the real
+        // Clase Muestra price instead of a hardcoded constant. Falls back to 300.
+        let trialPrice = TRIAL_FALLBACK_PRICE;
         if (plan.name === INSCRIPTION_PLAN_NAME) {
+            const trialPlan = await queryOne<{ price: number | string }>(
+                `SELECT price FROM plans WHERE name = $1 AND is_active = true LIMIT 1`,
+                [TRIAL_PLAN_NAME]
+            );
+            if (trialPlan && trialPlan.price !== null && trialPlan.price !== undefined) {
+                const parsed = Number(trialPlan.price);
+                if (!Number.isNaN(parsed)) trialPrice = parsed;
+            }
+
             const trialToday = await queryOne<{ exists: boolean }>(
                 `SELECT EXISTS (
                     SELECT 1
@@ -328,7 +343,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
         const basePrice = parseFloat(plan.price);
         // Apply same-day trial discount (server-side; independent of promo codes)
         const subtotal = plan.name === INSCRIPTION_PLAN_NAME
-            ? inscriptionAmount({ basePrice, trialPrice: TRIAL_BASE_PRICE, tookTrialToday })
+            ? inscriptionAmount({ basePrice, trialPrice, tookTrialToday })
             : basePrice;
         const taxAmount = 0;
         const appliedDiscount = discount_code_id && discount_amount ? Math.min(discount_amount, subtotal) : 0;

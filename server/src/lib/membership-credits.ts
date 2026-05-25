@@ -1,8 +1,45 @@
-import { selectBucketForClassType, CreditBucket } from './credit-buckets.js';
+import { selectBucketForClassType, CreditBucket, bucketsCoverAllClassTypes } from './credit-buckets.js';
 
 /** Minimal DB interface satisfied by both `pool` and a `PoolClient` (a tx client). */
 export interface Queryable {
     query(text: string, params?: any[]): Promise<{ rows: any[]; rowCount?: number | null }>;
+}
+
+/**
+ * Type-aware membership auto-select (FIX 1).
+ *
+ * Given candidate active/non-expired memberships ALREADY ordered by the caller's
+ * preference (e.g. bounded-before-unlimited, soonest end_date), pick the first one
+ * whose credit buckets can cover ALL the distinct class types being booked.
+ *
+ * - Loads each candidate's buckets in the caller's preference order and returns the
+ *   first that covers every requested type (single-type requests just pass one id).
+ * - Legacy fallback: any candidate that has NO buckets is treated as covering
+ *   (its generic classes_remaining was already validated by the caller's SQL), so
+ *   old plans without buckets keep working. Among ties we still honor the incoming
+ *   order, so the legacy/no-buckets candidate is only chosen if no earlier candidate
+ *   with buckets covers the types.
+ * - Returns null only when NO candidate can cover the types (caller keeps rejecting).
+ *
+ * `db` is any Queryable (pool or tx client) — pass the SAME client used to fetch
+ * (and lock) the candidates so the bucket reads are consistent with the lock.
+ */
+export async function pickMembershipForClassTypes(
+    db: Queryable,
+    candidates: Array<{ id: string;[k: string]: any }>,
+    classTypeIds: string[]
+): Promise<{ id: string;[k: string]: any } | null> {
+    if (candidates.length === 0) return null;
+    // Fast path: a single candidate is whatever the caller already validated.
+    if (candidates.length === 1) return candidates[0];
+
+    for (const candidate of candidates) {
+        const buckets = await loadMembershipBuckets(db, candidate.id);
+        // No buckets → legacy membership; caller's SQL already vetted its credits.
+        if (buckets.length === 0) return candidate;
+        if (bucketsCoverAllClassTypes(buckets, classTypeIds)) return candidate;
+    }
+    return null;
 }
 
 /**

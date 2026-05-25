@@ -13,11 +13,16 @@ export async function copyPlanBucketsToMembership(
     membershipId: string,
     planId: string
 ): Promise<void> {
-    // Copy plan buckets into membership_credits
+    // Copy plan buckets into membership_credits.
+    // Idempotency guard: if this membership already has credit rows, the INSERT
+    // is a no-op (the NOT EXISTS makes the SELECT return zero rows). Prevents
+    // double buckets if this is ever called twice for the same membership.
     const insertResult = await db.query(
         `INSERT INTO membership_credits (membership_id, allowed_class_type_ids, remaining, sort_order)
          SELECT $1, allowed_class_type_ids, credit_count, sort_order
-         FROM plan_credit_buckets WHERE plan_id = $2`,
+         FROM plan_credit_buckets
+         WHERE plan_id = $2
+           AND NOT EXISTS (SELECT 1 FROM membership_credits WHERE membership_id = $1)`,
         [membershipId, planId]
     );
 

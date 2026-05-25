@@ -11,6 +11,7 @@ import {
     reserveBucketInMemory,
     applyBucketDeductions,
     refundBucket,
+    pickMembershipForClassTypes,
     CreditBucketError,
 } from '../lib/membership-credits.js';
 import { selectBucketForClassType } from '../lib/credit-buckets.js';
@@ -234,6 +235,10 @@ router.post('/bulk-month', authenticate, requireRole('admin'), async (req: Reque
             );
             membership = rows[0] || null;
         } else {
+            // Type-aware (FIX 1): fetch & lock all candidate active memberships in the
+            // existing priority order (bounded before unlimited, then soonest end_date),
+            // then prefer one whose buckets cover this schedule's class type. Legacy
+            // memberships (no buckets) keep the generic classes_remaining behavior.
             const { rows } = await client.query(
                 `SELECT * FROM memberships
                  WHERE user_id = $1 AND status = 'active'
@@ -241,11 +246,10 @@ router.post('/bulk-month', authenticate, requireRole('admin'), async (req: Reque
                  ORDER BY
                    CASE WHEN classes_remaining IS NULL THEN 1 ELSE 0 END ASC,
                    end_date ASC NULLS LAST
-                 LIMIT 1
                  FOR UPDATE`,
                 [userId, targetClasses.length]
             );
-            membership = rows[0] || null;
+            membership = await pickMembershipForClassTypes(client, rows, [String(schedule.class_type_id)]);
         }
 
         if (!membership) {
@@ -461,15 +465,18 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
 
         if (!membershipId) {
             // Auto-select: Active, has remaining classes (or null=unlimited), not expired
-            // We use the Mexico City date for comparison to avoid timezone shifts
+            // We use the Mexico City date for comparison to avoid timezone shifts.
+            // Type-aware (FIX 1): consider ALL eligible memberships in priority order
+            // and prefer one whose credit buckets actually cover THIS class type, so a
+            // user with multiple memberships isn't wrongly rejected when one membership's
+            // bucket for the needed type is exhausted but another covers it.
             const activeMemberships = await query(
-                `SELECT * FROM memberships 
-                 WHERE user_id = $1 
-                 AND status = 'active' 
+                `SELECT * FROM memberships
+                 WHERE user_id = $1
+                 AND status = 'active'
                  AND (end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'America/Mexico_City')::date OR end_date IS NULL)
                  AND (classes_remaining > 0 OR classes_remaining IS NULL)
-                 ORDER BY end_date ASC 
-                 LIMIT 1`,
+                 ORDER BY end_date ASC`,
                 [userId]
             );
 
@@ -477,7 +484,14 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
                 console.log('No active membership found for user:', userId);
                 return res.status(403).json({ error: 'No tienes una membresía activa o créditos disponibles.' });
             }
-            membershipId = activeMemberships[0].id;
+
+            const autoSelectTypeId = String(classDetails.class_type_id);
+            const chosen = await pickMembershipForClassTypes(pool, activeMemberships, [autoSelectTypeId]);
+            if (!chosen) {
+                // Every active membership exists but none has an eligible bucket for this type.
+                return res.status(403).json({ error: 'No tienes una membresía activa o créditos disponibles.' });
+            }
+            membershipId = chosen.id;
         } else {
             // Validate provided membership
             const membership = await queryOne(
@@ -710,7 +724,12 @@ router.post('/bulk', authenticate, async (req: Request, res: Response) => {
 
         // 2. Seleccionar membresía: activa, vigente, con créditos suficientes
         //    para TODAS las clases reservables. Excluye Inscripción (class_limit=0).
+        //    Type-aware (FIX 1): las clases pueden ser de distintos TIPOS. Traemos y
+        //    bloqueamos todas las candidatas en el orden de preferencia existente y
+        //    preferimos una cuyos buckets cubran TODOS los tipos solicitados. Las
+        //    membresías legacy (sin buckets) conservan el comportamiento genérico.
         const needed = bookable.length;
+        const distinctTypeIds = Array.from(new Set(bookable.map((c) => String(c.class_type_id))));
         const { rows: memRows } = await client.query(
             `SELECT m.* FROM memberships m
              JOIN plans p ON p.id = m.plan_id
@@ -722,15 +741,52 @@ router.post('/bulk', authenticate, async (req: Request, res: Response) => {
              ORDER BY
                CASE WHEN m.classes_remaining IS NULL THEN 1 ELSE 0 END ASC,
                m.end_date ASC NULLS LAST
-             LIMIT 1
              FOR UPDATE OF m`,
             [userId, needed]
         );
-        const membership = memRows[0];
+        const membership = await pickMembershipForClassTypes(client, memRows, distinctTypeIds);
 
         if (!membership) {
             await client.query('ROLLBACK');
-            // ¿Tiene alguna membresía válida pero sin créditos suficientes?
+
+            // FIX 2: if a candidate membership uses type-aware buckets, the rejection is
+            // per-type (a specific class type is exhausted / not included), not a generic
+            // total shortfall. Surface the type-specific CreditBucketError message instead
+            // of the generic "necesitas N y tienes X" diagnostic, which would contradict
+            // the per-type bucket logic (the generic total can be >= needed yet a type bucket
+            // is empty). Pick the best-covered candidate to produce the clearest message.
+            let bucketRejection: string | null = null;
+            let bestCovered = -1;
+            for (const cand of memRows) {
+                const candBuckets = await loadMembershipBuckets(client, cand.id);
+                if (candBuckets.length === 0) continue; // legacy candidate, no per-type info
+                // Count how many distinct requested types this candidate covers, and capture
+                // the first failing type's message from the most-covering candidate.
+                let covered = 0;
+                let firstError: string | null = null;
+                for (const typeId of distinctTypeIds) {
+                    const cls = bookable.find((c) => String(c.class_type_id) === typeId);
+                    try {
+                        reserveBucketInMemory(candBuckets, typeId, cls?.class_type_name);
+                        covered++;
+                    } catch (err) {
+                        if (err instanceof CreditBucketError) {
+                            if (!firstError) firstError = err.message;
+                        } else {
+                            throw err;
+                        }
+                    }
+                }
+                if (covered > bestCovered) {
+                    bestCovered = covered;
+                    bucketRejection = firstError;
+                }
+            }
+            if (bucketRejection) {
+                return res.status(400).json({ error: bucketRejection, skipped });
+            }
+
+            // Legacy (no buckets): ¿tiene alguna membresía válida pero sin créditos suficientes?
             const { rows: anyMem } = await client.query(
                 `SELECT m.classes_remaining FROM memberships m
                  JOIN plans p ON p.id = m.plan_id
@@ -1131,120 +1187,140 @@ router.post('/:id/cancel', authenticate, async (req: Request, res: Response) => 
         let cancellationsUsed = 0;
         let cancellationLimit = 2; // Default
 
-        if (isAdmin) {
-            // Admin cancela: respeta las MISMAS reglas que el cliente:
-            //   1) Debe estar dentro de la ventana configurable para reembolsar.
-            //   2) cancellations_used debe ser < cancellation_limit.
-            // Siempre consume una cancelacion (incrementa cancellations_used)
-            // mientras este dentro de la ventana, para reflejar el uso real.
-            refundReason = 'Cancelada por admin';
-            if (!isWithinWindow) {
-                shouldRefund = false;
-                refundReason = `Cancelada por admin — fuera de tiempo (menos de ${CANCELLATION_WINDOW_HOURS}h)`;
-            } else if (booking.membership_id) {
-                const membership = await queryOne<{
-                    cancellations_used: number | null;
-                    cancellation_limit: number | null;
-                    classes_remaining: number | null;
-                }>(
-                    `SELECT cancellations_used, cancellation_limit, classes_remaining
-                     FROM memberships WHERE id = $1`,
-                    [booking.membership_id]
-                );
-                if (membership) {
-                    cancellationsUsed = membership.cancellations_used || 0;
-                    cancellationLimit = membership.cancellation_limit || 2;
-                    if (cancellationsUsed < cancellationLimit) {
-                        shouldRefund = true;
-                        if (booking.credit_bucket_id) {
-                            // Type-aware: refund the exact bucket this booking consumed,
-                            // then recompute the derived classes_remaining total.
-                            await refundBucket(pool, booking.credit_bucket_id);
-                            await recomputeClassesRemaining(pool, booking.membership_id);
-                        } else if (membership.classes_remaining !== null) {
-                            // Legacy booking (no bucket recorded) → generic refund.
-                            await query(
-                                `UPDATE memberships SET classes_remaining = classes_remaining + 1 WHERE id = $1`,
-                                [booking.membership_id]
-                            );
-                        }
-                    } else {
-                        shouldRefund = false;
-                        refundReason = `Cancelada por admin — límite de cancelaciones excedido (${cancellationsUsed}/${cancellationLimit})`;
-                    }
-                    await query(
-                        `UPDATE memberships SET cancellations_used = cancellations_used + 1 WHERE id = $1`,
+        // FIX 3: the core cancel mutation — refund (bucket or legacy generic),
+        // cancellations_used increment, and the booking-status UPDATE — must be
+        // atomic so a mid-way failure can't leave a refunded credit without a
+        // cancelled booking (or vice versa). Wrap them in one transaction and pass
+        // the tx client (`cancelClient`) to refundBucket/recomputeClassesRemaining
+        // (they accept any { query }). Membership reads are done inside the tx too.
+        // NOTE: waitlist promotion below is intentionally NOT part of this tx — it has
+        // its own error isolation and must not roll back a successful cancel (see concern).
+        const cancelClient = await pool.connect();
+        let cancelled: any;
+        try {
+            await cancelClient.query('BEGIN');
+
+            if (isAdmin) {
+                // Admin cancela: respeta las MISMAS reglas que el cliente:
+                //   1) Debe estar dentro de la ventana configurable para reembolsar.
+                //   2) cancellations_used debe ser < cancellation_limit.
+                // Siempre consume una cancelacion (incrementa cancellations_used)
+                // mientras este dentro de la ventana, para reflejar el uso real.
+                refundReason = 'Cancelada por admin';
+                if (!isWithinWindow) {
+                    shouldRefund = false;
+                    refundReason = `Cancelada por admin — fuera de tiempo (menos de ${CANCELLATION_WINDOW_HOURS}h)`;
+                } else if (booking.membership_id) {
+                    const { rows: memRows } = await cancelClient.query(
+                        `SELECT cancellations_used, cancellation_limit, classes_remaining
+                         FROM memberships WHERE id = $1`,
                         [booking.membership_id]
                     );
+                    const membership = memRows[0];
+                    if (membership) {
+                        cancellationsUsed = membership.cancellations_used || 0;
+                        cancellationLimit = membership.cancellation_limit || 2;
+                        if (cancellationsUsed < cancellationLimit) {
+                            shouldRefund = true;
+                            if (booking.credit_bucket_id) {
+                                // Type-aware: refund the exact bucket this booking consumed,
+                                // then recompute the derived classes_remaining total.
+                                await refundBucket(cancelClient, booking.credit_bucket_id);
+                                await recomputeClassesRemaining(cancelClient, booking.membership_id);
+                            } else if (membership.classes_remaining !== null) {
+                                // Legacy booking (no bucket recorded) → generic refund.
+                                await cancelClient.query(
+                                    `UPDATE memberships SET classes_remaining = classes_remaining + 1 WHERE id = $1`,
+                                    [booking.membership_id]
+                                );
+                            }
+                        } else {
+                            shouldRefund = false;
+                            refundReason = `Cancelada por admin — límite de cancelaciones excedido (${cancellationsUsed}/${cancellationLimit})`;
+                        }
+                        await cancelClient.query(
+                            `UPDATE memberships SET cancellations_used = cancellations_used + 1 WHERE id = $1`,
+                            [booking.membership_id]
+                        );
+                    } else {
+                        shouldRefund = true;
+                    }
                 } else {
                     shouldRefund = true;
                 }
             } else {
-                shouldRefund = true;
-            }
-        } else {
-            // Non-admin: already rejected above if outside window, so we are within window here.
-            // Check cancellation limits if it's a membership booking
-            if (booking.membership_id) {
-                const membership = await queryOne(
-                    `SELECT id, cancellations_used, cancellation_limit, classes_remaining
-                     FROM memberships WHERE id = $1`,
-                    [booking.membership_id]
-                );
+                // Non-admin: already rejected above if outside window, so we are within window here.
+                // Check cancellation limits if it's a membership booking
+                if (booking.membership_id) {
+                    const { rows: memRows } = await cancelClient.query(
+                        `SELECT id, cancellations_used, cancellation_limit, classes_remaining
+                         FROM memberships WHERE id = $1`,
+                        [booking.membership_id]
+                    );
+                    const membership = memRows[0];
 
-                if (membership) {
-                    cancellationsUsed = membership.cancellations_used || 0;
-                    cancellationLimit = membership.cancellation_limit || 2;
+                    if (membership) {
+                        cancellationsUsed = membership.cancellations_used || 0;
+                        cancellationLimit = membership.cancellation_limit || 2;
 
-                    if (cancellationsUsed < cancellationLimit) {
-                        shouldRefund = true;
-                        // Increment cancellation usage
-                        await query(
-                            `UPDATE memberships
-                             SET cancellations_used = cancellations_used + 1
-                             WHERE id = $1`,
-                            [booking.membership_id]
-                        );
-                        // Also refund the credit
-                        if (booking.credit_bucket_id) {
-                            // Type-aware: refund the exact bucket this booking consumed,
-                            // then recompute the derived classes_remaining total.
-                            await refundBucket(pool, booking.credit_bucket_id);
-                            await recomputeClassesRemaining(pool, booking.membership_id);
-                        } else if (membership.classes_remaining !== null) {
-                            // Legacy booking (no bucket recorded) → generic refund.
-                            await query(
+                        if (cancellationsUsed < cancellationLimit) {
+                            shouldRefund = true;
+                            // Increment cancellation usage
+                            await cancelClient.query(
                                 `UPDATE memberships
-                                 SET classes_remaining = classes_remaining + 1
+                                 SET cancellations_used = cancellations_used + 1
                                  WHERE id = $1`,
                                 [booking.membership_id]
                             );
+                            // Also refund the credit
+                            if (booking.credit_bucket_id) {
+                                // Type-aware: refund the exact bucket this booking consumed,
+                                // then recompute the derived classes_remaining total.
+                                await refundBucket(cancelClient, booking.credit_bucket_id);
+                                await recomputeClassesRemaining(cancelClient, booking.membership_id);
+                            } else if (membership.classes_remaining !== null) {
+                                // Legacy booking (no bucket recorded) → generic refund.
+                                await cancelClient.query(
+                                    `UPDATE memberships
+                                     SET classes_remaining = classes_remaining + 1
+                                     WHERE id = $1`,
+                                    [booking.membership_id]
+                                );
+                            }
+                        } else {
+                            shouldRefund = false;
+                            refundReason = `Límite de cancelaciones alcanzado (${cancellationLimit})`;
                         }
                     } else {
-                        shouldRefund = false;
-                        refundReason = `Límite de cancelaciones alcanzado (${cancellationLimit})`;
+                        // Should not happen if constraint exists
+                        shouldRefund = true;
                     }
                 } else {
-                    // Should not happen if constraint exists
+                    // No membership? Maybe pay-as-you-go. Refund enabled.
                     shouldRefund = true;
                 }
-            } else {
-                // No membership? Maybe pay-as-you-go. Refund enabled.
-                shouldRefund = true;
             }
-        }
 
-        const cancelled = await queryOne(
-            `UPDATE bookings
-             SET status = 'cancelled', cancelled_at = NOW(),
-                 cancellation_reason = $1, cancelled_by = $3
-             WHERE id = $2 RETURNING *`,
-            [
-                isAdmin ? 'Cancelada por admin' : (refundReason || 'Cancelada por usuario'),
-                bookingId,
-                userId || null,
-            ]
-        );
+            const { rows: cancelledRows } = await cancelClient.query(
+                `UPDATE bookings
+                 SET status = 'cancelled', cancelled_at = NOW(),
+                     cancellation_reason = $1, cancelled_by = $3
+                 WHERE id = $2 RETURNING *`,
+                [
+                    isAdmin ? 'Cancelada por admin' : (refundReason || 'Cancelada por usuario'),
+                    bookingId,
+                    userId || null,
+                ]
+            );
+            cancelled = cancelledRows[0];
+
+            await cancelClient.query('COMMIT');
+        } catch (txErr) {
+            try { await cancelClient.query('ROLLBACK'); } catch { /* ignore */ }
+            throw txErr;
+        } finally {
+            cancelClient.release();
+        }
 
         // classes.current_bookings lo baja el trigger update_class_booking_count en el UPDATE de status de arriba.
 

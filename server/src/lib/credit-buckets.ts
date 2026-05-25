@@ -30,3 +30,35 @@ export function selectBucketForClassType(
   });
   return eligible[0];
 }
+
+/**
+ * Does this set of buckets have at least one eligible bucket for `classTypeId`?
+ * "Eligible" = allows the type AND has availability (remaining > 0 or null).
+ * Thin wrapper over selectBucketForClassType used for type-aware membership
+ * auto-selection (FIX 1). Does NOT mutate buckets.
+ */
+export function bucketsCoverClassType(
+  buckets: CreditBucket[],
+  classTypeId: string
+): boolean {
+  return selectBucketForClassType(buckets, classTypeId) !== null;
+}
+
+/**
+ * Can this set of buckets cover EVERY distinct class type in `classTypeIds`?
+ * Used to prefer a membership that covers all types in a multi-class request
+ * (the `bulk` path). This is a coarse per-type eligibility check (each distinct
+ * type must have some eligible bucket), NOT a full quantity simulation — the
+ * per-class reservation (reserveBucketInMemory) still enforces exact quantities
+ * afterward. An empty list returns true (vacuously covered). Does NOT mutate.
+ */
+export function bucketsCoverAllClassTypes(
+  buckets: CreditBucket[],
+  classTypeIds: string[]
+): boolean {
+  const distinct = new Set(classTypeIds.map((id) => String(id)));
+  for (const typeId of distinct) {
+    if (!bucketsCoverClassType(buckets, typeId)) return false;
+  }
+  return true;
+}
