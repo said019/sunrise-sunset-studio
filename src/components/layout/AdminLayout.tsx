@@ -434,11 +434,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                         <Link to="/admin/dashboard" className="flex items-center space-x-2.5">
                             <img
                                 src="/catarsis.jpg"
-                                alt="Catarsis Studio"
+                                alt="Sunrise Sunset"
                                 className="h-9 w-9 rounded-xl object-cover ring-2 ring-catarsis-gold/20"
                             />
                             <div className="flex flex-col">
-                                <span className="font-heading text-lg font-bold text-catarsis-gold leading-none">Catarsis</span>
+                                <span className="font-heading text-lg font-bold text-catarsis-gold leading-none">Sunrise Sunset</span>
                                 <span className="font-body text-[10px] uppercase tracking-[2px] text-muted-foreground">Admin</span>
                             </div>
                         </Link>
@@ -480,11 +480,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     <Link to="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center space-x-2">
                         <img
                             src="/catarsis.jpg"
-                            alt="Catarsis Studio"
+                            alt="Sunrise Sunset"
                             className="h-8 w-8 rounded-full object-cover"
                         />
                         <div className="flex flex-col">
-                            <span className="font-heading text-lg font-bold text-catarsis-olive leading-none">Catarsis</span>
+                            <span className="font-heading text-lg font-bold text-catarsis-olive leading-none">Sunrise Sunset</span>
                             <span className="font-heading text-xs text-muted-foreground">Admin</span>
                         </div>
                     </Link>

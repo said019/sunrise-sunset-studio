@@ -1,5 +1,5 @@
 /**
- * Unified Notifications for Catarsis Studio
+ * Unified Notifications for Sunrise Sunset
  * 
  * Orchestrates push notifications for both Apple Wallet and Google Wallet
  */

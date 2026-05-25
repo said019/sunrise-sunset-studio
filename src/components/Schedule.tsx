@@ -207,7 +207,7 @@ export default function Schedule() {
           {/* Title */}
           <div className="text-center mb-10">
             <p className="text-[10px] sm:text-xs uppercase tracking-[4px] text-catarsis-gold/60 font-semibold mb-2 font-body">
-              Catarsis Studio
+              Sunrise Sunset
             </p>
             <h2 className="text-3xl sm:text-4xl font-heading font-bold text-white tracking-tight">
               Horario de clases
@@ -514,7 +514,7 @@ export default function Schedule() {
         {/* CTA */}
         <div className="mt-12 p-8 rounded-2xl bg-gradient-to-br from-catarsis-cream to-catarsis-sand/20 border border-catarsis-sand/30 text-center">
           <p className="font-heading text-xl text-catarsis-dark mb-1">
-            ¿Primera vez en Catarsis?
+            ¿Primera vez en Sunrise Sunset?
           </p>
           <p className="text-sm font-body text-catarsis-olive mb-5">
             Prueba una clase sin compromiso

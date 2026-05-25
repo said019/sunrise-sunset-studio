@@ -164,7 +164,7 @@ router.get('/download/apple/:token', async (req: Request, res: Response) => {
         
         res.set({
             'Content-Type': 'application/vnd.apple.pkpass',
-            'Content-Disposition': `attachment; filename="catarsis-pass.pkpass"`,
+            'Content-Disposition': `attachment; filename="sunrise-sunset-pass.pkpass"`,
         });
         
         res.send(passBuffer);
@@ -261,7 +261,7 @@ router.get('/apple/download/:membershipId', authenticate, async (req: Request, r
 
         res.set({
             'Content-Type': 'application/vnd.apple.pkpass',
-            'Content-Disposition': `attachment; filename="catarsis-${membershipId.substring(0, 8)}.pkpass"`,
+            'Content-Disposition': `attachment; filename="sunrise-sunset-${membershipId.substring(0, 8)}.pkpass"`,
         });
 
         res.send(passBuffer);
@@ -790,7 +790,7 @@ router.post('/test-push', async (req: Request, res: Response) => {
 
         // Get membership data for the alert message
         const m = await getMembershipData(membershipId);
-        const alertTitle = '✨ Catarsis Studio';
+        const alertTitle = '✨ Sunrise Sunset';
         const classesText = m?.classes_remaining === null ? 'Ilimitadas' : `${m?.classes_remaining ?? 0} clases`;
         const alertBody = m ? `${m.user_name}, tu pase se actualizó. ${m.loyalty_points} pts | ${classesText}` : 'Tu pase se actualizó';
 

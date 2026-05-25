@@ -134,7 +134,7 @@ export default function ClientDashboard() {
                 ¡Hola, {user?.display_name?.split(' ')[0] || 'bienvenido'}! 👋
               </h1>
               <p className="text-catarsis-sand/60 font-body text-sm mt-1">
-                Bienvenido de vuelta a Catarsis Studio
+                Bienvenido de vuelta a Sunrise Sunset
               </p>
             </div>
           </div>

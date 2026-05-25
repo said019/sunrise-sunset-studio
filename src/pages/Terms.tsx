@@ -102,10 +102,10 @@ export default function Terms() {
                                 Contáctanos para cualquier pregunta sobre nuestros términos.
                             </p>
                             <a
-                                href="mailto:legal@balance.studio"
+                                href="mailto:legal@sunrisesunset.mx"
                                 className="text-xs text-primary hover:underline"
                             >
-                                legal@balance.studio
+                                legal@sunrisesunset.mx
                             </a>
                         </div>
                     </aside>
@@ -125,7 +125,7 @@ export default function Terms() {
                             <section id="intro" className="space-y-4">
                                 <h2 className="font-heading text-2xl font-semibold">Introducción</h2>
                                 <p className="text-muted-foreground leading-relaxed">
-                                    Bienvenido a Catarsis Studio. Al acceder a nuestras instalaciones, utilizar nuestros servicios
+                                    Bienvenido a Sunrise Sunset. Al acceder a nuestras instalaciones, utilizar nuestros servicios
                                     o reservar clases a través de nuestra plataforma, aceptas estar legalmente vinculado por estos
                                     Términos y Condiciones.
                                 </p>
@@ -137,8 +137,8 @@ export default function Terms() {
                             <section id="servicios" className="space-y-4">
                                 <h2 className="font-heading text-2xl font-semibold">Servicios</h2>
                                 <p className="text-muted-foreground leading-relaxed">
-                                    Catarsis Studio ofrece clases de entrenamiento físico (incluyendo pero no limitado a Pilates,
-                                    Yoga, y Barré o Catarsis), talleres y eventos relacionados con el bienestar.
+                                    Sunrise Sunset ofrece clases de entrenamiento físico (incluyendo pero no limitado a Sculpt,
+                                    Surf-Pilates y Yoga), talleres y eventos relacionados con el bienestar.
                                 </p>
                                 <p className="text-muted-foreground leading-relaxed">
                                     Nos reservamos el derecho de modificar horarios, instructores y tipos de clase según sea necesario
@@ -197,7 +197,7 @@ export default function Terms() {
                             <section id="responsabilidad" className="space-y-4">
                                 <h2 className="font-heading text-2xl font-semibold">Limitación de Responsabilidad</h2>
                                 <p className="text-muted-foreground leading-relaxed">
-                                    El usuario reconoce que la práctica de ejercicio físico conlleva riesgos inherentes. Catarsis Studio
+                                    El usuario reconoce que la práctica de ejercicio físico conlleva riesgos inherentes. Sunrise Sunset
                                     no se hace responsable por lesiones sufridas durante las clases, excepto en casos de negligencia
                                     directa del estudio.
                                 </p>
@@ -210,7 +210,7 @@ export default function Terms() {
                             <section id="cambios" className="space-y-4">
                                 <h2 className="font-heading text-2xl font-semibold">Modificaciones</h2>
                                 <p className="text-muted-foreground leading-relaxed">
-                                    Catarsis Studio se reserva el derecho de modificar estos términos y condiciones en cualquier momento.
+                                    Sunrise Sunset se reserva el derecho de modificar estos términos y condiciones en cualquier momento.
                                     Las modificaciones entrarán en vigor inmediatamente después de su publicación en el sitio web.
                                 </p>
                             </section>
@@ -222,16 +222,16 @@ export default function Terms() {
                                 </p>
                                 <div className="bg-muted/50 p-6 rounded-lg space-y-3">
                                     <div>
-                                        <p className="text-sm font-medium">Catarsis Studio</p>
+                                        <p className="text-sm font-medium">Sunrise Sunset</p>
                                         <p className="text-sm text-muted-foreground">Departamento Legal</p>
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium">Email</p>
                                         <a
-                                            href="mailto:legal@balance.studio"
+                                            href="mailto:legal@sunrisesunset.mx"
                                             className="text-sm text-primary hover:underline"
                                         >
-                                            legal@balance.studio
+                                            legal@sunrisesunset.mx
                                         </a>
                                     </div>
                                 </div>

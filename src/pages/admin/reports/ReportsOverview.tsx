@@ -22,7 +22,7 @@ function getDefaultDates() {
 
 function exportToExcel(overview: any, startDate: string, endDate: string) {
     const rows = [
-        ['Reporte General - Catarsis Studio'],
+        ['Reporte General - Sunrise Sunset'],
         [`Período: ${startDate} al ${endDate}`],
         [''],
         ['RESUMEN FINANCIERO'],

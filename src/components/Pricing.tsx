@@ -170,7 +170,7 @@ const Pricing = () => {
             <Star className="w-10 h-10 sm:w-12 sm:h-12 shrink-0" />
             <div>
               <h3 className="font-heading text-2xl font-semibold">
-                ¿Primera vez en Catarsis?
+                ¿Primera vez en Sunrise Sunset?
               </h3>
               <p className="font-body text-white/80">
                 Sesión muestra por $150 · Inscripción anual $500

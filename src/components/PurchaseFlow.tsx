@@ -274,7 +274,7 @@ export function PurchaseFlow() {
               <div className="space-y-1 text-sm font-body">
                 <p><strong>Banco:</strong> BBVA</p>
                 <p><strong>CLABE:</strong> 012 180 0123 4567 8901</p>
-                <p><strong>Titular:</strong> Catarsis Studio SA de CV</p>
+                <p><strong>Titular:</strong> Sunrise Sunset SA de CV</p>
                 <p><strong>Concepto:</strong> Membresía {selectedPlan?.name}</p>
               </div>
             </AlertDescription>

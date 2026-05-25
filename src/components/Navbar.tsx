@@ -120,21 +120,16 @@ const Navbar = () => {
         <nav className="flex items-center justify-between">
           {/* Logo */}
           <a href="#" className="flex items-center gap-3">
-            <img 
-              src="/catarsis.jpg" 
-              alt="Catarsis Studio" 
+            <img
+              src="/catarsis.jpg"
+              alt="Sunrise Sunset"
               className="h-10 w-10 rounded-full object-cover"
             />
             <div className="flex flex-col">
               <span className={`font-heading text-xl md:text-2xl font-semibold tracking-tight leading-none transition-colors duration-500 ${
                 isScrolled ? 'text-foreground' : 'text-white'
               }`}>
-                Catarsis
-              </span>
-              <span className={`text-[10px] font-body tracking-[0.2em] uppercase transition-colors duration-500 ${
-                isScrolled ? 'text-muted-foreground' : 'text-white/60'
-              }`}>
-                Studio
+                Sunrise Sunset
               </span>
             </div>
           </a>
@@ -253,8 +248,8 @@ const Navbar = () => {
           {/* Close button */}
           <div className="flex items-center justify-between px-6 pt-6 pb-4">
             <div className="flex items-center gap-2">
-              <img src="/catarsis.jpg" alt="Catarsis" className="h-8 w-8 rounded-full object-cover" />
-              <span className="font-heading text-lg font-semibold text-white">Catarsis</span>
+              <img src="/catarsis.jpg" alt="Sunrise Sunset" className="h-8 w-8 rounded-full object-cover" />
+              <span className="font-heading text-lg font-semibold text-white">Sunrise Sunset</span>
             </div>
             <button
               onClick={() => setIsMobileMenuOpen(false)}

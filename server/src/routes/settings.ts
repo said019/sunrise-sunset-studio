@@ -18,8 +18,8 @@ router.get('/bank-info', authenticate, async (req: Request, res: Response) => {
         if (!setting || !setting.value) {
             // Return default bank info
             return res.json({
-                bank_name: 'Balance Studio',
-                account_holder: 'Balance Studio S.A. de C.V.',
+                bank_name: 'Sunrise Sunset',
+                account_holder: 'Sunrise Sunset S.A. de C.V.',
                 account_number: '1234567890',
                 clabe: '012345678901234567',
                 reference_instructions: 'Usa tu nombre completo como referencia'

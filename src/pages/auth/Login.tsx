@@ -68,13 +68,13 @@ export default function Login() {
                     <div className="flex justify-center mb-4">
                         <img
                             src="/catarsis.jpg"
-                            alt="Catarsis Studio"
+                            alt="Sunrise Sunset"
                             className="h-16 w-16 rounded-full object-cover"
                         />
                     </div>
                     <CardTitle className="text-2xl font-heading">Bienvenido</CardTitle>
                     <CardDescription>
-                        Ingresa a tu cuenta de Catarsis Studio
+                        Ingresa a tu cuenta de Sunrise Sunset
                     </CardDescription>
                 </CardHeader>
 

@@ -225,7 +225,7 @@ const ClassTypes = () => {
             <div className="relative min-h-[300px] lg:min-h-[400px]">
               <img 
                 src="/studio-neon.jpg" 
-                alt="Catarsis Studio — This is where the magic happens"
+                alt="Sunrise Sunset — This is where the magic happens"
                 className="absolute inset-0 w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />

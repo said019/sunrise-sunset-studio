@@ -60,8 +60,8 @@ export interface StudioInfo {
 const studioDirectory: Record<string, StudioInfo> = {
   balance: {
     slug: 'balance',
-    name: 'Balance Studio',
-    tagline: 'Catarsis, Pilates Mat y Yoga Sculpt en un espacio sereno.',
+    name: 'Sunrise Sunset',
+    tagline: 'Sculpt, Surf-Pilates y Yoga en un espacio sereno.',
     description:
       'Sesiones íntimas, ritmo consciente y membresías digitales con nuestra Membresía.',
     addressLine: 'Av. Presidente Masaryk 123',
@@ -115,7 +115,7 @@ const studioDirectory: Record<string, StudioInfo> = {
       name: 'BBVA',
       account: '0123456789',
       clabe: '012345678901234567',
-      beneficiary: 'Balance Studio MX',
+      beneficiary: 'Sunrise Sunset MX',
     },
     businessHours: [
       { label: 'Lunes, Miércoles y Viernes', hours: 'Barré' },

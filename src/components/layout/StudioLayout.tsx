@@ -56,7 +56,7 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
   );
 
   useEffect(() => {
-    document.title = `${studio.name} | Catarsis Studio`;
+    document.title = `${studio.name} | Sunrise Sunset`;
   }, [studio.name]);
 
   const isActive = (path: string) => {

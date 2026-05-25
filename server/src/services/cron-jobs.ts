@@ -1,5 +1,5 @@
 /**
- * Catarsis Studio - Cron Jobs Service
+ * Sunrise Sunset - Cron Jobs Service
  *
  * Tareas programadas automáticas:
  * - Generación de clases recurrentes

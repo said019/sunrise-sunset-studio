@@ -9,7 +9,7 @@ const Hero = () => {
       <div className="absolute inset-0">
         <img
           src={heroImage}
-          alt="Catarsis Studio — Barré, Pilates, Yoga Sculpt"
+          alt="Sunrise Sunset — Sculpt, Surf-Pilates, Yoga"
           className="w-full h-full object-cover"
         />
         {/* Subtle gradient only at bottom for text readability */}

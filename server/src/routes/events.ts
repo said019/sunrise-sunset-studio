@@ -218,7 +218,7 @@ router.post('/notify', authenticate, requireRole('admin', 'super_admin'), async 
                 eventDate: String(event.date).split('T')[0],
                 startTime: event.start_time?.slice(0, 5) || '',
                 endTime: event.end_time?.slice(0, 5) || '',
-                location: event.location || 'Catarsis Studio',
+                location: event.location || 'Sunrise Sunset',
                 price: parseFloat(event.price) || 0,
                 instructor: event.instructor_name || '',
                 description: event.description || '',

@@ -1,5 +1,5 @@
 /**
- * Apple Wallet Integration for Catarsis Studio
+ * Apple Wallet Integration for Sunrise Sunset
  */
 
 import fs from 'fs';
@@ -17,10 +17,10 @@ const APPLE_TEAM_ID = process.env.APPLE_TEAM_ID;
 const APPLE_PASS_TYPE_ID = process.env.APPLE_PASS_TYPE_ID;
 const APPLE_KEY_ID = process.env.APPLE_KEY_ID;
 const APPLE_APNS_KEY_BASE64 = process.env.APPLE_APNS_KEY_BASE64;
-// Hardcodeado a "Catarsis Studio" para que NUNCA herede valor de otro
-// proyecto que use el mismo PassTypeID (e.g. LUM) si por error se
+// Hardcodeado a "Sunrise Sunset" para que NUNCA herede valor de otro
+// proyecto que use el mismo PassTypeID si por error se
 // configura APPLE_ORG_NAME en Railway con un valor distinto.
-const APPLE_ORG_NAME = 'Catarsis Studio';
+const APPLE_ORG_NAME = 'Sunrise Sunset';
 
 interface MembershipData {
     id: string;
@@ -50,7 +50,7 @@ interface MembershipData {
 
 type PlanType = 'basico' | 'premium' | 'ilimitado' | 'intro';
 
-// Catarsis Studio wallet palette.
+// Sunrise Sunset wallet palette.
 // Warm gold: #A48550, olive: #81836F, sand: #D3C39F, cream: #F6F6EA, dark chocolate: #322A1E.
 
 const PLAN_STYLES: Record<PlanType, { badge: string; backgroundColor: string; foregroundColor: string; labelColor: string; stripPrefix: string; }> = {
@@ -365,14 +365,14 @@ function buildTempModelDir(m: MembershipData, style: typeof PLAN_STYLES.basico):
         webServiceURL: baseUrl + '/api/wallet',
         authenticationToken: APPLE_AUTH_TOKEN || m.id,
         organizationName: APPLE_ORG_NAME,
-        description: 'Membresia ' + m.plan_name + ' - Catarsis Studio',
-        logoText: 'Catarsis Studio',
+        description: 'Membresia ' + m.plan_name + ' - Sunrise Sunset',
+        logoText: 'Sunrise Sunset',
         storeCard: {
             headerFields: [{ key: 'plan_badge', label: 'PLAN', value: m.plan_name.toUpperCase() }],
             primaryFields: [],
             secondaryFields: [
                 { key: 'member_name', label: 'NOMBRE', value: m.user_name },
-                { key: 'classes', label: 'CLASES', value: formatClassesRemaining(m.classes_remaining), changeMessage: 'Catarsis Studio: %@ clases disponibles 🧘' },
+                { key: 'classes', label: 'CLASES', value: formatClassesRemaining(m.classes_remaining), changeMessage: 'Sunrise Sunset: %@ clases disponibles 🧘' },
                 { key: 'valid_until', label: 'VENCE', value: formatDate(endDate) }
             ],
             auxiliaryFields: [
@@ -389,7 +389,7 @@ function buildTempModelDir(m: MembershipData, style: typeof PLAN_STYLES.basico):
                 { key: 'classes_used', label: 'Clases tomadas', value: m.classes_used + ' clases' },
                 ...(m.referral_code ? [{ key: 'referral', label: 'Tu codigo de referido', value: `${m.referral_code} — Comparte con tus amigas y gana puntos` }] : []),
                 { key: 'contact', label: 'Contacto', value: 'WhatsApp: 427 100 7347\nHermenegildo Galeana Int. Local 4\nCentro, San Juan del Rio, Qro.' },
-                { key: 'website', label: 'Reserva en', value: 'www.catarsis-studio.com.mx' },
+                { key: 'website', label: 'Reserva en', value: 'www.sunrisesunset.mx' },
                 { key: 'terms', label: 'Terminos', value: 'Membresia personal e intransferible.\nCancelaciones: minimo 5 horas antes.\nMaximo 2 cancelaciones por membresia.' }
             ]
         },
@@ -413,9 +413,9 @@ function buildTempModelDir(m: MembershipData, style: typeof PLAN_STYLES.basico):
             return relevantDateStr ? { relevantDate: relevantDateStr } : {};
         })(),
         // Location-based: show pass when near the studio.
-        // Coordenadas reales de Catarsis Studio (San Juan del Rio, Qro).
+        // Coordenadas del estudio Sunrise Sunset (El Tezal, Los Cabos).
         locations: [
-            { latitude: 20.3862419, longitude: -99.9982146, relevantText: '¡Prepárate para tu clase en Catarsis Studio!' }
+            { latitude: 20.3862419, longitude: -99.9982146, relevantText: '¡Prepárate para tu clase en Sunrise Sunset!' }
         ],
     };
     fs.writeFileSync(path.join(dir, 'pass.json'), JSON.stringify(passJson, null, 2));

@@ -133,7 +133,7 @@ export async function getWhatsAppStatus(): Promise<{
 }
 
 // ============================================
-// Mensajes predefinidos para Catarsis
+// Mensajes predefinidos para Sunrise Sunset
 // ============================================
 
 /**
@@ -195,7 +195,7 @@ export async function sendClientWelcome(
     email: string,
     tempPassword: string
 ): Promise<boolean> {
-    const message = `🎉 *¡Bienvenido a Catarsis Studio!*\n\n` +
+    const message = `🎉 *¡Bienvenido a Sunrise Sunset!*\n\n` +
         `Hola ${clientName}!\n\n` +
         `Tu cuenta ha sido creada. Aquí están tus datos de acceso:\n\n` +
         `📧 *Email:* ${email}\n` +
@@ -214,7 +214,7 @@ export async function sendMigrationWelcome(
     clientName: string,
     tempPassword: string
 ): Promise<boolean> {
-    const message = `🎉 *Bienvenida a Catarsis Digital*\n\n` +
+    const message = `🎉 *Bienvenida a Sunrise Sunset*\n\n` +
         `Hola ${clientName}!\n\n` +
         `Tu cuenta ha sido creada en nuestra nueva plataforma.\n\n` +
         `📱 *Datos de acceso:*\n` +

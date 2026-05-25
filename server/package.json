@@ -1,7 +1,7 @@
 {
-    "name": "balance-studio-server",
+    "name": "sunrise-sunset-server",
     "version": "1.0.0",
-    "description": "Backend API for Balance Studio Pilates management system",
+    "description": "Backend API for Sunrise Sunset Pilates management system",
     "main": "dist/index.js",
     "type": "module",
     "scripts": {

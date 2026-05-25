@@ -108,7 +108,7 @@ router.post('/test', async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'Se requiere número de teléfono' });
         }
         
-        const testMessage = message || '🧘 Mensaje de prueba desde Catarsis Studio ✨';
+        const testMessage = message || '🧘 Mensaje de prueba desde Sunrise Sunset ✨';
         
         const success = await sendWhatsAppMessage(phone, testMessage);
         

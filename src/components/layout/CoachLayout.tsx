@@ -84,12 +84,12 @@ export default function CoachLayout({ children }: CoachLayoutProps) {
 
                             {/* Logo */}
                             <Link to="/coach" className="flex items-center space-x-2.5">
-                                <img 
-                                    src="/catarsis.jpg" 
-                                    alt="Catarsis Studio" 
+                                <img
+                                    src="/catarsis.jpg"
+                                    alt="Sunrise Sunset"
                                     className="h-9 w-9 rounded-xl object-cover ring-2 ring-catarsis-gold/20"
                                 />
-                                <span className="font-heading text-xl font-bold text-catarsis-gold">Catarsis</span>
+                                <span className="font-heading text-xl font-bold text-catarsis-gold">Sunrise Sunset</span>
                                 <span className="text-[10px] font-body font-semibold text-catarsis-gold uppercase tracking-[2px] bg-catarsis-gold/10 px-2.5 py-1 rounded-lg">
                                     Coach
                                 </span>
@@ -172,12 +172,12 @@ export default function CoachLayout({ children }: CoachLayoutProps) {
                         <div className="flex flex-col h-full">
                             <div className="flex h-16 items-center justify-between border-b px-4">
                                 <div className="flex items-center space-x-2">
-                                    <img 
-                                        src="/catarsis.jpg" 
-                                        alt="Catarsis Studio" 
+                                    <img
+                                        src="/catarsis.jpg"
+                                        alt="Sunrise Sunset"
                                         className="h-9 w-9 rounded-xl object-cover ring-2 ring-catarsis-gold/20"
                                     />
-                                    <span className="font-heading text-lg font-bold text-catarsis-gold">Catarsis Coach</span>
+                                    <span className="font-heading text-lg font-bold text-catarsis-gold">Sunrise Sunset Coach</span>
                                 </div>
                                 <Button
                                     variant="ghost"

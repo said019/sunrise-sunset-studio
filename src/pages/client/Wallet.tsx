@@ -210,7 +210,7 @@ export default function WalletClub() {
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="text-xs uppercase tracking-widest text-white/70">
-                            Catarsis Studio
+                            Sunrise Sunset
                           </p>
                           <h2 className="text-2xl font-semibold">{data?.memberName || 'Miembro'}</h2>
                           <p className="text-sm text-white/80">

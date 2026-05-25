@@ -1,5 +1,5 @@
 /**
- * Catarsis Studio - Cron Jobs Admin API
+ * Sunrise Sunset - Cron Jobs Admin API
  *
  * Endpoints para administrar y ejecutar jobs manualmente
  */

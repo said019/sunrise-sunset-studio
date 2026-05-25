@@ -77,14 +77,13 @@ export function ClientLayout({ children }: ClientLayoutProps) {
                 <div className="container flex h-16 items-center justify-between">
                     {/* Logo */}
                     <Link to="/app" className="flex items-center space-x-3">
-                        <img 
-                            src="/catarsis.jpg" 
-                            alt="Catarsis Studio" 
+                        <img
+                            src="/catarsis.jpg"
+                            alt="Sunrise Sunset"
                             className="h-8 w-8 rounded-full object-cover"
                         />
                         <div className="flex items-baseline space-x-1">
-                            <span className="font-heading text-xl font-bold text-primary">Catarsis</span>
-                            <span className="font-heading text-sm text-muted-foreground">Studio</span>
+                            <span className="font-heading text-xl font-bold text-primary">Sunrise Sunset</span>
                         </div>
                     </Link>
 

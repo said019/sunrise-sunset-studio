@@ -1,5 +1,5 @@
 /**
- * Google Wallet Integration for Catarsis Studio
+ * Google Wallet Integration for Sunrise Sunset
  * 
  * Implements OAuth2, Loyalty Class/Object creation, and messaging
  * Adapted for Pilates studio with memberships, classes, and loyalty points
@@ -51,7 +51,7 @@ type PlanType = 'basico' | 'premium' | 'ilimitado' | 'intro';
 const GOOGLE_WALLET_API = 'https://walletobjects.googleapis.com/walletobjects/v1';
 const GOOGLE_OAUTH_URL = 'https://oauth2.googleapis.com/token';
 
-// Styles for different plan types (Catarsis Studio 2026 palette - White/Clean Design)
+// Styles for different plan types (Sunrise Sunset 2026 palette - White/Clean Design)
 const PLAN_STYLES: Record<PlanType, {
     hexBackgroundColor: string;
     badge: string;
@@ -274,23 +274,23 @@ export async function createGoogleLoyaltyClass(
 
         const loyaltyClass = {
             id: classId,
-            issuerName: 'Catarsis Studio',
+            issuerName: 'Sunrise Sunset',
             programName: style.programName,
             hexBackgroundColor: style.hexBackgroundColor,
 
             programLogo: {
                 sourceUri: { uri: logoUrl },
-                contentDescription: { defaultValue: { language: 'es', value: 'Catarsis Studio Logo' } },
+                contentDescription: { defaultValue: { language: 'es', value: 'Sunrise Sunset Logo' } },
             },
 
             // Hero image - prominent display
             heroImage: {
                 sourceUri: { uri: heroUrl },
-                contentDescription: { defaultValue: { language: 'es', value: 'Catarsis Studio' } },
+                contentDescription: { defaultValue: { language: 'es', value: 'Sunrise Sunset' } },
             },
 
             localizedIssuerName: {
-                defaultValue: { language: 'es', value: 'Catarsis Studio' },
+                defaultValue: { language: 'es', value: 'Sunrise Sunset' },
             },
 
             localizedProgramName: {
@@ -313,7 +313,7 @@ export async function createGoogleLoyaltyClass(
             // Welcome messages
             messages: [
                 {
-                    header: '¡Bienvenido a Catarsis Studio!',
+                    header: '¡Bienvenido a Sunrise Sunset!',
                     body: 'Tu bienestar comienza aquí. Reserva tus clases y acumula puntos con cada visita. 🧘‍♀️',
                     id: 'welcome_msg_v1',
                 },
@@ -385,9 +385,9 @@ export async function createAllLoyaltyClasses(): Promise<void> {
 }
 
 function getBusinessLocations(): Array<{ latitude: number; longitude: number }> {
-    // Hardcodeado a las coordenadas reales de Catarsis Studio
-    // (San Juan del Rio, Qro). Antes leia BUSINESS_LATITUDE/LONGITUDE
-    // de env vars que podrian heredar valor de otro proyecto (e.g. LUM).
+    // Hardcodeado a las coordenadas reales de Sunrise Sunset
+    // (El Tezal, Los Cabos). Antes leia BUSINESS_LATITUDE/LONGITUDE
+    // de env vars que podrian heredar valor de otro proyecto.
     return [{ latitude: 20.3862419, longitude: -99.9982146 }];
 }
 

@@ -118,13 +118,13 @@ export default function Register() {
                     <div className="flex justify-center mb-4">
                         <img
                             src="/catarsis.jpg"
-                            alt="Catarsis Studio"
+                            alt="Sunrise Sunset"
                             className="h-16 w-16 rounded-full object-cover"
                         />
                     </div>
                     <CardTitle className="text-2xl font-heading">Crear Cuenta</CardTitle>
                     <CardDescription>
-                        Únete a Catarsis Studio y comienza tu transformación
+                        Únete a Sunrise Sunset y comienza tu transformación
                     </CardDescription>
                 </CardHeader>
 

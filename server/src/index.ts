@@ -187,7 +187,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 // Start server
 app.listen(PORT, () => {
     console.log(`
-🚀 Catarsis Studio API Server v2.1
+🚀 Sunrise Sunset API Server v2.1
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📡 Server running on http://localhost:${PORT}
 🔒 Auth routes: /api/auth

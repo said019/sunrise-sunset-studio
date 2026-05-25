@@ -32,7 +32,7 @@ export default function CancellationPolicy() {
                                 Última actualización: 10 de febrero de 2026
                             </p>
                             <p className="text-muted-foreground leading-relaxed">
-                                En Catarsis Studio valoramos tu tiempo y el de nuestros instructores. Nuestra política 
+                                En Sunrise Sunset valoramos tu tiempo y el de nuestros instructores. Nuestra política
                                 de cancelación está diseñada para ser justa tanto para ti como para nuestra comunidad.
                             </p>
                         </div>
@@ -192,18 +192,18 @@ export default function CancellationPolicy() {
                             <h2 className="font-heading text-2xl font-semibold">¿Necesitas ayuda?</h2>
                             <div className="bg-muted/50 p-6 rounded-lg space-y-3">
                                 <div>
-                                    <p className="text-sm font-medium">Catarsis Studio</p>
+                                    <p className="text-sm font-medium">Sunrise Sunset</p>
                                     <p className="text-sm text-muted-foreground">
-                                        Hermenegildo Galeana Int. Local 4, Centro, 76803 San Juan del Río, Qro.
+                                        El Tezal, Los Cabos, B.C.S.
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">Email</p>
                                     <a
-                                        href="mailto:catarsisstudio24@gmail.com"
+                                        href="mailto:hola@sunrisesunset.mx"
                                         className="text-sm text-primary hover:underline"
                                     >
-                                        catarsisstudio24@gmail.com
+                                        hola@sunrisesunset.mx
                                     </a>
                                 </div>
                                 <div>

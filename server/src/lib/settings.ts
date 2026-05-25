@@ -101,7 +101,7 @@ export type SettingKey = keyof SettingsMap;
 
 const DEFAULTS: SettingsMap = {
     studio_info: {
-        name: 'Catarsis Studio',
+        name: 'Sunrise Sunset',
         address: '',
         phone: '',
         email: '',
@@ -150,7 +150,7 @@ const DEFAULTS: SettingsMap = {
         maintenance_mode: false,
     },
     whatsapp_templates: {
-        send_booking_confirmation: '✅ *Reserva Confirmada*\n\nHola {nombre}!\n\nTu reserva para *{clase}* ha sido confirmada.\n\n📅 {fecha}\n⏰ {hora}\n👨‍🏫 {instructor}\n\n¡Te esperamos en Catarsis Studio!',
+        send_booking_confirmation: '✅ *Reserva Confirmada*\n\nHola {nombre}!\n\nTu reserva para *{clase}* ha sido confirmada.\n\n📅 {fecha}\n⏰ {hora}\n👨‍🏫 {instructor}\n\n¡Te esperamos en Sunrise Sunset!',
         send_cancellation_notice: '❌ *Reserva Cancelada*\n\nHola {nombre},\n\nTu reserva para *{clase}* del {fecha} a las {hora} ha sido cancelada.',
         send_class_reminder: '🔔 *Recordatorio de Clase*\n\nHola {nombre}!\n\nTu clase *{clase}* es en {hora}.\n\n¡No faltes! 🧘',
         send_membership_expiring: '⏰ *Membresía por vencer*\n\nHola {nombre},\n\nTu plan *{plan}* vence pronto.\n\nRenueva para seguir disfrutando.',

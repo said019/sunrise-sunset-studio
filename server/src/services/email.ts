@@ -16,7 +16,7 @@ function getResend(): Resend {
 
 // Get FROM email - Resend requires verified domain or use onboarding@resend.dev for testing
 function getFromEmail(): string {
-    return process.env.EMAIL_FROM || 'Catarsis Studio <onboarding@resend.dev>';
+    return process.env.EMAIL_FROM || 'Sunrise Sunset <onboarding@resend.dev>';
 }
 
 // Get frontend URL - single source of truth for all email links
@@ -41,7 +41,7 @@ export async function sendInstructorMagicLink({ to, instructorName, magicLink }:
     const { data, error } = await resend.emails.send({
         from: getFromEmail(),
         to: [to],
-        subject: '🔑 Acceso a tu Portal de Instructor - Catarsis Studio',
+        subject: '🔑 Acceso a tu Portal de Instructor - Sunrise Sunset',
         html: `
             <!DOCTYPE html>
             <html>
@@ -61,9 +61,9 @@ export async function sendInstructorMagicLink({ to, instructorName, magicLink }:
             </head>
             <body>
                 <div class="container">
-                    <div class="header"><img src="${getLogoUrl()}" alt="Catarsis Studio" style="width: 120px; height: auto;"></div>
+                    <div class="header"><img src="${getLogoUrl()}" alt="Sunrise Sunset" style="width: 120px; height: auto;"></div>
                     <h1>¡Hola ${instructorName}! 👋</h1>
-                    <p>Te damos la bienvenida al portal de instructores de Catarsis Studio.</p>
+                    <p>Te damos la bienvenida al portal de instructores de Sunrise Sunset.</p>
                     <p>Haz clic en el botón de abajo para acceder a tu plataforma de instructor.</p>
                     <div style="text-align: center;">
                         <a href="${magicLink}" class="button">🔓 Acceder al Portal de Instructor</a>
@@ -77,7 +77,7 @@ export async function sendInstructorMagicLink({ to, instructorName, magicLink }:
                         </ul>
                     </div>
                     <p class="warning">⚠️ Este enlace expira en 1 hora y solo puede usarse una vez.</p>
-                    <div class="footer"><p>Con cariño,<br><strong>Equipo Catarsis Studio</strong></p></div>
+                    <div class="footer"><p>Con cariño,<br><strong>Equipo Sunrise Sunset</strong></p></div>
                 </div>
             </body>
             </html>
@@ -115,7 +115,7 @@ export async function sendInstructorCredentials({
     const { data, error } = await resend.emails.send({
         from: getFromEmail(),
         to: [to],
-        subject: '🎉 Bienvenido al Equipo de Catarsis Studio - Tus Credenciales',
+        subject: '🎉 Bienvenido al Equipo de Sunrise Sunset - Tus Credenciales',
         html: `
             <!DOCTYPE html>
             <html>
@@ -139,7 +139,7 @@ export async function sendInstructorCredentials({
             <body>
                 <div class="container">
                     <div class="header">
-                        <img src="${getLogoUrl()}" alt="Catarsis Studio" style="width: 140px; height: auto; margin-bottom: 10px;">
+                        <img src="${getLogoUrl()}" alt="Sunrise Sunset" style="width: 140px; height: auto; margin-bottom: 10px;">
                         <p style="color: #999; font-size: 14px;">Portal de Instructores</p>
                     </div>
                     <h1>🎉 ¡Bienvenido al equipo, ${instructorName}!</h1>
@@ -156,7 +156,7 @@ export async function sendInstructorCredentials({
                     <div class="security-note">
                         <strong>⚠️ Importante:</strong> Esta es una contraseña temporal. Cámbiala en tu primer inicio de sesión.
                     </div>
-                    <div class="footer"><p><strong>¡Gracias por ser parte de Catarsis Studio! 💜</strong></p></div>
+                    <div class="footer"><p><strong>¡Gracias por ser parte de Sunrise Sunset! 💜</strong></p></div>
                 </div>
             </body>
             </html>
@@ -226,7 +226,7 @@ export async function sendClassAssignmentNotification({
                 </head>
                 <body>
                     <div class="container">
-                        <div class="header"><img src="${getLogoUrl()}" alt="Catarsis Studio" style="width: 120px; height: auto;"></div>
+                        <div class="header"><img src="${getLogoUrl()}" alt="Sunrise Sunset" style="width: 120px; height: auto;"></div>
                         <h1>¡Hola ${coachName}! 👋</h1>
                         <p>Se te ha asignado una nueva clase:</p>
                         <div class="class-card">
@@ -331,7 +331,7 @@ export async function sendCoachWeeklySchedule({
                 </style></head>
                 <body>
                     <div class="container">
-                        <div class="header"><img src="${getLogoUrl()}" alt="Catarsis Studio" style="width:120px;height:auto;"></div>
+                        <div class="header"><img src="${getLogoUrl()}" alt="Sunrise Sunset" style="width:120px;height:auto;"></div>
                         <h1>¡Hola ${coachName}! 👋</h1>
                         <p>Este es el resumen de tus clases para la semana <strong>${rangeLabel}</strong>:</p>
                         ${dayBlocks || '<p style="color:#999;">No tienes clases asignadas esta semana.</p>'}
@@ -396,7 +396,7 @@ export async function sendMembershipActivatedEmail({
         const { data, error } = await resend.emails.send({
             from: getFromEmail(),
             to: [to],
-            subject: `🎉 ¡Membresía activada! - ${planName} - Catarsis Studio`,
+            subject: `🎉 ¡Membresía activada! - ${planName} - Sunrise Sunset`,
             html: `
                 <!DOCTYPE html>
                 <html>
@@ -411,7 +411,7 @@ export async function sendMembershipActivatedEmail({
                                 <table role="presentation" style="max-width: 500px; width: 100%; border-collapse: collapse;">
                                     <tr>
                                         <td align="center" style="padding: 30px 0;">
-                                            <img src="${getLogoUrl()}" alt="Catarsis Studio" style="width: 100px; height: auto;">
+                                            <img src="${getLogoUrl()}" alt="Sunrise Sunset" style="width: 100px; height: auto;">
                                         </td>
                                     </tr>
                                     <tr>
@@ -453,7 +453,7 @@ export async function sendMembershipActivatedEmail({
                                     </tr>
                                     <tr>
                                         <td style="padding: 30px 20px; text-align: center;">
-                                            <p style="margin: 0 0 5px; font-size: 13px; color: #8C8475; font-weight: 500;">Catarsis Studio</p>
+                                            <p style="margin: 0 0 5px; font-size: 13px; color: #8C8475; font-weight: 500;">Sunrise Sunset</p>
                                             <p style="margin: 0; font-size: 12px; color: #b0a89c;">Transformando vidas a través del movimiento</p>
                                         </td>
                                     </tr>
@@ -521,7 +521,7 @@ export async function sendEventAnnouncementEmail({
         const { data, error } = await resend.emails.send({
             from: getFromEmail(),
             to: to,
-            subject: `✨ Nuevo evento: ${eventTitle} - Catarsis Studio`,
+            subject: `✨ Nuevo evento: ${eventTitle} - Sunrise Sunset`,
             html: `
                 <!DOCTYPE html>
                 <html>
@@ -536,7 +536,7 @@ export async function sendEventAnnouncementEmail({
                                 <table role="presentation" style="max-width: 500px; width: 100%; border-collapse: collapse;">
                                     <tr>
                                         <td align="center" style="padding: 30px 0;">
-                                            <img src="${getLogoUrl()}" alt="Catarsis Studio" style="width: 100px; height: auto;">
+                                            <img src="${getLogoUrl()}" alt="Sunrise Sunset" style="width: 100px; height: auto;">
                                         </td>
                                     </tr>
                                     <tr>
@@ -581,7 +581,7 @@ export async function sendEventAnnouncementEmail({
                                     </tr>
                                     <tr>
                                         <td style="padding: 30px 20px; text-align: center;">
-                                            <p style="margin: 0 0 5px; font-size: 13px; color: #8C8475; font-weight: 500;">Catarsis Studio</p>
+                                            <p style="margin: 0 0 5px; font-size: 13px; color: #8C8475; font-weight: 500;">Sunrise Sunset</p>
                                             <p style="margin: 0; font-size: 12px; color: #b0a89c;">Transformando vidas a través del movimiento</p>
                                         </td>
                                     </tr>
@@ -633,7 +633,7 @@ export async function sendClientWelcomeEmail({
         const { data, error } = await resend.emails.send({
             from: getFromEmail(),
             to: [to],
-            subject: '🎉 Bienvenido a Catarsis Studio - Tus datos de acceso',
+            subject: '🎉 Bienvenido a Sunrise Sunset - Tus datos de acceso',
             html: `
                 <!DOCTYPE html>
                 <html>
@@ -648,7 +648,7 @@ export async function sendClientWelcomeEmail({
                                 <table role="presentation" style="max-width: 500px; width: 100%; border-collapse: collapse;">
                                     <tr>
                                         <td align="center" style="padding: 30px 0;">
-                                            <img src="${getLogoUrl()}" alt="Catarsis Studio" style="width: 100px; height: auto;">
+                                            <img src="${getLogoUrl()}" alt="Sunrise Sunset" style="width: 100px; height: auto;">
                                         </td>
                                     </tr>
                                     <tr>
@@ -666,7 +666,7 @@ export async function sendClientWelcomeEmail({
                                                             ¡Bienvenido, ${clientName}!
                                                         </h1>
                                                         <p style="margin: 0 0 30px; font-size: 16px; color: #666; text-align: center;">
-                                                            Tu cuenta en Catarsis Studio ha sido creada
+                                                            Tu cuenta en Sunrise Sunset ha sido creada
                                                         </p>
                                                         <div style="background: linear-gradient(135deg, #f8f8f8 0%, #e8e5dd 100%); border-left: 4px solid #8C8475; padding: 25px; margin: 20px 0; border-radius: 8px;">
                                                             <h3 style="margin: 0 0 15px; color: #8C8475;">🔐 Tus datos de acceso</h3>
@@ -697,7 +697,7 @@ export async function sendClientWelcomeEmail({
                                     </tr>
                                     <tr>
                                         <td style="padding: 30px 20px; text-align: center;">
-                                            <p style="margin: 0 0 5px; font-size: 13px; color: #8C8475; font-weight: 500;">Catarsis Studio</p>
+                                            <p style="margin: 0 0 5px; font-size: 13px; color: #8C8475; font-weight: 500;">Sunrise Sunset</p>
                                             <p style="margin: 0; font-size: 12px; color: #b0a89c;">Transformando vidas a través del movimiento</p>
                                         </td>
                                     </tr>
@@ -754,7 +754,7 @@ export async function sendOrderRejectedEmail({
         const { data, error } = await resend.emails.send({
             from: getFromEmail(),
             to: [to],
-            subject: `❌ Pago no aprobado - Orden #${orderNumber} - Catarsis Studio`,
+            subject: `❌ Pago no aprobado - Orden #${orderNumber} - Sunrise Sunset`,
             html: `
                 <!DOCTYPE html>
                 <html>
@@ -769,7 +769,7 @@ export async function sendOrderRejectedEmail({
                                 <table role="presentation" style="max-width: 500px; width: 100%; border-collapse: collapse;">
                                     <tr>
                                         <td align="center" style="padding: 30px 0;">
-                                            <img src="${getLogoUrl()}" alt="Catarsis Studio" style="width: 100px; height: auto;">
+                                            <img src="${getLogoUrl()}" alt="Sunrise Sunset" style="width: 100px; height: auto;">
                                         </td>
                                     </tr>
                                     <tr>
@@ -812,7 +812,7 @@ export async function sendOrderRejectedEmail({
                                     </tr>
                                     <tr>
                                         <td style="padding: 30px 20px; text-align: center;">
-                                            <p style="margin: 0 0 5px; font-size: 13px; color: #8C8475; font-weight: 500;">Catarsis Studio</p>
+                                            <p style="margin: 0 0 5px; font-size: 13px; color: #8C8475; font-weight: 500;">Sunrise Sunset</p>
                                             <p style="margin: 0; font-size: 12px; color: #b0a89c;">Transformando vidas a través del movimiento</p>
                                         </td>
                                     </tr>
@@ -849,7 +849,7 @@ export async function sendPasswordResetEmail({ to, resetLink }: SendPasswordRese
     const { data, error } = await resend.emails.send({
         from: getFromEmail(),
         to: [to],
-        subject: '🔐 Restablecer contraseña - Catarsis Studio',
+        subject: '🔐 Restablecer contraseña - Sunrise Sunset',
         html: `
             <!DOCTYPE html>
             <html>
@@ -865,7 +865,7 @@ export async function sendPasswordResetEmail({ to, resetLink }: SendPasswordRese
                                 <!-- Logo Header -->
                                 <tr>
                                     <td align="center" style="padding: 30px 0;">
-                                        <img src="${getLogoUrl()}" alt="Catarsis Studio" style="width: 100px; height: auto;">
+                                        <img src="${getLogoUrl()}" alt="Sunrise Sunset" style="width: 100px; height: auto;">
                                     </td>
                                 </tr>
                                 <!-- Main Card -->
@@ -891,7 +891,7 @@ export async function sendPasswordResetEmail({ to, resetLink }: SendPasswordRese
                                                     
                                                     <!-- Subtitle -->
                                                     <p style="margin: 0 0 30px; font-size: 16px; color: #666; text-align: center; line-height: 1.6;">
-                                                        Recibimos una solicitud para restablecer la contraseña de tu cuenta en Catarsis Studio.
+                                                        Recibimos una solicitud para restablecer la contraseña de tu cuenta en Sunrise Sunset.
                                                     </p>
                                                     
                                                     <!-- Button -->
@@ -923,7 +923,7 @@ export async function sendPasswordResetEmail({ to, resetLink }: SendPasswordRese
                                 <tr>
                                     <td style="padding: 30px 20px; text-align: center;">
                                         <p style="margin: 0 0 10px; font-size: 13px; color: #8C8475; font-weight: 500;">
-                                            Catarsis Studio
+                                            Sunrise Sunset
                                         </p>
                                         <p style="margin: 0; font-size: 12px; color: #b0a89c;">
                                             Transformando vidas a través del movimiento

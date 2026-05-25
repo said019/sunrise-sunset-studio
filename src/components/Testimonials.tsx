@@ -97,12 +97,12 @@ const Testimonials = () => {
               Síguenos en Instagram
             </h3>
             <a
-              href="https://www.instagram.com/catarsis.barre"
+              href="https://www.instagram.com/sunrisesunsetstudio"
               target="_blank"
               rel="noopener noreferrer"
               className="text-catarsis-olive font-body hover:underline"
             >
-              @catarsis.barre
+              @sunrisesunsetstudio
             </a>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
