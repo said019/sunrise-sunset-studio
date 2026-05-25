@@ -1,0 +1,24 @@
+{
+  "name": "Catarsis Studio",
+  "short_name": "Catarsis",
+  "description": "Barré, Pilates, Yoga Sculpt y Sculpt - Reserva tu clase",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF6F0",
+  "theme_color": "#3D3229",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/catarsis-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/catarsis-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

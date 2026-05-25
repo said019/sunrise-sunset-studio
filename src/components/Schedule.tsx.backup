@@ -1,0 +1,515 @@
+import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  format, 
+  addDays, 
+  startOfWeek, 
+  isSameDay, 
+  parseISO, 
+  isToday,
+  isPast,
+  addWeeks,
+  subWeeks
+} from 'date-fns';
+import { es } from 'date-fns/locale';
+
+// Types
+interface ClassItem {
+  id: string;
+  name: string;
+  time: string;
+  duration: number;
+  instructor: string;
+  spots: number;
+  maxSpots: number;
+  level: string;
+}
+
+// ============================================================================
+// MOCK DATA GENERATOR
+// ============================================================================
+
+const classTemplates = [
+  { name: 'Barre Sculpt', type: 'barre' as const, level: 'todos' as const, intensity: 3 as const, maxSpots: 12 },
+  { name: 'Pilates Mat Flow', type: 'pilates' as const, level: 'todos' as const, intensity: 2 as const, maxSpots: 12 },
+  { name: 'Yoga Vinyasa', type: 'yoga' as const, level: 'intermedio' as const, intensity: 3 as const, maxSpots: 12 },
+  { name: 'Barre Cardio', type: 'barre' as const, level: 'todos' as const, intensity: 4 as const, maxSpots: 12 },
+  { name: 'Pilates Reformer', type: 'pilates' as const, level: 'todos' as const, intensity: 3 as const, maxSpots: 8 },
+  { name: 'Yoga Restaurativo', type: 'yoga' as const, level: 'todos' as const, intensity: 1 as const, maxSpots: 12 },
+  { name: 'Barre Intenso', type: 'barre' as const, level: 'avanzado' as const, intensity: 5 as const, maxSpots: 15 },
+  {Mock Data
+const classTemplates = [
+  { name: 'Barre Studio', instructor: 'María', level: 'Todos', maxSpots: 12 },
+  { name: 'Pilates Mat', instructor: 'Elena', level: 'Todos', maxSpots: 12 },
+  { name: 'Yoga Flow', instructor: 'Carlos', level: 'Todos', maxSpots: 12 },
+  { name: 'Pilates Reformer', instructor: 'Lucía', level: 'Intermedio', maxSpots: 8 },
+  { name: 'Barre Sculpt', instructor: 'María', level: 'Todos', maxSpots: 12 },
+  { name: 'Barre Cardio', instructor: 'Camila', level: 'Todos', maxSpots: 12 },
+  { name: 'Yoga Restore', instructor: 'Carlos', level: 'Todos', maxSpots: 12 },
+  { name: 'Pilates Power', instructor: 'Elena', level: 'Avanzado', maxSpots: 10 },
+  { name: 'Yoga Vinyasa', instructor: 'Carlos', level: 'Intermedio', maxSpots: 12 },
+];
+
+// Horarios por día de la semana (0=Domingo, 1=Lunes, etc.)
+const scheduleByDay: Record<number, string[]> = {
+  0: [], // Domingo - cerrado
+  1: ['07:00', '08:00', '09:30', '11:00', '13:00', '17:00', '18:00', '19:00', '20:00'], // Lunes
+  2: ['07:00', '09:00', '18:00'], // Martes (ejemplo con menos clases)
+  3: ['07:00', '08:00', '09:30', '11:00', '13:00', '17:00', '18:00', '19:00', '20:00'], // Miércoles
+  4: ['07:00', '09:00', '11:00', '17:00', '19:00', '20:00'], // Jueves
+  5: ['07:00', '09:00', '11:00', '13:00', '17:00', '19:00'], // Viernes
+  6: ['09:00', '11:00', '13:00', '17:00'], // Sábado
+};
+
+function generateClasses(weekStart: Date): ClassItem[] {
+  const classes: ClassItem[] = [];
+  let classCounter = 0;
+
+  // Generar clases para los próximos 14 días
+  for (let dayOffset = 0; dayOffset < 14; dayOffset++) {
+    const currentDay = addDays(weekStart, dayOffset);
+    const dayOfWeek = currentDay.getDay();
+    const times = scheduleByDay[dayOfWeek] || [];
+
+    times.forEach((timeStr) => {
+      const template = classTemplates[classCounter % classTemplates.length];
+      
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      const classDate = new Date(currentDay);
+      classDate.setHours(hours, minutes, 0, 0);
+
+      // Generar spots disponibles de forma más realista
+      const spotsOptions = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10];
+      const spots = spotsOptions[Math.floor(Math.random() * spotsOptions.length)];
+
+      classes.push({
+        id: `${classCounter}`,
+        name: template.name,
+        time: classDate.toISOString(),
+        duration: 50,
+        instructor: template.instructor,
+        spots: Math.min(spots, template.maxSpots),
+        maxSpots: template.maxSpots,
+        level: template.level,
+      });
+
+      classCounter++;
+    });
+  }
+
+  return classes;
+}
+
+type TimeBlock = 'manana' | 'tarde' | 'noche';
+
+const timeBlocks: { id: TimeBlock; label: string; range: string; hours: [number, number] }[] = [
+  { id: 'manana', label: 'Mañana', range: '6:00 - 12:00', hours: [6, 12] },
+  { id: 'tarde', label: 'Tarde', range: '12:00 - 17:00', hours: [12, 17] },
+  { id: 'noche', label: 'Noche', range: '17:00 - 21:00', hours: [17, 21] },
+export default function Schedule() {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [expandedBlock, setExpandedBlock] = useState<TimeBlock | null>('manana'
+      .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+  }, [selectedDate, allClasses]);
+
+  const handleBook = (classId: string) => {
+    setBookingClass(classId);
+    setTimeout(() => setBookingClass(null), 2000);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#FAF9F7]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      {/* Google Fonts */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+        
+        .font-display {
+          font-family: 'Playfair Display', serif;
+        }
+        
+        .font-body {
+          font-family: 'DM Sans', sans-serif;
+        }
+
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+          background-size: 200% 100%;
+        }
+      `}</style>
+
+      {/* Subtle texture overlay */}
+      <div 
+        className="fixed inset-0 pointer-events-none opacity-30"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        }}
+      />
+
+      <div className="relative max-w-6xl mx-auto px-6 py-16">
+        {/* Header - Editorial Style */}
+        <motion.header 
+          className="mb-16 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.p 
+            className="text-xs tracking-[0.3em] text-stone-400 uppercase mb-4 font-body"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            Catarsis Studio • Horarios
+          </motion.p>
+          
+          <motion.h1 
+            className="font-display text-5xl md:text-7xl text-stone-800 mb-6 tracking-tight"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            Tu próxima
+            <span className="block italic text-stone-500">transformación</span>
+          </motion.h1>
+
+          <motion.div 
+            className="flex items-center justify-center gap-8 text-stone-400"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <span className="h-px w-16 bg-stone-300" />
+            <span className="text-sm tracking-wide font-body">
+              {format(new Date(), "MMMM yyyy", { locale: es }).toUpperCase()}
+            </span>
+            <span className="h-px w-16 bg-stone-300" />
+          </motion.div>
+        </motion.header>
+
+        {/* Week Selector - Minimal & Elegant */}
+        <motion.div 
+          className="mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => setWeekStart(prev => subWeeks(prev, 1))}
+              className="w-10 h-10 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:border-stone-400 hover:text-stone-600 transition-all"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            <div className="flex gap-1 bg-white rounded-2xl p-2 shadow-sm border border-stone-100">
+              {weekDays.map((day, i) => {
+                const isSelected = isSameDay(day, selectedDate);
+                const dayIsToday = isToday(day);
+                const hasClasses = allClasses.some(c => isSameDay(parseISO(c.time), day));
+
+                return (
+                  <motion.button
+                    key={day.toISOString()}
+                    onClick={() => setSelectedDate(day)}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.05 * i }}
+                    className={`
+                      relative flex flex-col items-center px-5 py-3 rounded-xl transition-all duration-300 font-body
+                      ${isSelected 
+                        ? 'bg-stone-800 text-white shadow-lg' 
+                        : 'hover:bg-stone-50 text-stone-600'
+                      }
+                    `}
+                  >
+                    <span className={`text-[10px] tracking-wider uppercase mb-1 ${isSelected ? 'text-stone-300' : 'text-stone-400'}`}>
+                      {format(day, 'EEE', { locale: es })}
+                    </span>
+                    <span className={`text-xl font-medium ${dayIsToday && !isSelected ? 'text-stone-900' : ''}`}>
+                      {format(day, 'd')}
+                    </span>
+                    
+                    {/* Indicator dot */}
+                    {hasClasses && (
+                      <span className={`absolute -bottom-0.5 w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-stone-300'}`} />
+                    )}
+                    
+                    {/* Today ring */}
+                    {dayIsToday && !isSelected && (
+                      <span className="absolute inset-0 rounded-xl border-2 border-stone-800 pointer-events-none" />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => setWeekStart(prev => addWeeks(prev, 1))}
+              className="w-10 h-10 rounded-full border border-stone-200 flex items-center justify-center text-stone-400 hover:border-stone-400 hover:text-stone-600 transition-all"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Date Display */}
+        <motion.div 
+          className="flex items-end justify-between mb-8 border-b border-stone-200 pb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div>
+            <h2 className="font-display text-3xl text-stone-800 capitalize">
+              {format(selectedDate, "EEEE", { locale: es })}
+            </h2>
+            <p className="text-stone-400 font-body">
+              {format(selectedDate, "d 'de' MMMM", { locale: es })}
+            </p>
+          </div>
+          <p className="text-sm text-stone-400 font-body">
+            {filteredClasses.length} {filteredClasses.length === 1 ? 'clase' : 'clases'} disponibles
+          </p>
+        </motion.div>
+
+        {/* Classes Grid */}
+        <motion.div 
+          className="space-y-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredClasses.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-20"
+              >
+                <p className="font-display text-2xl text-stone-300 italic">
+                  Sin clases este día
+                </p>
+                <p className="text-stone-400 mt-2 font-body">
+                  Selecciona otro día para ver el horario
+                </p>
+              </motion.div>
+            ) : (
+              filteredClasses.map((cls, index) => {
+                const style = classStyles[cls.type];
+                const level = levelConfig[cls.level];
+                const isFull = cls.spots === 0;
+                const isUrgent = cls.spots <= 2 && cls.spots > 0;
+                const isHovered = hoveredClass === cls.id;
+                const isBooking = bookingClass === cls.id;
+
+                return (
+                  <motion.div
+                    key={cls.id}
+                    layout
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ delay: index * 0.08, duration: 0.4 }}
+                    onMouseEnter={() => setHoveredClass(cls.id)}
+                    onMouseLeave={() => setHoveredClass(null)}
+                    className={`
+                      group relative overflow-hidden rounded-2xl border-2 transition-all duration-500
+                      ${style.bg} ${style.border}
+                      ${isFull ? 'opacity-50 grayscale-[30%]' : ''}
+                      ${isHovered && !isFull ? 'shadow-xl scale-[1.01] border-stone-300' : 'shadow-sm'}
+                    `}
+                    style={{ backgroundImage: style.pattern }}
+                  >
+                    {/* Shimmer effect on hover */}
+                    {isHovered && !isFull && (
+                      <div className="absolute inset-0 animate-shimmer pointer-events-none" />
+                    )}
+
+                    <div className="relative flex items-stretch">
+                      {/* Time Block */}
+                      <div className="w-28 shrink-0 flex flex-col items-center justify-center py-6 border-r border-white/50">
+                        <span className="text-3xl font-light text-stone-700 font-body tabular-nums">
+                          {format(parseISO(cls.time), 'HH:mm')}
+                        </span>
+                        <span className="text-xs text-stone-400 font-body">
+                          {cls.duration} min
+                        </span>
+                      </div>
+
+                      {/* Main Content */}
+                      <div className="flex-1 p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            {/* Class Name & Icon */}
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-2xl">{style.icon}</span>
+                              <h3 className="font-display text-2xl text-stone-800">
+                                {cls.name}
+                              </h3>
+                            </div>
+
+                            {/* Instructor */}
+                            <div className="flex items-center gap-3 mb-4">
+                              <img
+                                src={cls.instructor.photo}
+                                alt={cls.instructor.name}
+                                className="w-8 h-8 rounded-full object-cover ring-2 ring-white"
+                              />
+                              <span className="text-stone-600 font-body">
+                                {cls.instructor.name}
+                              </span>
+                            </div>
+
+                            {/* Meta Info */}
+                            <div className="flex items-center gap-3">
+                              {/* Level Badge */}
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium font-body ${level.color}`}>
+                                {level.label}
+                              </span>
+
+                              {/* Intensity */}
+                              <div className="flex items-center gap-1">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <div
+                                    key={i}
+                                    className={`w-1.5 h-4 rounded-full transition-all ${
+                                      i < cls.intensity 
+                                        ? style.accent 
+                                        : 'bg-stone-200'
+                                    }`}
+                                    style={{
+                                      height: `${8 + i * 3}px`
+                                    }}
+                                  />
+                                ))}
+                                <span className="text-xs text-stone-400 ml-1 font-body">Intensidad</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right Side: Spots & CTA */}
+                          <div className="flex flex-col items-end justify-between h-full ml-6">
+                            {/* Spots Indicator */}
+                            <div className="text-right mb-4">
+                              {isFull ? (
+                                <span className="text-stone-400 font-medium font-body">
+                                  Clase llena
+                                </span>
+                              ) : (
+                                <>
+                                  <span className={`text-2xl font-light font-body ${isUrgent ? 'text-rose-500' : 'text-stone-700'}`}>
+                                    {cls.spots}
+                                  </span>
+                                  <span className="text-stone-400 text-sm font-body">
+                                    /{cls.maxSpots} lugares
+                                  </span>
+                                  {isUrgent && (
+                                    <p className="text-xs text-rose-500 font-medium font-body animate-pulse">
+                                      ¡Últimos lugares!
+                                    </p>
+                                  )}
+                                </>
+                              )}
+                            </div>
+
+                            {/* Book Button */}
+                            <motion.button
+                              onClick={() => !isFull && handleBook(cls.id)}
+                              disabled={isFull}
+                              whileHover={!isFull ? { scale: 1.02 } : {}}
+                              whileTap={!isFull ? { scale: 0.98 } : {}}
+                              className={`
+                                relative px-8 py-3 rounded-xl font-medium text-sm font-body overflow-hidden
+                                transition-all duration-300
+                                ${isFull 
+                                  ? 'bg-stone-200 text-stone-400 cursor-not-allowed' 
+                                  : `${style.accent} text-white shadow-lg hover:shadow-xl`
+                                }
+                              `}
+                            >
+                              <span className={`relative z-10 flex items-center gap-2 ${isBooking ? 'opacity-0' : ''}`}>
+                                {isFull ? 'Agotada' : 'Reservar'}
+                                {!isFull && (
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                  </svg>
+                                )}
+                              </span>
+                              
+                              {/* Success state */}
+                              {isBooking && (
+                                <motion.span
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className="absolute inset-0 flex items-center justify-center"
+                                >
+                                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </motion.span>
+                              )}
+                            </motion.button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Decorative corner accent */}
+                      <div className={`absolute top-0 right-0 w-20 h-20 ${style.accent} opacity-5 rounded-bl-[100px]`} />
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Bottom CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className="mt-16 text-center"
+        >
+          <div className="inline-flex flex-col items-center p-8 rounded-3xl bg-white border border-stone-100 shadow-sm">
+            <p className="font-display text-xl text-stone-600 mb-2">
+              ¿Primera vez con nosotros?
+            </p>
+            <p className="text-stone-400 mb-6 font-body max-w-sm">
+              Reserva una clase de prueba y descubre tu nueva rutina favorita
+            </p>
+            <button className="group flex items-center gap-3 px-8 py-4 bg-stone-800 text-white rounded-xl font-medium font-body hover:bg-stone-700 transition-all">
+              <span>Clase de prueba</span>
+              <span className="text-stone-400 group-hover:text-white transition-colors">
+                $199 MXN
+              </span>
+              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Footer */}
+        <motion.footer
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="mt-12 text-center text-stone-400 text-sm font-body"
+        >
+          <p>Cancelaciones permitidas hasta 4 horas antes de la clase</p>
+        </motion.footer>
+      </div>
+    </div>
+  );
+}

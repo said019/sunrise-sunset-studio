@@ -1,0 +1,243 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Catarsis Studio Palette 2026
+     * Dorado cálido: #A48550 → HSL: 38 34% 48%  — Primary (botones, acentos)
+     * Verde oliva:   #81836F → HSL: 66 8% 47%   — Secondary (complementos)
+     * Arena suave:   #D3C39F → HSL: 42 37% 73%  — Accent (fondos sutiles)
+     * Crema claro:   #F6F6EA → HSL: 60 40% 94%  — Background
+     * Chocolate:     #322A1E → HSL: 36 25% 16%  — Foreground (textos)
+     */
+    --background: 60 40% 94%;
+    --foreground: 36 25% 16%;
+
+    --card: 60 30% 98%;
+    --card-foreground: 36 25% 16%;
+
+    --popover: 60 40% 97%;
+    --popover-foreground: 36 25% 16%;
+
+    --primary: 38 34% 48%;
+    --primary-foreground: 60 40% 97%;
+
+    --secondary: 66 8% 47%;
+    --secondary-foreground: 60 40% 97%;
+
+    --muted: 42 25% 90%;
+    --muted-foreground: 36 15% 40%;
+
+    --accent: 42 37% 73%;
+    --accent-foreground: 36 25% 16%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 60 40% 98%;
+
+    --border: 42 25% 85%;
+    --input: 42 25% 85%;
+    --ring: 38 34% 48%;
+
+    --radius: 0.5rem;
+
+    /* Custom tokens — Catarsis Studio */
+    --hero-gradient: linear-gradient(135deg, hsl(60 40% 94%) 0%, hsl(42 37% 90%) 50%, hsl(66 8% 88%) 100%);
+    --card-gradient: linear-gradient(180deg, hsl(60 40% 97%) 0%, hsl(42 30% 93%) 100%);
+    --overlay-dark: linear-gradient(180deg, hsla(36, 25%, 16%, 0.2) 0%, hsla(36, 25%, 16%, 0.55) 100%);
+    --glow-sage: 0 12px 32px hsla(66, 8%, 47%, 0.2);
+    --glow-warm: 0 12px 32px hsla(38, 34%, 48%, 0.18);
+
+    /* Typography */
+    --font-heading: 'Cormorant', serif;
+    --font-body: 'Outfit', sans-serif;
+
+    /* Animations */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Catarsis semantic status colors — verde oliva #81836F */
+    --success: 66 8% 47%;
+    --success-foreground: 60 40% 97%;
+    --warning: 38 50% 52%;
+    --warning-foreground: 36 25% 16%;
+    --info: 42 30% 60%;
+    --info-foreground: 36 25% 16%;
+
+    --sidebar-background: 60 30% 98%;
+    --sidebar-foreground: 36 25% 16%;
+    --sidebar-primary: 38 34% 48%;
+    --sidebar-primary-foreground: 60 40% 97%;
+    --sidebar-accent: 42 25% 93%;
+    --sidebar-accent-foreground: 36 25% 16%;
+    --sidebar-border: 42 20% 88%;
+    --sidebar-ring: 38 34% 48%;
+  }
+
+  .dark {
+    /* Catarsis Studio Dark Mode */
+    --background: 36 25% 8%;
+    --foreground: 42 30% 92%;
+
+    --card: 36 20% 11%;
+    --card-foreground: 42 30% 92%;
+
+    --popover: 36 25% 9%;
+    --popover-foreground: 42 30% 92%;
+
+    --primary: 38 40% 55%;
+    --primary-foreground: 36 25% 8%;
+
+    --secondary: 66 10% 55%;
+    --secondary-foreground: 42 30% 92%;
+
+    --muted: 36 15% 16%;
+    --muted-foreground: 42 15% 55%;
+
+    --accent: 42 25% 28%;
+    --accent-foreground: 42 30% 92%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 60 40% 98%;
+
+    --border: 36 15% 18%;
+    --input: 36 15% 18%;
+    --ring: 38 40% 55%;
+
+    --success: 66 10% 55%;
+    --success-foreground: 36 25% 8%;
+    --warning: 38 45% 55%;
+    --warning-foreground: 36 25% 8%;
+    --info: 42 25% 50%;
+    --info-foreground: 36 25% 8%;
+
+    --sidebar-background: 36 25% 8%;
+    --sidebar-foreground: 42 20% 92%;
+    --sidebar-primary: 38 40% 55%;
+    --sidebar-primary-foreground: 36 25% 8%;
+    --sidebar-accent: 36 15% 14%;
+    --sidebar-accent-foreground: 42 20% 92%;
+    --sidebar-border: 36 15% 16%;
+    --sidebar-ring: 38 40% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+@layer components {
+  .hero-gradient {
+    background: var(--hero-gradient);
+  }
+
+  .card-gradient {
+    background: var(--card-gradient);
+  }
+
+  .overlay-dark {
+    background: var(--overlay-dark);
+  }
+
+  .glow-sage {
+    box-shadow: var(--glow-sage);
+  }
+
+  .glow-warm {
+    box-shadow: var(--glow-warm);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  .animate-fade-up {
+    animation: fadeUp 0.8s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.5s ease-out forwards;
+  }
+
+  .animate-slide-left {
+    animation: slideLeft 0.6s ease-out forwards;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes slideLeft {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+}
