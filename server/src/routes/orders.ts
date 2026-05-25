@@ -9,6 +9,7 @@ import { awardPaymentLoyaltyPoints } from '../lib/loyalty.js';
 import { copyPlanBucketsToMembership } from '../lib/memberships.js';
 import { notifyMembershipRenewed } from '../lib/notifications.js';
 import { isGoogleDriveConfigured, uploadBufferToGoogleDrive } from '../lib/googleDrive.js';
+import { inscriptionAmount } from '../lib/inscription.js';
 
 // Decodifica un data URI base64 ("data:image/png;base64,xxxxx") a { buffer, mimeType }.
 // Devuelve null si no es un data URI valido.
@@ -299,8 +300,36 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Plan no encontrado o no disponible' });
         }
 
+        // Detect same-day trial → inscription discount.
+        // Applies when the client is enrolling (Inscripción) and already has a
+        // Clase Muestra membership created today in Mexico City time.
+        const INSCRIPTION_PLAN_NAME = 'Inscripción';
+        const TRIAL_PLAN_NAME = 'Clase Muestra';
+        const TRIAL_BASE_PRICE = 300; // seeded price of Clase Muestra
+
+        let tookTrialToday = false;
+        if (plan.name === INSCRIPTION_PLAN_NAME) {
+            const trialToday = await queryOne<{ exists: boolean }>(
+                `SELECT EXISTS (
+                    SELECT 1
+                    FROM memberships m
+                    JOIN plans p ON p.id = m.plan_id
+                    WHERE m.user_id = $1
+                      AND p.name = $2
+                      AND DATE(m.created_at AT TIME ZONE 'America/Mexico_City')
+                          = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Mexico_City')::date
+                ) AS exists`,
+                [userId, TRIAL_PLAN_NAME]
+            );
+            tookTrialToday = trialToday?.exists === true;
+        }
+
         // Calculate totals with discount
-        const subtotal = parseFloat(plan.price);
+        const basePrice = parseFloat(plan.price);
+        // Apply same-day trial discount (server-side; independent of promo codes)
+        const subtotal = plan.name === INSCRIPTION_PLAN_NAME
+            ? inscriptionAmount({ basePrice, trialPrice: TRIAL_BASE_PRICE, tookTrialToday })
+            : basePrice;
         const taxAmount = 0;
         const appliedDiscount = discount_code_id && discount_amount ? Math.min(discount_amount, subtotal) : 0;
         const totalAmount = Math.max(subtotal - appliedDiscount, 0);
