@@ -35,3 +35,13 @@ VALUES ('Clase Suelta - Yoga', 350.00, 'MXN', 30, 1, 'Drop-in · Yoga', '["1 cla
 INSERT INTO plan_credit_buckets (plan_id, allowed_class_type_ids, credit_count, sort_order)
 SELECT (SELECT id FROM plans WHERE name='Clase Suelta - Yoga'),
        ARRAY(SELECT id FROM class_types WHERE name='Yoga'), 1, 0;
+
+-- Deactivate any non-Sunrise plans (Catarsis defaults seeded by schema_complete.sql),
+-- so only the Sunrise catalog (12 packages + 4 singles = 16) is active.
+UPDATE plans SET is_active = false
+WHERE name NOT IN (
+  'Sunrise Pack','Golden Hour','Sunset Flow','Full Day Experience',
+  'Wave Starter','Ocean Flow','Deep Flow','Endless Waves',
+  'Balanced Flow','Elevate Experience','Full Experience','Sunrise Sunset Combo',
+  'Clase Muestra','Clase Suelta - Sculpt-Funcional','Clase Suelta - Surf-Pilates','Clase Suelta - Yoga'
+);
