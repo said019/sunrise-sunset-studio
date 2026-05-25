@@ -117,9 +117,9 @@ export default function Register() {
                 <CardHeader className="space-y-1 text-center">
                     <div className="flex justify-center mb-4">
                         <img
-                            src="/catarsis.jpg"
+                            src="/logo-wordmark.svg"
                             alt="Sunrise Sunset"
-                            className="h-16 w-16 rounded-full object-cover"
+                            className="h-16 w-auto"
                         />
                     </div>
                     <CardTitle className="text-2xl font-heading">Crear Cuenta</CardTitle>

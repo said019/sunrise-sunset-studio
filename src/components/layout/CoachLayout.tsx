@@ -85,7 +85,7 @@ export default function CoachLayout({ children }: CoachLayoutProps) {
                             {/* Logo */}
                             <Link to="/coach" className="flex items-center space-x-2.5">
                                 <img
-                                    src="/catarsis.jpg"
+                                    src="/logo.svg"
                                     alt="Sunrise Sunset"
                                     className="h-9 w-9 rounded-xl object-cover ring-2 ring-amber/20"
                                 />
@@ -173,7 +173,7 @@ export default function CoachLayout({ children }: CoachLayoutProps) {
                             <div className="flex h-16 items-center justify-between border-b px-4">
                                 <div className="flex items-center space-x-2">
                                     <img
-                                        src="/catarsis.jpg"
+                                        src="/logo.svg"
                                         alt="Sunrise Sunset"
                                         className="h-9 w-9 rounded-xl object-cover ring-2 ring-amber/20"
                                     />

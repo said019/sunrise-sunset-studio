@@ -433,7 +433,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     {!sidebarCollapsed && (
                         <Link to="/admin/dashboard" className="flex items-center space-x-2.5">
                             <img
-                                src="/catarsis.jpg"
+                                src="/logo.svg"
                                 alt="Sunrise Sunset"
                                 className="h-9 w-9 rounded-xl object-cover ring-2 ring-amber/20"
                             />
@@ -479,9 +479,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <div className="flex items-center justify-between border-b px-4" style={{ paddingTop: 'env(safe-area-inset-top, 0px)', height: 'calc(4rem + env(safe-area-inset-top, 0px))' }}>
                     <Link to="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center space-x-2">
                         <img
-                            src="/catarsis.jpg"
+                            src="/logo.svg"
                             alt="Sunrise Sunset"
-                            className="h-8 w-8 rounded-full object-cover"
+                            className="h-8 w-8 rounded-xl object-contain"
                         />
                         <div className="flex flex-col">
                             <span className="font-heading text-lg font-bold text-coral leading-none">Sunrise Sunset</span>

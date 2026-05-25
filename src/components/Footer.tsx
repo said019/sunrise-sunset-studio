@@ -1,4 +1,4 @@
-import { MapPin, Phone, Mail, Instagram } from "lucide-react";
+import { MapPin, Phone, Mail, Instagram } from "lucide-react"; // Phone kept for v1 re-enable
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
@@ -10,9 +10,9 @@ const Footer = () => {
           <div>
             <div className="flex items-center gap-3 mb-6">
               <img
-                src="/catarsis.jpg"
+                src="/logo.svg"
                 alt="Sunrise Sunset"
-                className="h-12 w-12 rounded-full object-cover"
+                className="h-12 w-12 rounded-xl object-contain"
               />
               <div className="flex flex-col">
                 <span className="font-heading text-xl font-semibold text-primary-foreground leading-none">
@@ -26,7 +26,7 @@ const Footer = () => {
             </p>
             <div className="flex items-center gap-4">
               <a
-                href="https://www.instagram.com/sunrisesunsetstudio"
+                href="https://instagram.com/sunrisesunsetloscabos"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-primary-foreground/10 rounded-full flex items-center justify-center hover:bg-primary-foreground/20 transition-colors"
@@ -69,16 +69,17 @@ const Footer = () => {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary-foreground/50 flex-shrink-0 mt-0.5" />
                 <a
-                  href="https://maps.google.com/?q=Hermenegildo+Galeana+Int+Local+4+Centro+76803+San+Juan+del+Rio+Qro"
+                  href="https://maps.google.com/?q=Carretera+Transpeninsular+km+3.5+El+Tezal+Cabo+San+Lucas+BCS"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-body text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
                 >
-                  Hermenegildo Galeana Int. Local 4
+                  Carretera Transpeninsular km 3.5
                   <br />
-                  Centro, 76803 San Juan del Río, Qro.
+                  El Tezal, 23454 Cabo San Lucas, B.C.S.
                 </a>
               </li>
+              {/* v1: phone hidden — re-enable by uncommenting when phone support is confirmed
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary-foreground/50" />
                 <a
@@ -88,6 +89,7 @@ const Footer = () => {
                   +52 427 100 7347
                 </a>
               </li>
+              */}
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary-foreground/50" />
                 <a

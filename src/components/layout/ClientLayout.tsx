@@ -78,9 +78,9 @@ export function ClientLayout({ children }: ClientLayoutProps) {
                     {/* Logo */}
                     <Link to="/app" className="flex items-center space-x-3">
                         <img
-                            src="/catarsis.jpg"
+                            src="/logo.svg"
                             alt="Sunrise Sunset"
-                            className="h-8 w-8 rounded-full object-cover"
+                            className="h-8 w-8 rounded-xl object-contain"
                         />
                         <div className="flex items-baseline space-x-1">
                             <span className="font-heading text-xl font-bold text-primary">Sunrise Sunset</span>

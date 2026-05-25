@@ -121,9 +121,9 @@ const Navbar = () => {
           {/* Logo */}
           <a href="#" className="flex items-center gap-3">
             <img
-              src="/catarsis.jpg"
+              src="/logo.svg"
               alt="Sunrise Sunset"
-              className="h-10 w-10 rounded-full object-cover"
+              className="h-10 w-10 rounded-xl object-contain"
             />
             <div className="flex flex-col">
               <span className={`font-heading text-xl md:text-2xl font-semibold tracking-tight leading-none transition-colors duration-500 ${
@@ -248,7 +248,7 @@ const Navbar = () => {
           {/* Close button */}
           <div className="flex items-center justify-between px-6 pt-6 pb-4">
             <div className="flex items-center gap-2">
-              <img src="/catarsis.jpg" alt="Sunrise Sunset" className="h-8 w-8 rounded-full object-cover" />
+              <img src="/logo.svg" alt="Sunrise Sunset" className="h-8 w-8 rounded-xl object-contain" />
               <span className="font-heading text-lg font-semibold text-white">Sunrise Sunset</span>
             </div>
             <button

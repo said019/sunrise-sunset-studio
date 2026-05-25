@@ -64,15 +64,15 @@ const studioDirectory: Record<string, StudioInfo> = {
     tagline: 'Sculpt, Surf-Pilates y Yoga en un espacio sereno.',
     description:
       'Sesiones íntimas, ritmo consciente y membresías digitales con nuestra Membresía.',
-    addressLine: 'Av. Presidente Masaryk 123',
-    city: 'Polanco',
-    state: 'CDMX',
-    postalCode: '11560',
-    phone: '+52 55 5555 1234',
-    whatsapp: '+52 55 8000 1122',
-    email: 'hola@balancestudio.com',
-    instagram: '@balancestudio',
-    mapUrl: 'https://maps.google.com/?q=Balance+Studio+Polanco',
+    addressLine: 'Carretera Transpeninsular km 3.5',
+    city: 'El Tezal, Cabo San Lucas',
+    state: 'B.C.S.',
+    postalCode: '23454',
+    phone: '', // v1: phone not yet enabled
+    whatsapp: '', // v1: WhatsApp not yet enabled
+    email: 'hola@sunrisesunset.mx',
+    instagram: '@sunrisesunsetloscabos',
+    mapUrl: 'https://maps.google.com/?q=Carretera+Transpeninsular+km+3.5+El+Tezal+Cabo+San+Lucas+BCS',
     classTypes: [
       {
         name: 'Catarsis',

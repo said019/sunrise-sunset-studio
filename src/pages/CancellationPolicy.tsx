@@ -194,7 +194,7 @@ export default function CancellationPolicy() {
                                 <div>
                                     <p className="text-sm font-medium">Sunrise Sunset</p>
                                     <p className="text-sm text-muted-foreground">
-                                        El Tezal, Los Cabos, B.C.S.
+                                        Carretera Transpeninsular km 3.5, El Tezal, 23454 Cabo San Lucas, B.C.S.
                                     </p>
                                 </div>
                                 <div>

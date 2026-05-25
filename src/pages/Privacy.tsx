@@ -293,7 +293,7 @@ export default function Privacy() {
                 <div className="bg-muted/50 p-6 rounded-lg space-y-3">
                   <div>
                     <p className="text-sm font-medium">Sunrise Sunset</p>
-                    <p className="text-sm text-muted-foreground">El Tezal, Los Cabos, B.C.S.</p>
+                    <p className="text-sm text-muted-foreground">Carretera Transpeninsular km 3.5, El Tezal, 23454 Cabo San Lucas, B.C.S.</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Email</p>
