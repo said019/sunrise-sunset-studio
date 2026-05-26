@@ -36,3 +36,7 @@ test-results/
 playwright-report/
 e2e/reports/
 .env.test
+
+# macOS Finder duplicate cruft
+* 2.*
+* 3.*
