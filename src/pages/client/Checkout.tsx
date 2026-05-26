@@ -373,7 +373,8 @@ export default function Checkout() {
             const GROUP_A_NAMES = ['Sunrise Pack', 'Golden Hour', 'Sunset Flow', 'Full Day Experience'];
             const GROUP_B_NAMES = ['Wave Starter', 'Ocean Flow', 'Deep Flow', 'Endless Waves'];
             const GROUP_C_NAMES = ['Balanced Flow', 'Elevate Experience', 'Full Experience', 'Sunrise Sunset Combo'];
-            const SINGLES_ORDER = ['Clase Muestra', 'Clase Suelta - Sculpt-Funcional', 'Clase Suelta - Surf-Pilates', 'Clase Suelta - Yoga'];
+            const MUESTRA_NAME = 'Clase Muestra';
+            const SUELTA_NAMES = ['Clase Suelta - Sculpt-Funcional', 'Clase Suelta - Surf-Pilates', 'Clase Suelta - Yoga'];
             const recommendedName = 'Full Experience';
             const byPrice = (a: Plan, b: Plan) => Number(a.price) - Number(b.price);
 
@@ -385,9 +386,10 @@ export default function Checkout() {
             });
 
             const inscripcion = visiblePlans.find((p) => p.name === 'Inscripción');
-            const singles = visiblePlans
-              .filter((p) => SINGLES_ORDER.includes(p.name))
-              .sort((a, b) => SINGLES_ORDER.indexOf(a.name) - SINGLES_ORDER.indexOf(b.name));
+            const muestra = visiblePlans.find((p) => p.name === MUESTRA_NAME);
+            const sueltas = visiblePlans
+              .filter((p) => SUELTA_NAMES.includes(p.name))
+              .sort((a, b) => SUELTA_NAMES.indexOf(a.name) - SUELTA_NAMES.indexOf(b.name));
             const groupA = visiblePlans.filter((p) => GROUP_A_NAMES.includes(p.name)).sort(byPrice);
             const groupB = visiblePlans.filter((p) => GROUP_B_NAMES.includes(p.name)).sort(byPrice);
             const groupC = visiblePlans.filter((p) => GROUP_C_NAMES.includes(p.name)).sort(byPrice);
@@ -489,30 +491,55 @@ export default function Checkout() {
 
             return (
               <div className="space-y-12">
-                {/* Inscripción — paso 1 si no la tienen */}
-                {inscripcion && (
+                {/* Clase Muestra — primera experiencia (con guiño al descuento de inscripción) */}
+                {muestra && (
                   <section>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="material-symbols-outlined text-coral filled text-xl">redeem</span>
-                      <h3 className="font-heading text-xl text-foreground">Inscripción · paso uno</h3>
+                      <span className="material-symbols-outlined text-coral filled text-xl">spa</span>
+                      <h3 className="font-heading text-xl text-foreground">Clase muestra · tu primera vez</h3>
                     </div>
                     <p className="text-sm text-foreground/65 mb-4 max-w-xl">
-                      Pago único para acceder al studio. Si te inscribes el mismo día que tomas tu clase muestra,
-                      el costo de ésta se descuenta de tu inscripción.
+                      Una sesión para probar el studio.
+                      {!hasActiveMembershipFee && ' Si te inscribes el mismo día, los $300 se descuentan automáticamente de tu inscripción.'}
                     </p>
                     <div className="max-w-md">
-                      <PlanCard plan={inscripcion} variant="hero" />
+                      <PlanCard plan={muestra} variant="hero" />
                     </div>
                   </section>
                 )}
 
-                {/* Sueltas y muestra */}
-                {singles.length > 0 && (
+                {/* Clase Suelta — 3 tipos sin paquete */}
+                {sueltas.length > 0 && (
                   <section>
-                    <h3 className="font-heading text-xl text-foreground mb-1">Sueltas y muestra</h3>
-                    <p className="text-sm text-foreground/55 mb-4">Una clase a la vez · sin compromiso</p>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                      {singles.map((p) => <PlanCard key={p.id} plan={p} variant="compact" />)}
+                    <h3 className="font-heading text-xl text-foreground mb-1">Clase suelta · 3 tipos</h3>
+                    <p className="text-sm text-foreground/55 mb-4">Una clase a la vez · sin paquete</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {sueltas.map((p) => <PlanCard key={p.id} plan={p} variant="compact" />)}
+                    </div>
+                  </section>
+                )}
+
+                {/* Inscripción · pago único, con callout del descuento same-day */}
+                {inscripcion && (
+                  <section>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="material-symbols-outlined text-coral filled text-xl">redeem</span>
+                      <h3 className="font-heading text-xl text-foreground">Inscripción · pago único</h3>
+                    </div>
+                    <p className="text-sm text-foreground/65 mb-4 max-w-xl">
+                      Acceso anual al studio. Necesaria para comprar cualquier paquete mensual.
+                    </p>
+                    <div className="max-w-md space-y-3">
+                      <div className="bg-blush border border-coral/25 rounded-2xl p-4 flex items-start gap-3">
+                        <span className="material-symbols-outlined text-coral text-2xl mt-0.5 filled">savings</span>
+                        <div className="text-sm">
+                          <p className="font-semibold text-foreground">−$300 si te inscribes el mismo día de tu muestra</p>
+                          <p className="text-xs text-foreground/65 mt-0.5 leading-relaxed">
+                            El costo de tu clase muestra ($300) se descuenta automáticamente del costo de inscripción ($500), siempre que sea el mismo día calendario.
+                          </p>
+                        </div>
+                      </div>
+                      <PlanCard plan={inscripcion} variant="hero" />
                     </div>
                   </section>
                 )}
