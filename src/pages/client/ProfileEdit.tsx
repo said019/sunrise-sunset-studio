@@ -19,14 +19,21 @@ import { optimizeImage } from '@/lib/imageOptimization';
 import type { UpdateProfileData, User } from '@/types/auth';
 import { Link } from 'react-router-dom';
 import { Camera, Loader2 } from 'lucide-react';
+import { PhoneInput } from '@/components/PhoneInput';
+import { DEFAULT_COUNTRY, findCountryByISO, parsePhoneToParts } from '@/lib/country-codes';
 
 const profileSchema = z.object({
   displayName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  phone: z
+  countryISO: z.string().default(DEFAULT_COUNTRY.iso),
+  // phoneNational is optional. If non-empty it must be 6-14 digits.
+  phoneNational: z
     .string()
-    .regex(/^\+52[0-9]{10}$/, 'Formato: +52 seguido de 10 dígitos')
     .optional()
-    .or(z.literal('')),
+    .or(z.literal(''))
+    .refine(
+      (v) => !v || /^[0-9]{6,14}$/.test(v),
+      'Si llenas el teléfono, debe tener entre 6 y 14 dígitos',
+    ),
   dateOfBirth: z.string().optional().or(z.literal('')),
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
@@ -55,17 +62,22 @@ export default function ProfileEdit() {
     enabled: Boolean(authUser?.id),
   });
 
+  // Pre-populate from the auth-store snapshot (the network query refines below).
+  const initialParts = parsePhoneToParts(authUser?.phone);
+
   const {
     register,
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       displayName: authUser?.display_name || '',
-      phone: authUser?.phone || '',
+      countryISO: initialParts.country.iso,
+      phoneNational: initialParts.national,
       dateOfBirth: authUser?.date_of_birth ? authUser.date_of_birth.slice(0, 10) : '',
       emergencyContactName: authUser?.emergency_contact_name || '',
       emergencyContactPhone: authUser?.emergency_contact_phone || '',
@@ -73,11 +85,16 @@ export default function ProfileEdit() {
     },
   });
 
+  const countryISO = watch('countryISO') ?? DEFAULT_COUNTRY.iso;
+  const phoneNational = watch('phoneNational') ?? '';
+
   useEffect(() => {
     if (data?.user) {
+      const parts = parsePhoneToParts(data.user.phone);
       reset({
         displayName: data.user.display_name || '',
-        phone: data.user.phone || '',
+        countryISO: parts.country.iso,
+        phoneNational: parts.national,
         dateOfBirth: data.user.date_of_birth ? data.user.date_of_birth.slice(0, 10) : '',
         emergencyContactName: data.user.emergency_contact_name || '',
         emergencyContactPhone: data.user.emergency_contact_phone || '',
@@ -146,30 +163,14 @@ export default function ProfileEdit() {
   const initials = (data?.user?.display_name || authUser?.display_name || '?')
     .split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
-  const handlePhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
-    let value = event.target.value;
-    value = value.replace(/[^\d+]/g, '');
-    if (!value.startsWith('+52') && value.length > 0) {
-      if (value.startsWith('52')) {
-        value = `+${value}`;
-      } else if (value.startsWith('+')) {
-        value = `+52${value.substring(1)}`;
-      } else {
-        value = `+52${value}`;
-      }
-    }
-    if (value.length > 13) {
-      value = value.substring(0, 13);
-    }
-    event.target.value = value;
-    setValue('phone', value, { shouldValidate: true });
-  };
-
   const onSubmit = (values: ProfileForm) => {
     if (!authUser?.id) return;
+    const country = findCountryByISO(values.countryISO || DEFAULT_COUNTRY.iso) ?? DEFAULT_COUNTRY;
+    const trimmedNational = (values.phoneNational || '').trim();
+    const fullPhone = trimmedNational ? `${country.dialCode}${trimmedNational}` : undefined;
     const payload: UpdateProfileData = {
       displayName: values.displayName,
-      phone: values.phone?.trim() ? values.phone : undefined,
+      phone: fullPhone,
       dateOfBirth: values.dateOfBirth || undefined,
       emergencyContactName: values.emergencyContactName || undefined,
       emergencyContactPhone: values.emergencyContactPhone || undefined,
@@ -245,10 +246,19 @@ export default function ProfileEdit() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Teléfono</Label>
-                    <Input id="phone" {...register('phone', { onChange: handlePhoneChange })} />
-                    {errors.phone && (
-                      <p className="text-xs text-destructive">{errors.phone.message}</p>
+                    <Label htmlFor="phoneNational">Teléfono</Label>
+                    <PhoneInput
+                      id="phoneNational"
+                      countryISO={countryISO}
+                      phoneNational={phoneNational}
+                      onCountryChange={(v) => setValue('countryISO', v, { shouldValidate: true })}
+                      onPhoneChange={(v) => setValue('phoneNational', v, { shouldValidate: true })}
+                      placeholder="Opcional"
+                    />
+                    {(errors.phoneNational || errors.countryISO) && (
+                      <p className="text-xs text-destructive">
+                        {errors.phoneNational?.message ?? errors.countryISO?.message}
+                      </p>
                     )}
                   </div>
 

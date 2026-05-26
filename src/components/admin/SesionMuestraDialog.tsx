@@ -13,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Sparkles } from 'lucide-react';
+import { PhoneInput } from '@/components/PhoneInput';
+import { DEFAULT_COUNTRY, findCountryByISO } from '@/lib/country-codes';
 
 interface SesionMuestraDialogProps {
     classId: string;
@@ -22,14 +24,19 @@ interface SesionMuestraDialogProps {
 export function SesionMuestraDialog({ classId, onBooked }: SesionMuestraDialogProps) {
     const [open, setOpen] = useState(false);
     const [displayName, setDisplayName] = useState('');
-    const [phone, setPhone] = useState('');
+    const [countryISO, setCountryISO] = useState<string>(DEFAULT_COUNTRY.iso);
+    const [phoneNational, setPhoneNational] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
+    const country = findCountryByISO(countryISO) ?? DEFAULT_COUNTRY;
+    const fullPhone = `${country.dialCode}${phoneNational}`;
+
     const reset = () => {
         setDisplayName('');
-        setPhone('');
+        setCountryISO(DEFAULT_COUNTRY.iso);
+        setPhoneNational('');
         setPaymentMethod('cash');
     };
 
@@ -37,7 +44,7 @@ export function SesionMuestraDialog({ classId, onBooked }: SesionMuestraDialogPr
         mutationFn: async () => {
             const { data } = await api.post('/users/prospect-booking', {
                 displayName,
-                phone,
+                phone: fullPhone,
                 classId,
                 paymentMethod,
             });
@@ -57,7 +64,7 @@ export function SesionMuestraDialog({ classId, onBooked }: SesionMuestraDialogPr
         },
     });
 
-    const canSubmit = displayName.trim().length >= 2 && phone.replace(/\D/g, '').length >= 8;
+    const canSubmit = displayName.trim().length >= 2 && phoneNational.length >= 6;
 
     return (
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
@@ -66,7 +73,7 @@ export function SesionMuestraDialog({ classId, onBooked }: SesionMuestraDialogPr
                     <Sparkles className="mr-2 h-4 w-4" /> Sesión Muestra
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[420px]">
+            <DialogContent className="sm:max-w-[460px]">
                 <DialogHeader>
                     <DialogTitle>Agendar sesión muestra</DialogTitle>
                     <DialogDescription>
@@ -81,8 +88,16 @@ export function SesionMuestraDialog({ classId, onBooked }: SesionMuestraDialogPr
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="sm-phone">Teléfono <span className="text-destructive">*</span></Label>
-                        <Input id="sm-phone" placeholder="+52 33 1234 5678"
-                            value={phone} onChange={(e) => setPhone(e.target.value)} />
+                        <PhoneInput
+                            id="sm-phone"
+                            countryISO={countryISO}
+                            phoneNational={phoneNational}
+                            onCountryChange={setCountryISO}
+                            onPhoneChange={setPhoneNational}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Se guardará como <span className="font-mono">{country.dialCode}{phoneNational || '…'}</span>
+                        </p>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="sm-pay">Método de pago</Label>

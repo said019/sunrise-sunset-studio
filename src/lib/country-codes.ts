@@ -34,3 +34,31 @@ export const DEFAULT_COUNTRY: Country = COUNTRIES[0]; // México
 export function findCountryByISO(iso: string): Country | undefined {
     return COUNTRIES.find((c) => c.iso === iso);
 }
+
+export interface PhoneParts {
+    country: Country;
+    national: string;
+}
+
+/**
+ * Splits a stored E.164 phone like "+529876543210" into { country, national }.
+ * Falls back to MX + raw digits when the input lacks a '+' prefix or the dial
+ * code isn't in our list. Sorts dial codes by length DESC so '+52' matches
+ * before '+5'.
+ */
+export function parsePhoneToParts(fullPhone?: string | null): PhoneParts {
+    const phone = (fullPhone || '').trim();
+    if (!phone) return { country: DEFAULT_COUNTRY, national: '' };
+    if (!phone.startsWith('+')) {
+        return { country: DEFAULT_COUNTRY, national: phone.replace(/\D/g, '') };
+    }
+    const digitsOnly = phone.slice(1).replace(/\D/g, '');
+    const byLengthDesc = [...COUNTRIES].sort((a, b) => b.dialCode.length - a.dialCode.length);
+    for (const c of byLengthDesc) {
+        const code = c.dialCode.slice(1);
+        if (digitsOnly.startsWith(code)) {
+            return { country: c, national: digitsOnly.slice(code.length) };
+        }
+    }
+    return { country: DEFAULT_COUNTRY, national: digitsOnly };
+}

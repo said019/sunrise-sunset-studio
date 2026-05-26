@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '@/stores/authStore';
@@ -9,10 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Mail, Lock, Eye, EyeOff, User, Phone, Cake } from 'lucide-react';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { COUNTRIES, DEFAULT_COUNTRY, findCountryByISO } from '@/lib/country-codes';
+import { PhoneInput } from '@/components/PhoneInput';
 
 const COUNTRY_ISOS = COUNTRIES.map((c) => c.iso) as [string, ...string[]];
 
@@ -53,7 +53,6 @@ export default function Register() {
         handleSubmit,
         setValue,
         watch,
-        control,
         formState: { errors },
     } = useForm<RegisterForm>({
         resolver: zodResolver(registerSchema),
@@ -66,9 +65,9 @@ export default function Register() {
 
     const acceptsTerms = watch('acceptsTerms');
     const acceptsCommunications = watch('acceptsCommunications');
-    const selectedISO = watch('countryISO');
-    const selectedCountry = findCountryByISO(selectedISO) ?? DEFAULT_COUNTRY;
+    const selectedISO = watch('countryISO') ?? DEFAULT_COUNTRY.iso;
     const phoneNationalValue = watch('phoneNational') ?? '';
+    const selectedCountry = findCountryByISO(selectedISO) ?? DEFAULT_COUNTRY;
 
     // Redirect if already authenticated
     useEffect(() => {
@@ -159,61 +158,22 @@ export default function Register() {
                         )}
                     </div>
 
-                    {/* Teléfono — selector de país + número nacional */}
+                    {/* Teléfono — selector de país + número nacional (PhoneInput) */}
                     <div className="space-y-2 sm:col-span-2">
                         <Label htmlFor="phoneNational" className="text-sm font-semibold text-chocolate">
                             Teléfono
                         </Label>
-                        <div className="flex gap-2">
-                            <Controller
-                                name="countryISO"
-                                control={control}
-                                render={({ field }) => (
-                                    <Select
-                                        value={field.value}
-                                        onValueChange={field.onChange}
-                                        disabled={isLoading}
-                                    >
-                                        <SelectTrigger
-                                            aria-label="Código de país"
-                                            className="h-12 w-[124px] shrink-0 rounded-2xl border-chocolate/[0.12] bg-cream/[0.72] text-chocolate focus:ring-coral"
-                                        >
-                                            <SelectValue>
-                                                <span className="mr-1">{selectedCountry.flag}</span>
-                                                <span>{selectedCountry.dialCode}</span>
-                                            </SelectValue>
-                                        </SelectTrigger>
-                                        <SelectContent className="max-h-72">
-                                            {COUNTRIES.map((c) => (
-                                                <SelectItem key={c.iso} value={c.iso}>
-                                                    <span className="mr-2">{c.flag}</span>
-                                                    {c.name}
-                                                    <span className="ml-2 text-chocolate/60">{c.dialCode}</span>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                )}
-                            />
-                            <div className="relative flex-1">
-                                <Phone className={iconClass} strokeWidth={1.7} />
-                                <Input
-                                    id="phoneNational"
-                                    type="tel"
-                                    inputMode="numeric"
-                                    autoComplete="tel-national"
-                                    placeholder="Número (solo dígitos)"
-                                    className={inputClass}
-                                    {...register('phoneNational')}
-                                    onChange={(e) => {
-                                        // Strip non-digits as user types
-                                        e.target.value = e.target.value.replace(/[^0-9]/g, '');
-                                        register('phoneNational').onChange(e);
-                                    }}
-                                    disabled={isLoading}
-                                />
-                            </div>
-                        </div>
+                        <PhoneInput
+                            id="phoneNational"
+                            countryISO={selectedISO}
+                            phoneNational={phoneNationalValue}
+                            onCountryChange={(v) => setValue('countryISO', v as RegisterForm['countryISO'], { shouldValidate: true })}
+                            onPhoneChange={(v) => setValue('phoneNational', v, { shouldValidate: true })}
+                            disabled={isLoading}
+                            triggerClassName="h-12 w-[124px] rounded-2xl border-chocolate/[0.12] bg-cream/[0.72] text-chocolate focus:ring-coral"
+                            inputClassName={inputClass}
+                            inputAdornment={<Phone className={iconClass} strokeWidth={1.7} />}
+                        />
                         {(errors.phoneNational || errors.countryISO) && (
                             <p className="text-sm text-destructive">
                                 {errors.phoneNational?.message ?? errors.countryISO?.message}

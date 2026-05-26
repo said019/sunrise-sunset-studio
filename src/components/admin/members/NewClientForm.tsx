@@ -18,17 +18,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, UserPlus, Info, Search, UserCheck, X } from 'lucide-react';
 import api from '@/lib/api';
+import { PhoneInput } from '@/components/PhoneInput';
+import { DEFAULT_COUNTRY, findCountryByISO, parsePhoneToParts } from '@/lib/country-codes';
 
+// Internal form schema: stores country + national part separately for the UI.
 const newClientSchema = z.object({
   displayName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.string().email('Email inválido'),
-  phone: z.string().min(8, 'Teléfono inválido'),
+  countryISO: z.string().default(DEFAULT_COUNTRY.iso),
+  phoneNational: z.string().regex(/^[0-9]{6,14}$/, 'Teléfono inválido — solo dígitos, 6 a 14 caracteres'),
   password: z.string().min(8, 'Mínimo 8 caracteres').optional().or(z.literal('')),
   dateOfBirth: z.string().optional().or(z.literal('')),
   acceptsCommunications: z.boolean().default(false),
 });
 
-type NewClientForm = z.infer<typeof newClientSchema>;
+type NewClientFormData = z.infer<typeof newClientSchema>;
+
+// External payload — what the parent's onSubmit receives. Keeps the old shape
+// (combined `phone`) so callers don't need to change.
+export type NewClientForm = {
+  displayName: string;
+  email: string;
+  phone: string;
+  password?: string;
+  dateOfBirth?: string;
+  acceptsCommunications: boolean;
+};
 
 interface ExistingClient {
   id: string;
@@ -44,14 +59,17 @@ interface NewClientFormProps {
 }
 
 export const NewClientForm = ({ onSubmit, isLoading, onCancel }: NewClientFormProps) => {
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<NewClientForm>({
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<NewClientFormData>({
     resolver: zodResolver(newClientSchema),
     defaultValues: {
+      countryISO: DEFAULT_COUNTRY.iso,
       acceptsCommunications: false,
     },
   });
 
   const acceptsCommunications = watch('acceptsCommunications');
+  const countryISO = watch('countryISO') ?? DEFAULT_COUNTRY.iso;
+  const phoneNational = watch('phoneNational') ?? '';
 
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
@@ -103,23 +121,38 @@ export const NewClientForm = ({ onSubmit, isLoading, onCancel }: NewClientFormPr
     setSelectedClient(client);
     setShowResults(false);
     setSearchTerm('');
-    // Auto-fill form
+    // Auto-fill form — parse existing phone into country + national
+    const parts = parsePhoneToParts(client.phone);
     setValue('displayName', client.display_name);
     setValue('email', client.email);
-    setValue('phone', client.phone);
+    setValue('countryISO', parts.country.iso);
+    setValue('phoneNational', parts.national);
   };
 
   const handleClearSelection = () => {
     setSelectedClient(null);
-    reset({ acceptsCommunications: false });
+    reset({ countryISO: DEFAULT_COUNTRY.iso, acceptsCommunications: false });
   };
 
   useEffect(() => {
     register('acceptsCommunications');
   }, [register]);
 
+  const internalSubmit = (data: NewClientFormData) => {
+    const country = findCountryByISO(data.countryISO) ?? DEFAULT_COUNTRY;
+    const fullPhone = `${country.dialCode}${data.phoneNational}`;
+    onSubmit({
+      displayName: data.displayName,
+      email: data.email,
+      phone: fullPhone,
+      password: data.password ? data.password : undefined,
+      dateOfBirth: data.dateOfBirth ? data.dateOfBirth : undefined,
+      acceptsCommunications: data.acceptsCommunications,
+    });
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(internalSubmit)} className="space-y-6">
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
@@ -237,17 +270,21 @@ export const NewClientForm = ({ onSubmit, isLoading, onCancel }: NewClientFormPr
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="phoneNational">
               Teléfono <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="phone"
-              placeholder="+52 33 1234 5678"
-              {...register('phone')}
+            <PhoneInput
+              id="phoneNational"
+              countryISO={countryISO}
+              phoneNational={phoneNational}
+              onCountryChange={(v) => setValue('countryISO', v, { shouldValidate: true })}
+              onPhoneChange={(v) => setValue('phoneNational', v, { shouldValidate: true })}
             />
-            {errors.phone && (
-              <p className="text-xs text-destructive">{errors.phone.message}</p>
+            {(errors.phoneNational || errors.countryISO) && (
+              <p className="text-xs text-destructive">
+                {errors.phoneNational?.message ?? errors.countryISO?.message}
+              </p>
             )}
           </div>
 
