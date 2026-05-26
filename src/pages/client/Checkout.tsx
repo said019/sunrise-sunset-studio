@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
+import { cn } from '@/lib/utils';
 import type { OrderPaymentMethod, CreateOrderRequest, Order } from '@/types/order';
 import {
   CreditCard,
@@ -220,7 +221,8 @@ export default function Checkout() {
     if (plan && (plan.name.toLowerCase().includes('muestra') || plan.name.toLowerCase().includes('individual') || plan.name.toLowerCase().includes('prueba'))) {
       setSelectedPaymentMethod('bank_transfer');
     }
-    setStep('payment');
+    // Don't auto-advance: the redesigned plan grid lets the user compare across
+    // groups; advancing happens via the sticky "Continuar" button instead.
   };
 
   const handlePaymentMethodSelect = () => {
@@ -311,7 +313,7 @@ export default function Checkout() {
   return (
     <AuthGuard requiredRoles={['client']}>
       <ClientLayout>
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className={cn(step === 'plan' ? 'max-w-6xl' : 'max-w-2xl', 'mx-auto space-y-6')}>
           {/* Header */}
           <div className="flex items-center gap-4">
             <Button
@@ -348,115 +350,235 @@ export default function Checkout() {
             <Badge variant={step === 'confirm' ? 'default' : 'secondary'}>3. Confirmar</Badge>
           </div>
 
-          {/* Step 1: Select Plan */}
-          {step === 'plan' && (
-            <div className="space-y-4">
-              {plansLoading ? (
-                <>
-                  <Skeleton className="h-32 w-full" />
-                  <Skeleton className="h-32 w-full" />
-                  <Skeleton className="h-32 w-full" />
-                </>
-              ) : plans && plans.length > 0 ? (
-                plans.filter((plan) => {
-                  // Hide inscription plan if user already has active one
-                  const isFee =
-                    plan.category === 'membership_fee' ||
-                    plan.name.toLowerCase().includes('social') ||
-                    plan.name.toLowerCase().includes('inscrip') ||
-                    Number(plan.price) === 500;
-                  if (isFee && hasActiveMembershipFee) return false;
-                  return true;
-                }).map((plan) => {
-                  // Define special categories
-                  // We use the fields from backend: category, is_exclusive
-                  const isMembershipFeePlan =
-                    plan.category === 'membership_fee' ||
-                    plan.name.toLowerCase().includes('social') ||
-                    plan.name.toLowerCase().includes('inscrip') ||
-                    Number(plan.price) === 500;
-
-                  const isTrialPlan =
-                    plan.category === 'trial' ||
-                    plan.name.toLowerCase().includes('prueba') ||
-                    plan.name.toLowerCase().includes('muestra') ||
-                    plan.name.toLowerCase().includes('individual') ||
-                    plan.name.toLowerCase().includes('drop');
-
-                  // Lock logic: If no active fee, ONLY allow Fee plan or Trial plans
-                  // If plan is marked exclusive OR (it is not a fee plan AND not a trial plan), it requires membership
-                  // But we should stick to the "is_exclusive" flag if reliable. 
-                  // If we want to enforce the rule: "All packages require membership except Trial and Fee itself":
-                  const requiresMembership = plan.is_exclusive || (!isMembershipFeePlan && !isTrialPlan);
-
-                  const isLocked = !hasActiveMembershipFee && requiresMembership;
-
-                  console.log(`Plan: ${plan.name} | isLocked: ${isLocked} | hasActiveFee: ${hasActiveMembershipFee}`);
-
-                  return (
-                    <Card
-                      key={plan.id}
-                      className={`transition-all relative overflow-hidden ${selectedPlanId === plan.id ? 'border-primary ring-2 ring-primary' : ''
-                        } ${isLocked ? 'opacity-70 bg-muted/20' : 'cursor-pointer hover:border-primary'}`}
-                      onClick={() => !isLocked && handlePlanSelect(plan.id)}
-                    >
-                      {isLocked && (
-                        <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex flex-col items-center justify-center z-10 text-center p-4">
-                          <div className="bg-background/90 p-2 rounded-full shadow-sm mb-2">
-                            <Sparkles className="h-6 w-6 text-warning" />
-                          </div>
-                          <p className="font-semibold text-sm">Requiere Social Fee</p>
-                          <p className="text-xs text-muted-foreground">Debes pagar tu inscripción anual primero</p>
-                        </div>
-                      )}
-
-                      <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              {plan.name}
-                              {plan.category === 'membership_fee' && <Badge variant="secondary" className="text-xs">Acceso Anual</Badge>}
-                            </CardTitle>
-                            {plan.description && (
-                              <CardDescription>{plan.description}</CardDescription>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-bold text-primary">
-                              {formatPrice(plan.price)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {plan.duration_days} días
-                            </p>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Sparkles className="h-4 w-4" />
-                            {plan.is_unlimited
-                              ? 'Clases ilimitadas'
-                              : plan.class_limit
-                                ? `${plan.class_limit} clases`
-                                : 'Acceso membresía'}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              ) : (
+          {/* Step 1: Select Plan — grouped boutique showcase */}
+          {step === 'plan' && (() => {
+            if (plansLoading) {
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-44 rounded-2xl" />)}
+                </div>
+              );
+            }
+            if (!plans || plans.length === 0) {
+              return (
                 <Card>
                   <CardContent className="py-8 text-center">
-                    <p className="text-muted-foreground">
-                      No hay planes disponibles en este momento.
-                    </p>
+                    <p className="text-muted-foreground">No hay planes disponibles en este momento.</p>
                   </CardContent>
                 </Card>
-              )}
-            </div>
-          )}
+              );
+            }
+
+            // Group definitions
+            const GROUP_A_NAMES = ['Sunrise Pack', 'Golden Hour', 'Sunset Flow', 'Full Day Experience'];
+            const GROUP_B_NAMES = ['Wave Starter', 'Ocean Flow', 'Deep Flow', 'Endless Waves'];
+            const GROUP_C_NAMES = ['Balanced Flow', 'Elevate Experience', 'Full Experience', 'Sunrise Sunset Combo'];
+            const SINGLES_ORDER = ['Clase Muestra', 'Clase Suelta - Sculpt-Funcional', 'Clase Suelta - Surf-Pilates', 'Clase Suelta - Yoga'];
+            const recommendedName = 'Full Experience';
+            const byPrice = (a: Plan, b: Plan) => Number(a.price) - Number(b.price);
+
+            const visiblePlans = plans.filter((p) => {
+              const isFee = p.category === 'membership_fee' ||
+                p.name.toLowerCase().includes('inscrip') ||
+                Number(p.price) === 500;
+              return !(isFee && hasActiveMembershipFee);
+            });
+
+            const inscripcion = visiblePlans.find((p) => p.name === 'Inscripción');
+            const singles = visiblePlans
+              .filter((p) => SINGLES_ORDER.includes(p.name))
+              .sort((a, b) => SINGLES_ORDER.indexOf(a.name) - SINGLES_ORDER.indexOf(b.name));
+            const groupA = visiblePlans.filter((p) => GROUP_A_NAMES.includes(p.name)).sort(byPrice);
+            const groupB = visiblePlans.filter((p) => GROUP_B_NAMES.includes(p.name)).sort(byPrice);
+            const groupC = visiblePlans.filter((p) => GROUP_C_NAMES.includes(p.name)).sort(byPrice);
+
+            const isPlanLocked = (plan: Plan) => {
+              const isFee = plan.category === 'membership_fee' ||
+                plan.name.toLowerCase().includes('inscrip') ||
+                Number(plan.price) === 500;
+              const isTrial = plan.category === 'trial' ||
+                plan.name.toLowerCase().includes('muestra') ||
+                plan.name.toLowerCase().includes('prueba');
+              const requiresMembership = plan.is_exclusive || (!isFee && !isTrial);
+              return !hasActiveMembershipFee && requiresMembership;
+            };
+
+            const planClassLabel = (plan: Plan) => {
+              if (plan.is_unlimited || plan.class_limit === null) return 'Clases ilimitadas';
+              if (plan.class_limit === 0) return 'Acceso anual';
+              return `${plan.class_limit} clase${plan.class_limit !== 1 ? 's' : ''}`;
+            };
+
+            // Inline plan card — varies by `variant`
+            const PlanCard = ({ plan, variant = 'default' }: { plan: Plan; variant?: 'default' | 'compact' | 'recommended' | 'hero' }) => {
+              const locked = isPlanLocked(plan);
+              const selected = selectedPlanId === plan.id;
+              const recommended = variant === 'recommended';
+              const compact = variant === 'compact';
+              const hero = variant === 'hero';
+              const displayName = plan.name.replace('Clase Suelta - ', '');
+
+              return (
+                <button
+                  type="button"
+                  disabled={locked}
+                  onClick={() => !locked && handlePlanSelect(plan.id)}
+                  className={cn(
+                    'group relative w-full text-left rounded-2xl overflow-hidden transition-all',
+                    compact ? 'p-4' : 'p-5 md:p-6',
+                    recommended
+                      ? 'bg-sunset text-cream sunset-glow lg:scale-[1.03]'
+                      : hero
+                        ? 'bg-card text-foreground shadow-md ring-1 ring-coral/10'
+                        : 'bg-card text-foreground shadow-sm hover:shadow-md hover:-translate-y-0.5',
+                    selected && !recommended && 'ring-4 ring-coral/40',
+                    selected && recommended && 'ring-4 ring-cream/40',
+                    locked && 'opacity-60 cursor-not-allowed hover:translate-y-0'
+                  )}
+                >
+                  {recommended && (
+                    <>
+                      <span className="pointer-events-none absolute -right-16 -top-16 w-48 h-48 rounded-full bg-cream/15 blur-3xl" />
+                      <span className="pointer-events-none absolute -left-12 -bottom-12 w-40 h-40 rounded-full bg-wine/30 blur-3xl" />
+                      <span className="absolute top-3 right-3 text-[10px] font-bold tracking-[0.18em] uppercase bg-cream/20 backdrop-blur-sm text-cream px-2.5 py-1 rounded-full z-10">
+                        Recomendado
+                      </span>
+                    </>
+                  )}
+                  {locked && (
+                    <div className="absolute inset-0 bg-card/70 backdrop-blur-[1px] flex flex-col items-center justify-center text-center p-4 z-20">
+                      <span className="material-symbols-outlined text-coral text-2xl mb-1">lock</span>
+                      <p className="text-xs font-semibold text-foreground">Requiere inscripción</p>
+                    </div>
+                  )}
+
+                  <div className="relative z-[5] flex flex-col gap-2">
+                    <h4 className={cn(
+                      'font-heading leading-tight',
+                      compact ? 'text-base' : 'text-lg md:text-xl',
+                      recommended ? 'text-cream' : 'text-foreground'
+                    )}>
+                      {displayName}
+                    </h4>
+                    {!compact && plan.description && (
+                      <p className={cn('text-xs leading-relaxed line-clamp-2',
+                        recommended ? 'text-cream/80' : 'text-foreground/55'
+                      )}>
+                        {plan.description}
+                      </p>
+                    )}
+                    <div className="mt-3">
+                      <span className={cn(
+                        'font-heading tabular-nums',
+                        compact ? 'text-2xl' : 'text-3xl md:text-4xl',
+                        recommended ? 'text-cream' : 'text-coral'
+                      )}>
+                        {formatPrice(plan.price)}
+                      </span>
+                      <p className={cn('text-[11px] uppercase tracking-[0.14em] mt-1',
+                        recommended ? 'text-cream/70' : 'text-foreground/55'
+                      )}>
+                        {planClassLabel(plan)}
+                        {plan.duration_days !== 365 && ` · ${plan.duration_days} días`}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              );
+            };
+
+            return (
+              <div className="space-y-12">
+                {/* Inscripción — paso 1 si no la tienen */}
+                {inscripcion && (
+                  <section>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="material-symbols-outlined text-coral filled text-xl">redeem</span>
+                      <h3 className="font-heading text-xl text-foreground">Inscripción · paso uno</h3>
+                    </div>
+                    <p className="text-sm text-foreground/65 mb-4 max-w-xl">
+                      Pago único para acceder al studio. Si te inscribes el mismo día que tomas tu clase muestra,
+                      el costo de ésta se descuenta de tu inscripción.
+                    </p>
+                    <div className="max-w-md">
+                      <PlanCard plan={inscripcion} variant="hero" />
+                    </div>
+                  </section>
+                )}
+
+                {/* Sueltas y muestra */}
+                {singles.length > 0 && (
+                  <section>
+                    <h3 className="font-heading text-xl text-foreground mb-1">Sueltas y muestra</h3>
+                    <p className="text-sm text-foreground/55 mb-4">Una clase a la vez · sin compromiso</p>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      {singles.map((p) => <PlanCard key={p.id} plan={p} variant="compact" />)}
+                    </div>
+                  </section>
+                )}
+
+                {/* Grupo A */}
+                {groupA.length > 0 && (
+                  <section>
+                    <h3 className="font-heading text-xl text-foreground mb-1">Sunrise &amp; Yoga</h3>
+                    <p className="text-sm text-foreground/55 mb-4">Sculpt-Funcional + Yoga · 30 días</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {groupA.map((p) => <PlanCard key={p.id} plan={p} />)}
+                    </div>
+                  </section>
+                )}
+
+                {/* Grupo B */}
+                {groupB.length > 0 && (
+                  <section>
+                    <h3 className="font-heading text-xl text-foreground mb-1">Wave &amp; Yoga</h3>
+                    <p className="text-sm text-foreground/55 mb-4">Surf-Pilates + Yoga · 30 días</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {groupB.map((p) => <PlanCard key={p.id} plan={p} />)}
+                    </div>
+                  </section>
+                )}
+
+                {/* Grupo C — Mixto (con featured "Recomendado") */}
+                {groupC.length > 0 && (
+                  <section>
+                    <h3 className="font-heading text-xl text-foreground mb-1">Full Sunrise Sunset · Mixto</h3>
+                    <p className="text-sm text-foreground/55 mb-4">Los 3 tipos con composición exacta · 30 días</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:items-stretch">
+                      {groupC.map((p) => (
+                        <PlanCard
+                          key={p.id}
+                          plan={p}
+                          variant={p.name === recommendedName ? 'recommended' : 'default'}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Sticky continue bar (only when a plan is selected) */}
+                {selectedPlanId && (
+                  <div className="sticky bottom-24 md:bottom-6 z-30">
+                    <div className="bg-card/95 backdrop-blur border border-border/40 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-4 max-w-3xl mx-auto">
+                      <div className="min-w-0">
+                        <p className="text-[11px] uppercase tracking-wide text-foreground/55">Seleccionado</p>
+                        <p className="font-semibold text-foreground truncate">
+                          {selectedPlan?.name} · {selectedPlan && formatPrice(selectedPlan.price)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setStep('payment')}
+                        className="bg-coral text-cream px-5 py-3 rounded-xl text-sm font-semibold tracking-wide hover:opacity-90 active:scale-[0.98] shadow-lg shadow-coral/25 inline-flex items-center gap-2 shrink-0"
+                      >
+                        Continuar
+                        <span className="material-symbols-outlined text-base">arrow_forward</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Step 2: Select Payment Method */}
           {step === 'payment' && selectedPlan && (
