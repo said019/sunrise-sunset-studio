@@ -62,11 +62,57 @@ export function ClientLayout({ children, fab }: ClientLayoutProps) {
             >
                 <div className="flex h-20 items-center justify-between px-5 md:px-16 max-w-[1200px] mx-auto">
                     {/* Left: user avatar (opens dropdown) + brand */}
-                    <div className="flex items-center gap-3">
+                    {/* Left: logo */}
+                    <Link to="/app" aria-label="Sunrise Sunset · Inicio" className="block shrink-0">
+                        <img
+                            src="/logo-wordmark.svg"
+                            alt="Sunrise Sunset"
+                            className="h-12 w-auto rounded-lg select-none"
+                            draggable={false}
+                        />
+                    </Link>
+
+                    {/* Desktop nav */}
+                    <nav className="hidden md:flex items-center gap-8">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item.href}
+                                to={item.href}
+                                className={cn(
+                                    'flex items-center gap-1 text-sm font-medium tracking-wide transition-opacity hover:opacity-100',
+                                    isActive(item.href) ? 'text-coral opacity-100 font-semibold' : 'text-foreground/70 opacity-80'
+                                )}
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
+                        {desktopExtras.map((item) => (
+                            <Link
+                                key={item.href}
+                                to={item.href}
+                                className={cn(
+                                    'text-sm font-medium tracking-wide transition-opacity hover:opacity-100',
+                                    isActive(item.href) ? 'text-coral opacity-100 font-semibold' : 'text-foreground/60 opacity-80'
+                                )}
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
+                    </nav>
+
+                    {/* Right: bell + user menu (estándar — controles de usuario a la derecha) */}
+                    <div className="flex items-center gap-1 shrink-0">
+                        <Link
+                            to="/app/notifications"
+                            aria-label="Notificaciones"
+                            className="text-coral hover:opacity-80 transition-opacity active:scale-95 duration-200 p-2"
+                        >
+                            <span className="material-symbols-outlined text-2xl">notifications</span>
+                        </Link>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <button
-                                    className="w-10 h-10 rounded-full bg-cream overflow-hidden border border-border/40 transition-transform active:scale-95"
+                                    className="w-10 h-10 rounded-full bg-cream overflow-hidden border border-border/40 transition-transform active:scale-95 ml-1"
                                     aria-label="Menú de usuario"
                                 >
                                     <Avatar className="h-10 w-10">
@@ -77,7 +123,7 @@ export function ClientLayout({ children, fab }: ClientLayoutProps) {
                                     </Avatar>
                                 </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-60">
+                            <DropdownMenuContent align="end" className="w-60">
                                 <DropdownMenuLabel className="font-normal">
                                     <div className="flex flex-col space-y-1">
                                         <p className="text-sm font-semibold leading-none">{user?.display_name}</p>
@@ -116,52 +162,7 @@ export function ClientLayout({ children, fab }: ClientLayoutProps) {
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Link to="/app" aria-label="Sunrise Sunset · Inicio" className="block">
-                            <img
-                                src="/logo-wordmark.svg"
-                                alt="Sunrise Sunset"
-                                className="h-12 w-auto rounded-lg select-none"
-                                draggable={false}
-                            />
-                        </Link>
                     </div>
-
-                    {/* Desktop nav */}
-                    <nav className="hidden md:flex items-center gap-8">
-                        {navItems.map((item) => (
-                            <Link
-                                key={item.href}
-                                to={item.href}
-                                className={cn(
-                                    'flex items-center gap-1 text-sm font-medium tracking-wide transition-opacity hover:opacity-100',
-                                    isActive(item.href) ? 'text-coral opacity-100 font-semibold' : 'text-foreground/70 opacity-80'
-                                )}
-                            >
-                                {item.label}
-                            </Link>
-                        ))}
-                        {desktopExtras.map((item) => (
-                            <Link
-                                key={item.href}
-                                to={item.href}
-                                className={cn(
-                                    'text-sm font-medium tracking-wide transition-opacity hover:opacity-100',
-                                    isActive(item.href) ? 'text-coral opacity-100 font-semibold' : 'text-foreground/60 opacity-80'
-                                )}
-                            >
-                                {item.label}
-                            </Link>
-                        ))}
-                    </nav>
-
-                    {/* Right: notifications */}
-                    <Link
-                        to="/app/notifications"
-                        aria-label="Notificaciones"
-                        className="text-coral hover:opacity-80 transition-opacity active:scale-95 duration-200 p-2"
-                    >
-                        <span className="material-symbols-outlined text-2xl">notifications</span>
-                    </Link>
                 </div>
             </header>
 
