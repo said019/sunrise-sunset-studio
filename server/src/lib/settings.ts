@@ -143,7 +143,7 @@ const DEFAULTS: SettingsMap = {
         reference_instructions: '',
     },
     general_settings: {
-        timezone: 'America/Mexico_City',
+        timezone: 'America/Mazatlan',
         currency: 'MXN',
         date_format: 'DD/MM/YYYY',
         language: 'es',

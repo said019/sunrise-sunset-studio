@@ -331,8 +331,8 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
                     JOIN plans p ON p.id = m.plan_id
                     WHERE m.user_id = $1
                       AND p.name = $2
-                      AND DATE(m.created_at AT TIME ZONE 'America/Mexico_City')
-                          = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Mexico_City')::date
+                      AND DATE(m.created_at AT TIME ZONE 'America/Mazatlan')
+                          = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Mazatlan')::date
                 ) AS exists`,
                 [userId, TRIAL_PLAN_NAME]
             );

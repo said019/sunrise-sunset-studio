@@ -186,8 +186,8 @@ async function requestReviews(): Promise<void> {
             WHERE b.status = 'checked_in'
             AND r.id IS NULL
             AND (rr.id IS NULL OR rr.status = 'pending')
-            AND (c.date + c.end_time) BETWEEN (NOW() AT TIME ZONE 'America/Mexico_City') - INTERVAL '2.5 hours'
-                                           AND (NOW() AT TIME ZONE 'America/Mexico_City') - INTERVAL '1.5 hours'
+            AND (c.date + c.end_time) BETWEEN (NOW() AT TIME ZONE 'America/Mazatlan') - INTERVAL '2.5 hours'
+                                           AND (NOW() AT TIME ZONE 'America/Mazatlan') - INTERVAL '1.5 hours'
         `);
 
         if (bookings.length === 0) {
@@ -410,7 +410,7 @@ async function markNoShows(): Promise<void> {
             WHERE status = 'confirmed'
             AND class_id IN (
                 SELECT id FROM classes
-                WHERE (date + end_time) < (NOW() AT TIME ZONE 'America/Mexico_City') - INTERVAL '30 minutes'
+                WHERE (date + end_time) < (NOW() AT TIME ZONE 'America/Mazatlan') - INTERVAL '30 minutes'
                 AND status IN ('completed', 'scheduled')
             )
             RETURNING id
@@ -424,7 +424,7 @@ async function markNoShows(): Promise<void> {
             UPDATE classes
             SET status = 'completed', updated_at = NOW()
             WHERE status = 'scheduled'
-            AND (date + end_time) < (NOW() AT TIME ZONE 'America/Mexico_City') - INTERVAL '15 minutes'
+            AND (date + end_time) < (NOW() AT TIME ZONE 'America/Mazatlan') - INTERVAL '15 minutes'
         `);
 
         if (count > 0) {
@@ -506,8 +506,8 @@ async function sendCoachWeeklySchedules(): Promise<void> {
             JOIN instructors i ON i.id = c.instructor_id
             JOIN class_types ct ON ct.id = c.class_type_id
             WHERE c.status = 'scheduled'
-              AND c.date >= (CURRENT_TIMESTAMP AT TIME ZONE 'America/Mexico_City')::date
-              AND c.date < (CURRENT_TIMESTAMP AT TIME ZONE 'America/Mexico_City')::date + 7
+              AND c.date >= (CURRENT_TIMESTAMP AT TIME ZONE 'America/Mazatlan')::date
+              AND c.date < (CURRENT_TIMESTAMP AT TIME ZONE 'America/Mazatlan')::date + 7
             ORDER BY i.id, c.date, c.start_time
         `);
 
@@ -527,7 +527,7 @@ async function sendCoachWeeklySchedules(): Promise<void> {
         }
 
         // Etiqueta del rango (ej. "12 - 18 may")
-        const tz = 'America/Mexico_City';
+        const tz = 'America/Mazatlan';
         const today = new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
         const end = new Date(today);
         end.setDate(end.getDate() + 6);
@@ -599,49 +599,49 @@ export function initializeCronJobs(): void {
 
     // 3:00 AM - Generar clases recurrentes (cada día)
     cron.schedule('0 3 * * *', generateRecurringClasses, {
-        timezone: 'America/Mexico_City',
+        timezone: 'America/Mazatlan',
     });
     console.log('  ✅ GENERATE_CLASSES - Diario 3:00 AM');
 
     // Cada hora (:30) - Solicitar reseñas
     cron.schedule('30 * * * *', requestReviews, {
-        timezone: 'America/Mexico_City',
+        timezone: 'America/Mazatlan',
     });
     console.log('  ✅ REQUEST_REVIEWS - Cada hora');
 
     // 10:00 AM - Alertas de membresías por vencer
     cron.schedule('0 10 * * *', notifyExpiringMemberships, {
-        timezone: 'America/Mexico_City',
+        timezone: 'America/Mazatlan',
     });
     console.log('  ✅ EXPIRING_MEMBERSHIPS - Diario 10:00 AM');
 
     // 00:05 AM - Marcar membresías expiradas
     cron.schedule('5 0 * * *', markExpiredMemberships, {
-        timezone: 'America/Mexico_City',
+        timezone: 'America/Mazatlan',
     });
     console.log('  ✅ MARK_EXPIRED - Diario 00:05 AM');
 
     // Cada 6 horas - Limpiar órdenes expiradas
     cron.schedule('0 */6 * * *', cleanupExpiredOrders, {
-        timezone: 'America/Mexico_City',
+        timezone: 'America/Mazatlan',
     });
     console.log('  ✅ CLEANUP_ORDERS - Cada 6 horas');
 
     // Cada 30 min - Marcar no-shows y completar clases
     cron.schedule('5,35 * * * *', markNoShows, {
-        timezone: 'America/Mexico_City',
+        timezone: 'America/Mazatlan',
     });
     console.log('  ✅ MARK_NO_SHOWS - Cada 30 min');
 
     // 2:00 AM - Expirar solicitudes de reseña
     cron.schedule('0 2 * * *', expireReviewRequests, {
-        timezone: 'America/Mexico_City',
+        timezone: 'America/Mazatlan',
     });
     console.log('  ✅ EXPIRE_REVIEWS - Diario 2:00 AM');
 
     // Lunes 7:00 AM - Resumen semanal de clases para coaches (1 correo c/u)
     cron.schedule('0 7 * * 1', sendCoachWeeklySchedules, {
-        timezone: 'America/Mexico_City',
+        timezone: 'America/Mazatlan',
     });
     console.log('  ✅ COACH_WEEKLY_SCHEDULE - Lunes 7:00 AM');
 

@@ -474,7 +474,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
                 `SELECT * FROM memberships
                  WHERE user_id = $1
                  AND status = 'active'
-                 AND (end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'America/Mexico_City')::date OR end_date IS NULL)
+                 AND (end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'America/Mazatlan')::date OR end_date IS NULL)
                  AND (classes_remaining > 0 OR classes_remaining IS NULL)
                  ORDER BY end_date ASC`,
                 [userId]
@@ -735,7 +735,7 @@ router.post('/bulk', authenticate, async (req: Request, res: Response) => {
              JOIN plans p ON p.id = m.plan_id
              WHERE m.user_id = $1
                AND m.status = 'active'
-               AND (m.end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'America/Mexico_City')::date OR m.end_date IS NULL)
+               AND (m.end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'America/Mazatlan')::date OR m.end_date IS NULL)
                AND (p.class_limit IS NULL OR p.class_limit > 0)
                AND (m.classes_remaining IS NULL OR m.classes_remaining >= $2)
              ORDER BY
@@ -792,7 +792,7 @@ router.post('/bulk', authenticate, async (req: Request, res: Response) => {
                  JOIN plans p ON p.id = m.plan_id
                  WHERE m.user_id = $1 AND m.status = 'active'
                    AND (p.class_limit IS NULL OR p.class_limit > 0)
-                   AND (m.end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'America/Mexico_City')::date OR m.end_date IS NULL)
+                   AND (m.end_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'America/Mazatlan')::date OR m.end_date IS NULL)
                  ORDER BY m.classes_remaining DESC NULLS FIRST LIMIT 1`,
                 [userId]
             );

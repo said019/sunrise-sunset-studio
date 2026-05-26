@@ -22,7 +22,7 @@ export default function GeneralSettings() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [settings, setSettings] = useState<GeneralSettingsType>({
-        timezone: 'America/Mexico_City',
+        timezone: 'America/Mazatlan',
         currency: 'MXN',
         date_format: 'DD/MM/YYYY',
         language: 'es',
@@ -105,11 +105,12 @@ export default function GeneralSettings() {
                                     <SelectValue placeholder="Seleccionar zona horaria" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    <SelectItem value="America/Mazatlan">Los Cabos · Mazatlán (GMT-7)</SelectItem>
+                                    <SelectItem value="America/Hermosillo">Hermosillo (GMT-7)</SelectItem>
+                                    <SelectItem value="America/Tijuana">Tijuana (GMT-8)</SelectItem>
                                     <SelectItem value="America/Mexico_City">Ciudad de México (GMT-6)</SelectItem>
                                     <SelectItem value="America/Monterrey">Monterrey (GMT-6)</SelectItem>
-                                    <SelectItem value="America/Tijuana">Tijuana (GMT-8)</SelectItem>
                                     <SelectItem value="America/Cancun">Cancún (GMT-5)</SelectItem>
-                                    <SelectItem value="America/Hermosillo">Hermosillo (GMT-7)</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

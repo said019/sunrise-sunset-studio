@@ -76,12 +76,12 @@ const buildPaymentsQuery = (status?: string, search?: string, startDate?: string
     // Comparamos como fecha en CDMX para que el rango sea inclusivo y no
     // se pierdan pagos del primer/ultimo dia por la diferencia con UTC.
     if (startDate) {
-        queryStr += ` AND (COALESCE(p.completed_at, p.created_at) AT TIME ZONE 'America/Mexico_City')::date >= $${paramCount++}::date`;
+        queryStr += ` AND (COALESCE(p.completed_at, p.created_at) AT TIME ZONE 'America/Mazatlan')::date >= $${paramCount++}::date`;
         params.push(startDate);
     }
 
     if (endDate) {
-        queryStr += ` AND (COALESCE(p.completed_at, p.created_at) AT TIME ZONE 'America/Mexico_City')::date <= $${paramCount++}::date`;
+        queryStr += ` AND (COALESCE(p.completed_at, p.created_at) AT TIME ZONE 'America/Mazatlan')::date <= $${paramCount++}::date`;
         params.push(endDate);
     }
 

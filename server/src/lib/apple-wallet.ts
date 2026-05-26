@@ -144,7 +144,7 @@ export async function getMembershipData(membershipId: string): Promise<Membershi
                 (SELECT (c.date || 'T' || SUBSTRING(c.start_time::text, 1, 5) || ':00-06:00')
                  FROM bookings b2 JOIN classes c ON b2.class_id = c.id
                  WHERE b2.user_id = m.user_id AND b2.status = 'confirmed'
-                 AND (c.date + c.start_time) > (NOW() AT TIME ZONE 'America/Mexico_City')
+                 AND (c.date + c.start_time) > (NOW() AT TIME ZONE 'America/Mazatlan')
                  ORDER BY c.date ASC, c.start_time ASC LIMIT 1
                 ) as next_class_date
             FROM memberships m
