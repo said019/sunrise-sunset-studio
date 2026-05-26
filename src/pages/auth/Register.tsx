@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '@/stores/authStore';
@@ -8,16 +8,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Mail, Lock, Eye, EyeOff, User, Phone, Cake } from 'lucide-react';
+import { AuthShell } from '@/components/auth/AuthShell';
+import { COUNTRIES, DEFAULT_COUNTRY, findCountryByISO } from '@/lib/country-codes';
+
+const COUNTRY_ISOS = COUNTRIES.map((c) => c.iso) as [string, ...string[]];
 
 const registerSchema = z.object({
     displayName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
     email: z.string().email('Email inválido'),
-    phone: z
+    countryISO: z.enum(COUNTRY_ISOS),
+    phoneNational: z
         .string()
-        .regex(/^\+52[0-9]{10}$/, 'Formato: +52 seguido de 10 dígitos'),
+        .regex(/^[0-9]{6,14}$/, 'Solo dígitos, entre 6 y 14 caracteres'),
     dateOfBirth: z.string().optional().or(z.literal('')),
     password: z
         .string()
@@ -48,10 +53,12 @@ export default function Register() {
         handleSubmit,
         setValue,
         watch,
+        control,
         formState: { errors },
     } = useForm<RegisterForm>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
+            countryISO: DEFAULT_COUNTRY.iso,
             acceptsTerms: false,
             acceptsCommunications: false,
         },
@@ -59,6 +66,9 @@ export default function Register() {
 
     const acceptsTerms = watch('acceptsTerms');
     const acceptsCommunications = watch('acceptsCommunications');
+    const selectedISO = watch('countryISO');
+    const selectedCountry = findCountryByISO(selectedISO) ?? DEFAULT_COUNTRY;
+    const phoneNationalValue = watch('phoneNational') ?? '';
 
     // Redirect if already authenticated
     useEffect(() => {
@@ -72,35 +82,15 @@ export default function Register() {
         return () => clearError();
     }, [clearError]);
 
-    // Format phone number as user types
-    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let value = e.target.value;
-        // Remove non-digits except +
-        value = value.replace(/[^\d+]/g, '');
-        // Ensure starts with +52
-        if (!value.startsWith('+52') && value.length > 0) {
-            if (value.startsWith('52')) {
-                value = '+' + value;
-            } else if (value.startsWith('+')) {
-                value = '+52' + value.substring(1);
-            } else {
-                value = '+52' + value;
-            }
-        }
-        // Limit to +52 + 10 digits
-        if (value.length > 13) {
-            value = value.substring(0, 13);
-        }
-        e.target.value = value;
-    };
-
     const onSubmit = async (data: RegisterForm) => {
+        const country = findCountryByISO(data.countryISO) ?? DEFAULT_COUNTRY;
+        const fullPhone = `${country.dialCode}${data.phoneNational}`;
         try {
             await registerUser({
                 email: data.email,
                 password: data.password,
                 displayName: data.displayName,
-                phone: data.phone,
+                phone: fullPhone,
                 dateOfBirth: data.dateOfBirth || undefined,
                 acceptsTerms: data.acceptsTerms,
                 acceptsCommunications: data.acceptsCommunications,
@@ -111,235 +101,281 @@ export default function Register() {
         }
     };
 
+    const inputClass = "h-12 rounded-2xl border-chocolate/[0.12] bg-cream/[0.72] pl-11 text-chocolate placeholder:text-chocolate/[0.38] focus-visible:ring-coral";
+    const iconClass = "absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-coral";
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background p-4 py-8">
-            <Card className="w-full max-w-md shadow-xl">
-                <CardHeader className="space-y-1 text-center">
-                    <div className="flex justify-center mb-4">
-                        <img
-                            src="/logo-wordmark.svg"
-                            alt="Sunrise Sunset"
-                            className="h-16 w-auto"
-                        />
-                    </div>
-                    <CardTitle className="text-2xl font-heading">Crear Cuenta</CardTitle>
-                    <CardDescription>
-                        Únete a Sunrise Sunset y comienza tu transformación
-                    </CardDescription>
-                </CardHeader>
+        <AuthShell
+            eyebrow="Empieza aquí"
+            title="Tu cuenta para reservar."
+            copy="Crea tu perfil y deja listo tu acceso a clases, paquetes y eventos especiales del studio."
+        >
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                {error && (
+                    <Alert variant="destructive" className="rounded-2xl border-wine/20 bg-wine/10 text-wine">
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                )}
 
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <CardContent className="space-y-4">
-                        {error && (
-                            <Alert variant="destructive">
-                                <AlertDescription>{error}</AlertDescription>
-                            </Alert>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    {/* Nombre */}
+                    <div className="space-y-2 sm:col-span-2">
+                        <Label htmlFor="displayName" className="text-sm font-semibold text-chocolate">
+                            Nombre completo
+                        </Label>
+                        <div className="relative">
+                            <User className={iconClass} strokeWidth={1.7} />
+                            <Input
+                                id="displayName"
+                                placeholder="Tu nombre"
+                                className={inputClass}
+                                {...register('displayName')}
+                                disabled={isLoading}
+                            />
+                        </div>
+                        {errors.displayName && (
+                            <p className="text-sm text-destructive">{errors.displayName.message}</p>
                         )}
+                    </div>
 
-                        {/* Name */}
-                        <div className="space-y-2">
-                            <Label htmlFor="displayName">Nombre completo</Label>
-                            <div className="relative">
-                                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    id="displayName"
-                                    placeholder="Tu nombre"
-                                    className="pl-10"
-                                    {...register('displayName')}
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            {errors.displayName && (
-                                <p className="text-sm text-destructive">{errors.displayName.message}</p>
-                            )}
+                    {/* Email */}
+                    <div className="space-y-2 sm:col-span-2">
+                        <Label htmlFor="email" className="text-sm font-semibold text-chocolate">
+                            Email
+                        </Label>
+                        <div className="relative">
+                            <Mail className={iconClass} strokeWidth={1.7} />
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="tu@email.com"
+                                className={inputClass}
+                                {...register('email')}
+                                disabled={isLoading}
+                            />
                         </div>
+                        {errors.email && (
+                            <p className="text-sm text-destructive">{errors.email.message}</p>
+                        )}
+                    </div>
 
-                        {/* Email */}
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    {/* Teléfono — selector de país + número nacional */}
+                    <div className="space-y-2 sm:col-span-2">
+                        <Label htmlFor="phoneNational" className="text-sm font-semibold text-chocolate">
+                            Teléfono
+                        </Label>
+                        <div className="flex gap-2">
+                            <Controller
+                                name="countryISO"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                        disabled={isLoading}
+                                    >
+                                        <SelectTrigger
+                                            aria-label="Código de país"
+                                            className="h-12 w-[124px] shrink-0 rounded-2xl border-chocolate/[0.12] bg-cream/[0.72] text-chocolate focus:ring-coral"
+                                        >
+                                            <SelectValue>
+                                                <span className="mr-1">{selectedCountry.flag}</span>
+                                                <span>{selectedCountry.dialCode}</span>
+                                            </SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent className="max-h-72">
+                                            {COUNTRIES.map((c) => (
+                                                <SelectItem key={c.iso} value={c.iso}>
+                                                    <span className="mr-2">{c.flag}</span>
+                                                    {c.name}
+                                                    <span className="ml-2 text-chocolate/60">{c.dialCode}</span>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                            <div className="relative flex-1">
+                                <Phone className={iconClass} strokeWidth={1.7} />
                                 <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder="tu@email.com"
-                                    className="pl-10"
-                                    {...register('email')}
-                                    disabled={isLoading}
-                                />
-                            </div>
-                            {errors.email && (
-                                <p className="text-sm text-destructive">{errors.email.message}</p>
-                            )}
-                        </div>
-
-                        {/* Phone */}
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">Teléfono</Label>
-                            <div className="relative">
-                                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    id="phone"
+                                    id="phoneNational"
                                     type="tel"
-                                    placeholder="+525512345678"
-                                    className="pl-10"
-                                    {...register('phone')}
+                                    inputMode="numeric"
+                                    autoComplete="tel-national"
+                                    placeholder="Número (solo dígitos)"
+                                    className={inputClass}
+                                    {...register('phoneNational')}
                                     onChange={(e) => {
-                                        handlePhoneChange(e);
-                                        register('phone').onChange(e);
+                                        // Strip non-digits as user types
+                                        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                                        register('phoneNational').onChange(e);
                                     }}
                                     disabled={isLoading}
                                 />
                             </div>
-                            {errors.phone && (
-                                <p className="text-sm text-destructive">{errors.phone.message}</p>
-                            )}
                         </div>
-
-                        {/* Date of Birth */}
-                        <div className="space-y-2">
-                            <Label htmlFor="dateOfBirth">Fecha de nacimiento (opcional)</Label>
-                            <div className="relative">
-                                <Cake className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    id="dateOfBirth"
-                                    type="date"
-                                    className="pl-10"
-                                    {...register('dateOfBirth')}
-                                    disabled={isLoading}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Password */}
-                        <div className="space-y-2">
-                            <Label htmlFor="password">Contraseña</Label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    id="password"
-                                    type={showPassword ? 'text' : 'password'}
-                                    placeholder="••••••••"
-                                    className="pl-10 pr-10"
-                                    {...register('password')}
-                                    disabled={isLoading}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
-                                >
-                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                </button>
-                            </div>
-                            {errors.password && (
-                                <p className="text-sm text-destructive">{errors.password.message}</p>
-                            )}
-                        </div>
-
-                        {/* Confirm Password */}
-                        <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    id="confirmPassword"
-                                    type={showConfirmPassword ? 'text' : 'password'}
-                                    placeholder="••••••••"
-                                    className="pl-10 pr-10"
-                                    {...register('confirmPassword')}
-                                    disabled={isLoading}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
-                                >
-                                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                </button>
-                            </div>
-                            {errors.confirmPassword && (
-                                <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
-                            )}
-                        </div>
-
-                        {/* Terms */}
-                        <div className="space-y-3">
-                            <div className="flex items-start space-x-2">
-                                <Checkbox
-                                    id="acceptsTerms"
-                                    checked={acceptsTerms}
-                                    onCheckedChange={(checked) => setValue('acceptsTerms', checked as boolean)}
-                                    disabled={isLoading}
-                                />
-                                <label htmlFor="acceptsTerms" className="text-sm leading-tight cursor-pointer">
-                                    Acepto los{' '}
-                                    <Link to="/terms" className="text-primary hover:underline">
-                                        términos y condiciones
-                                    </Link>{' '}
-                                    y la{' '}
-                                    <Link to="/privacy" className="text-primary hover:underline">
-                                        política de privacidad
-                                    </Link>
-                                </label>
-                            </div>
-                            {errors.acceptsTerms && (
-                                <p className="text-sm text-destructive">{errors.acceptsTerms.message}</p>
-                            )}
-
-                            <div className="flex items-start space-x-2">
-                                <Checkbox
-                                    id="acceptsCommunications"
-                                    checked={acceptsCommunications}
-                                    onCheckedChange={(checked) => setValue('acceptsCommunications', checked as boolean)}
-                                    disabled={isLoading}
-                                />
-                                <label htmlFor="acceptsCommunications" className="text-sm leading-tight cursor-pointer">
-                                    Deseo recibir promociones y novedades por email
-                                </label>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="referralCode">¿Alguien te refirió? (opcional)</Label>
-                                <Input
-                                    id="referralCode"
-                                    placeholder="Código de referido"
-                                    {...register('referralCode')}
-                                    disabled={isLoading}
-                                    className="uppercase"
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    Si alguien te invitó, ingresa su código para que ambos ganen puntos.
-                                </p>
-                            </div>
-                        </div>
-                    </CardContent>
-
-                    <CardFooter className="flex flex-col gap-4">
-                        <Button
-                            type="submit"
-                            className="w-full"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Creando cuenta...
-                                </>
-                            ) : (
-                                'Crear Cuenta'
-                            )}
-                        </Button>
-
-                        <p className="text-sm text-center text-muted-foreground">
-                            ¿Ya tienes cuenta?{' '}
-                            <Link to={returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'} className="text-primary hover:underline font-medium">
-                                Inicia sesión
-                            </Link>
+                        {(errors.phoneNational || errors.countryISO) && (
+                            <p className="text-sm text-destructive">
+                                {errors.phoneNational?.message ?? errors.countryISO?.message}
+                            </p>
+                        )}
+                        <p className="text-xs text-chocolate/[0.54]">
+                            Se guardará como <span className="font-mono">{selectedCountry.dialCode}{phoneNationalValue || '…'}</span> en formato internacional.
                         </p>
-                    </CardFooter>
-                </form>
-            </Card>
-        </div>
+                    </div>
+
+                    {/* Fecha de nacimiento */}
+                    <div className="space-y-2">
+                        <Label htmlFor="dateOfBirth" className="text-sm font-semibold text-chocolate">
+                            Fecha de nacimiento
+                        </Label>
+                        <div className="relative">
+                            <Cake className={iconClass} strokeWidth={1.7} />
+                            <Input
+                                id="dateOfBirth"
+                                type="date"
+                                className={inputClass}
+                                {...register('dateOfBirth')}
+                                disabled={isLoading}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Password */}
+                    <div className="space-y-2">
+                        <Label htmlFor="password" className="text-sm font-semibold text-chocolate">
+                            Contraseña
+                        </Label>
+                        <div className="relative">
+                            <Lock className={iconClass} strokeWidth={1.7} />
+                            <Input
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                className={`${inputClass} pr-12`}
+                                {...register('password')}
+                                disabled={isLoading}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-chocolate/[0.52] transition-[transform,background-color,color] duration-200 ease-sunrise hover:bg-coral/10 hover:text-coral active:scale-[0.94]"
+                                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
+                        {errors.password && (
+                            <p className="text-sm text-destructive">{errors.password.message}</p>
+                        )}
+                    </div>
+
+                    {/* Confirm password */}
+                    <div className="space-y-2 sm:col-span-2">
+                        <Label htmlFor="confirmPassword" className="text-sm font-semibold text-chocolate">
+                            Confirmar contraseña
+                        </Label>
+                        <div className="relative">
+                            <Lock className={iconClass} strokeWidth={1.7} />
+                            <Input
+                                id="confirmPassword"
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                className={`${inputClass} pr-12`}
+                                {...register('confirmPassword')}
+                                disabled={isLoading}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-chocolate/[0.52] transition-[transform,background-color,color] duration-200 ease-sunrise hover:bg-coral/10 hover:text-coral active:scale-[0.94]"
+                                aria-label={showConfirmPassword ? 'Ocultar confirmación' : 'Mostrar confirmación'}
+                            >
+                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
+                        {errors.confirmPassword && (
+                            <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+                        )}
+                    </div>
+                </div>
+
+                <div className="space-y-3 rounded-2xl bg-cream/[0.58] p-4">
+                    <div className="flex items-start gap-3">
+                        <Checkbox
+                            id="acceptsTerms"
+                            checked={acceptsTerms}
+                            onCheckedChange={(checked) => setValue('acceptsTerms', checked as boolean)}
+                            disabled={isLoading}
+                            className="mt-0.5 rounded-md border-chocolate/24 data-[state=checked]:bg-coral"
+                        />
+                        <label htmlFor="acceptsTerms" className="cursor-pointer text-sm leading-6 text-chocolate/[0.72]">
+                            Acepto los{' '}
+                            <Link to="/terms" className="font-medium text-coral transition-colors hover:text-wine">
+                                términos
+                            </Link>{' '}
+                            y la{' '}
+                            <Link to="/privacy" className="font-medium text-coral transition-colors hover:text-wine">
+                                política de privacidad
+                            </Link>
+                        </label>
+                    </div>
+                    {errors.acceptsTerms && (
+                        <p className="text-sm text-destructive">{errors.acceptsTerms.message}</p>
+                    )}
+
+                    <div className="flex items-start gap-3">
+                        <Checkbox
+                            id="acceptsCommunications"
+                            checked={acceptsCommunications}
+                            onCheckedChange={(checked) => setValue('acceptsCommunications', checked as boolean)}
+                            disabled={isLoading}
+                            className="mt-0.5 rounded-md border-chocolate/24 data-[state=checked]:bg-coral"
+                        />
+                        <label htmlFor="acceptsCommunications" className="cursor-pointer text-sm leading-6 text-chocolate/[0.72]">
+                            Quiero recibir novedades, workshops y promociones por email.
+                        </label>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="referralCode" className="text-sm font-semibold text-chocolate">
+                        Código de referido
+                    </Label>
+                    <Input
+                        id="referralCode"
+                        placeholder="Opcional"
+                        {...register('referralCode')}
+                        disabled={isLoading}
+                        className="h-12 rounded-2xl border-chocolate/[0.12] bg-cream/[0.72] text-chocolate uppercase placeholder:normal-case placeholder:text-chocolate/[0.38] focus-visible:ring-coral"
+                    />
+                    <p className="text-xs leading-5 text-chocolate/[0.54]">
+                        Si alguien te invitó, ingresa su código para que ambos ganen puntos.
+                    </p>
+                </div>
+
+                <Button
+                    type="submit"
+                    className="h-12 w-full rounded-full bg-chocolate text-cream shadow-[0_16px_34px_hsla(24,46%,30%,0.18)] transition-[transform,background-color] duration-200 ease-sunrise hover:-translate-y-0.5 hover:bg-wine active:scale-[0.97]"
+                    disabled={isLoading}
+                >
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creando cuenta
+                        </>
+                    ) : (
+                        'Crear cuenta'
+                    )}
+                </Button>
+
+                <p className="text-center text-sm text-chocolate/[0.62]">
+                    ¿Ya tienes cuenta?{' '}
+                    <Link to={returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'} className="font-semibold text-coral transition-colors hover:text-wine">
+                        Inicia sesión
+                    </Link>
+                </p>
+            </form>
+        </AuthShell>
     );
 }

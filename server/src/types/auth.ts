@@ -40,7 +40,7 @@ export const RegisterSchema = z.object({
     displayName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
     phone: z
         .string()
-        .regex(/^\+52[0-9]{10}$/, 'Teléfono debe ser formato mexicano: +52XXXXXXXXXX'),
+        .regex(/^\+[1-9]\d{6,14}$/, 'Teléfono debe estar en formato internacional E.164 (ej. +5298...)'),
     dateOfBirth: z.string().optional(),
     acceptsTerms: z.boolean().refine(val => val === true, 'Debes aceptar los términos'),
     acceptsCommunications: z.boolean().default(false),
