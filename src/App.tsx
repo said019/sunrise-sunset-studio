@@ -44,6 +44,7 @@ import ReferFriends from "./pages/client/ReferFriends";
 import Notifications from "./pages/client/Notifications";
 import News from "./pages/client/News";
 import ClientCheckout from "./pages/client/Checkout";
+import ClientPlans from "./pages/client/Plans";
 import ClientOrders from "./pages/client/Orders";
 import ClientOrderDetail from "./pages/client/OrderDetail";
 import VideoLibrary from "./pages/client/VideoLibrary";
@@ -196,6 +197,7 @@ const App = () => (
             <Route path="/app/refer" element={<ReferFriends />} />
             <Route path="/app/notifications" element={<Notifications />} />
             <Route path="/app/news" element={<News />} />
+            <Route path="/app/plans" element={<ClientPlans />} />
             <Route path="/app/checkout" element={<ClientCheckout />} />
             <Route path="/app/orders" element={<ClientOrders />} />
             <Route path="/app/orders/:orderId" element={<ClientOrderDetail />} />
