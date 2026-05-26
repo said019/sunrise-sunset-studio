@@ -9,34 +9,11 @@ import type { BookingClient } from '@/types/booking';
 import type { ClientMembership } from '@/types/membership';
 import { ClientLayout } from '@/components/layout/ClientLayout';
 import { AuthGuard } from '@/components/layout/AuthGuard';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  AlertTriangle,
-  Calendar,
-  Clock,
-  Gift,
-  ChevronRight,
-  Plus,
-  RefreshCw,
-  Sparkles,
-  Play,
-} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface WalletSummary {
   pointsBalance: number;
-}
-
-interface LoyaltyReward {
-  id: string;
-  name: string;
-  points_cost: number;
-  is_active: boolean;
-  stock: number | null;
 }
 
 const statusLabel: Record<ClientMembership['status'], string> = {
@@ -57,7 +34,12 @@ export default function ClientDashboard() {
   });
 
   const isExpiredOrCancelled = membership?.status === 'expired' || membership?.status === 'cancelled';
-  const isOutOfCredits = membership?.status === 'active' && membership?.class_limit && (membership?.classes_remaining ?? 0) <= 0;
+  const isOutOfCredits =
+    membership?.status === 'active' &&
+    !!membership?.class_limit &&
+    (membership?.classes_remaining ?? 0) <= 0;
+  const hasActiveCredits =
+    membership?.status === 'active' && !isOutOfCredits;
 
   const { data: bookings, isLoading: bookingsLoading } = useQuery<BookingClient[]>({
     queryKey: ['my-bookings'],
@@ -69,380 +51,242 @@ export default function ClientDashboard() {
     queryFn: async () => (await api.get('/wallet/pass')).data,
   });
 
-  const { data: loyaltyRewards, isLoading: loyaltyRewardsLoading } = useQuery<LoyaltyReward[]>({
-    queryKey: ['loyalty-rewards'],
-    queryFn: async () => (await api.get('/loyalty/rewards')).data,
-  });
-
-  const { data: latestVideos } = useQuery<any[]>({
-    queryKey: ['latest-videos'],
-    queryFn: async () => {
-      const { data } = await api.get('/videos', { params: { limit: 4 } });
-      return data;
-    },
-  });
-
   const upcomingClasses = useMemo(() => {
     if (!bookings) return [];
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
     return bookings
-      .filter((booking) => booking.booking_status !== 'cancelled')
-      .filter((booking) => {
-        const classDate = parseISO(booking.date);
-        // Show all classes from today onwards (not just future hours)
-        return classDate >= today;
+      .filter((b) => b.booking_status !== 'cancelled')
+      .filter((b) => {
+        const d = parseISO(b.date);
+        return d >= today;
       })
       .sort((a, b) => {
-        const dateA = parseISO(`${a.date}T${a.start_time}`);
-        const dateB = parseISO(`${b.date}T${b.start_time}`);
-        return dateA.getTime() - dateB.getTime();
+        const da = parseISO(`${a.date}T${a.start_time}`);
+        const db = parseISO(`${b.date}T${b.start_time}`);
+        return da.getTime() - db.getTime();
       })
       .slice(0, 2);
   }, [bookings]);
 
-  const membershipEndDate = membership?.end_date ? parseISO(membership.end_date) : null;
-  const daysRemaining = membershipEndDate
-    ? Math.max(differenceInCalendarDays(membershipEndDate, new Date()), 0)
+  const membershipEnd = membership?.end_date ? parseISO(membership.end_date) : null;
+  const daysRemaining = membershipEnd
+    ? Math.max(differenceInCalendarDays(membershipEnd, new Date()), 0)
     : null;
   const classLimit = membership?.class_limit ?? null;
   const classesRemaining = membership?.classes_remaining ?? null;
-  const classesProgress = classLimit && classesRemaining !== null
-    ? (classesRemaining / classLimit) * 100
-    : null;
   const pointsBalance = walletSummary?.pointsBalance ?? 0;
-  const nextReward = useMemo(() => {
-    return (loyaltyRewards || [])
-      .filter((reward) => reward.is_active && (reward.stock === null || reward.stock > 0))
-      .sort((a, b) => a.points_cost - b.points_cost)[0] || null;
-  }, [loyaltyRewards]);
-  const rewardTarget = nextReward?.points_cost ?? null;
-  const pointsRemaining = rewardTarget ? Math.max(rewardTarget - pointsBalance, 0) : 0;
-  const rewardProgress = rewardTarget ? Math.min((pointsBalance / rewardTarget) * 100, 100) : 0;
+
+  // Decide which CTA + headline to show on the premium membership card.
+  const card = (() => {
+    if (membershipLoading) return null;
+    if (!membership) {
+      return {
+        eyebrow: 'Premium Access',
+        title: 'Tu Membresía',
+        body: 'Activa tu plan para comenzar tu viaje de transformación y bienestar.',
+        cta: { label: 'Comprar membresía', to: '/app/checkout', icon: 'arrow_forward' },
+        badge: 'Sin membresía',
+      };
+    }
+    if (isOutOfCredits) {
+      return {
+        eyebrow: 'Premium Access',
+        title: `${membership.plan_name}`,
+        body: `Agotaste tus ${membership.class_limit} clases. Compra más para seguir reservando${membership.end_date ? `. Vence el ${safeFormat(parseISO(membership.end_date), 'dd MMM yyyy')}` : '.'}`,
+        cta: { label: 'Comprar más clases', to: '/app/checkout', icon: 'add' },
+        badge: 'Sin créditos',
+      };
+    }
+    if (isExpiredOrCancelled) {
+      return {
+        eyebrow: 'Premium Access',
+        title: `${membership.plan_name}`,
+        body: `Tu membresía ${membership.status === 'expired' ? 'venció' : 'fue cancelada'}${membership.end_date ? ` el ${safeFormat(parseISO(membership.end_date), 'dd MMM yyyy')}` : ''}. Renueva para seguir reservando.`,
+        cta: { label: 'Renovar membresía', to: '/app/checkout', icon: 'refresh' },
+        badge: statusLabel[membership.status],
+      };
+    }
+    // Active + has credits
+    return {
+      eyebrow: 'Premium Access',
+      title: membership.plan_name || 'Tu Membresía',
+      body:
+        classLimit && classesRemaining !== null
+          ? `${classesRemaining} de ${classLimit} clases disponibles${daysRemaining !== null ? ` · ${daysRemaining} días restantes` : ''}.`
+          : `Acceso ilimitado activo${daysRemaining !== null ? ` · ${daysRemaining} días restantes` : '.'}`,
+      cta: { label: 'Reservar clase', to: '/app/book', icon: 'arrow_forward' },
+      badge: 'Activa',
+    };
+  })();
 
   return (
     <AuthGuard requiredRoles={['client']}>
-      <ClientLayout>
-        <div className="space-y-6">
-          {/* Header with gradient */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chocolate via-[#3D3229] to-chocolate p-6">
-            <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-amber/[0.08] blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-coral/[0.1] blur-3xl" />
-            <div className="relative z-10">
-              <h1 className="text-2xl font-heading font-bold text-white">
-                ¡Hola, {user?.display_name?.split(' ')[0] || 'bienvenido'}! 👋
-              </h1>
-              <p className="text-cream/60 font-body text-sm mt-1">
-                Bienvenido de vuelta a Sunrise Sunset
-              </p>
-            </div>
-          </div>
+      <ClientLayout fab={{ to: '/app/book', label: 'Reservar clase', icon: 'add' }}>
+        <div className="space-y-8">
+          {/* Greeting */}
+          <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <p className="text-xs font-semibold text-coral tracking-[0.18em] uppercase mb-2">
+              Bienvenido de vuelta
+            </p>
+            <h1 className="font-heading text-3xl md:text-4xl text-foreground">
+              ¡Hola, {user?.display_name?.split(' ')[0] || 'bienvenido'}!
+            </h1>
+          </section>
 
-          {/* Membership Card — Premium feel */}
-          <Card className={`relative overflow-hidden ${isExpiredOrCancelled || isOutOfCredits ? 'border-amber-300/40 bg-gradient-to-br from-amber-50/80 via-white to-orange-50/30' : 'border-amber/20 bg-gradient-to-br from-blush via-white to-cream/10'}`}>
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-amber/[0.06] blur-2xl" />
-            <CardHeader className="pb-2 relative z-10">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-heading">Tu Membresía</CardTitle>
-                <Badge
-                  variant={membership?.status === 'active' ? 'default' : 'secondary'}
-                  className={
-                    isOutOfCredits
-                      ? 'bg-amber-100 text-amber-700 border border-amber-300 rounded-lg'
-                      : membership?.status === 'active'
-                        ? 'bg-emerald-600 rounded-lg'
-                        : isExpiredOrCancelled
-                          ? 'bg-amber-100 text-amber-700 border border-amber-300 rounded-lg'
-                          : 'rounded-lg'
-                  }
-                >
-                  {isOutOfCredits ? 'Sin créditos' : membership ? statusLabel[membership.status] : 'Sin membresía'}
-                </Badge>
-              </div>
-              <CardDescription className="font-body">{membership?.plan_name || 'Activa tu plan para comenzar'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 relative z-10">
-              {membershipLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-2 w-full" />
-                  <Skeleton className="h-4 w-56" />
-                </div>
-              ) : membership && isOutOfCredits ? (
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200/60">
-                    <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-amber-800">
-                        Agotaste tus {membership.class_limit} clases de {membership.plan_name}
-                      </p>
-                      <p className="text-xs text-amber-600">
-                        Tu plan vence el {membership.end_date ? safeFormat(parseISO(membership.end_date), 'dd MMM yyyy') : '—'}. Compra más clases para seguir reservando.
-                      </p>
-                    </div>
+          {/* Premium membership card */}
+          <section className="relative group animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-100">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-coral to-amber rounded-[1.5rem] opacity-20 blur group-hover:opacity-30 transition duration-500" />
+            <div className="relative bg-card rounded-[1.5rem] p-6 md:p-8 shadow-editorial overflow-hidden">
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-coral/10 rounded-full" />
+              <div className="relative z-10 space-y-6">
+                {membershipLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <Skeleton className="h-7 w-48" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-12 w-full rounded-xl" />
                   </div>
-                  <Button asChild className="w-full rounded-xl bg-amber hover:bg-amber/90 shadow-md">
-                    <Link to="/app/checkout">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Comprar más clases
-                    </Link>
-                  </Button>
-                </div>
-              ) : membership && isExpiredOrCancelled ? (
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200/60">
-                    <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-amber-800">
-                        Tu membresía {membership.status === 'expired' ? 'venció' : 'fue cancelada'}{membership.end_date ? ` el ${safeFormat(parseISO(membership.end_date), 'dd MMM yyyy')}` : ''}
-                      </p>
-                      <p className="text-xs text-amber-600">
-                        Renueva para seguir reservando clases y acumulando puntos WalletClub.
-                      </p>
-                    </div>
-                  </div>
-                  <Button asChild className="w-full rounded-xl bg-amber hover:bg-amber/90 shadow-md">
-                    <Link to="/app/checkout">
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Renovar membresía
-                    </Link>
-                  </Button>
-                </div>
-              ) : membership ? (
-                <>
-                  {classLimit && classLimit > 0 ? (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Clases restantes</span>
-                        <span className="font-medium">
-                          {classesRemaining ?? 0} de {classLimit}
-                        </span>
-                      </div>
-                      <Progress value={classesProgress ?? 0} className="h-2" />
-                    </div>
-                  ) : classLimit === 0 ? (
-                    <div className="text-sm text-muted-foreground">
-                      Solo acceso (sin clases incluidas)
-                    </div>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">
-                      Clases ilimitadas activas
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>
-                        {daysRemaining !== null ? `${daysRemaining} días restantes` : 'Sin fecha de vencimiento'}
+                ) : card ? (
+                  <>
+                    <div className="flex items-start justify-between">
+                      <span
+                        className="material-symbols-outlined text-coral text-4xl filled"
+                        aria-hidden
+                      >
+                        spa
+                      </span>
+                      <span className="text-[11px] font-semibold tracking-[0.14em] uppercase bg-cream px-3 py-1 rounded-full text-chocolate/80">
+                        {card.badge}
                       </span>
                     </div>
-                    <span className="text-muted-foreground">
-                      {membership.end_date ? `Vence: ${safeFormat(membershipEndDate!, 'dd MMM yyyy')}` : 'Sin vencimiento'}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Aún no tienes una membresía activa.
-                  </p>
-                  <Button asChild size="sm">
-                    <Link to="/app/checkout">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Comprar membresía
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Button asChild size="lg" className="h-auto py-5 flex-col gap-2 rounded-xl bg-amber hover:bg-amber/90 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-              <Link to="/app/book">
-                <Plus className="h-5 w-5" />
-                <span className="font-body font-semibold">Reservar Clase</span>
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="h-auto py-5 flex-col gap-2 rounded-xl border-cream/40 hover:border-amber/40 hover:bg-amber/5 transition-all duration-300 hover:-translate-y-0.5">
-              <Link to="/app/wallet">
-                <Gift className="h-5 w-5 text-amber" />
-                <span className="font-body font-semibold">WalletClub</span>
-              </Link>
-            </Button>
-          </div>
-
-          <Card className="border-border/60 hover:shadow-md transition-shadow duration-300">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-heading">Próximas Clases</CardTitle>
-                <Button variant="ghost" size="sm" className="font-body rounded-xl" asChild>
-                  <Link to="/app/classes">
-                    Ver todas
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {bookingsLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-16 w-full" />
-                  <Skeleton className="h-16 w-full" />
-                </div>
-              ) : upcomingClasses.length > 0 ? (
-                <div className="space-y-3">
-                  {upcomingClasses.map((cls) => (
-                    <div
-                      key={cls.booking_id}
-                      className="flex items-center justify-between p-3 rounded-xl bg-muted/40 overflow-hidden relative hover:bg-muted/60 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm"
-                    >
-                      {cls.class_type_color && (
-                        <div 
-                          className="absolute left-0 top-0 bottom-0 w-1"
-                          style={{ backgroundColor: cls.class_type_color }}
-                        />
-                      )}
-                      <div className="flex items-center gap-3 pl-2">
-                        <div 
-                          className="h-10 w-10 rounded-full flex items-center justify-center"
-                          style={{ 
-                            backgroundColor: cls.class_type_color ? `${cls.class_type_color}20` : 'hsl(var(--primary) / 0.1)'
-                          }}
-                        >
-                          <Calendar 
-                            className="h-5 w-5" 
-                            style={{ color: cls.class_type_color || 'hsl(var(--primary))' }}
+                    <div className="space-y-2">
+                      <h2 className="font-heading text-2xl md:text-3xl text-foreground">{card.title}</h2>
+                      <p className="text-sm md:text-base text-foreground/70 leading-relaxed">{card.body}</p>
+                    </div>
+                    {hasActiveCredits && classLimit && classesRemaining !== null && (
+                      <div className="space-y-2">
+                        <div className="h-2 w-full rounded-full bg-cream overflow-hidden">
+                          <div
+                            className="h-full bg-coral rounded-full transition-all duration-700"
+                            style={{ width: `${Math.max(0, Math.min(100, (classesRemaining / classLimit) * 100))}%` }}
                           />
                         </div>
-                        <div>
-                          <p className="font-medium">{cls.class_type_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {safeFormat(cls.date, 'EEE d MMM')} • {cls.start_time.slice(0, 5)} • {cls.instructor_name}
-                          </p>
-                        </div>
                       </div>
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/app/classes/${cls.booking_id}`}>Ver detalle</Link>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <Calendar className="h-10 w-10 mx-auto text-muted-foreground/50" />
-                  <p className="mt-2 text-muted-foreground">No tienes clases próximas</p>
-                  <Button asChild className="mt-4">
-                    <Link to="/app/book">Reservar ahora</Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Videos On-Demand */}
-          {latestVideos && latestVideos.length > 0 && (
-            <Card className="border-border/60 hover:shadow-md transition-shadow duration-300">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2 font-heading">
-                    <div className="h-8 w-8 rounded-xl bg-amber/10 flex items-center justify-center">
-                      <Play className="h-4 w-4 text-amber" />
-                    </div>
-                    Videos On-Demand
-                  </CardTitle>
-                  <Button variant="ghost" size="sm" className="font-body rounded-xl" asChild>
-                    <Link to="/app/videos">
-                      Ver todos
-                      <ChevronRight className="ml-1 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-                <CardDescription className="font-body">Rutinas y técnica disponibles para ti</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  {latestVideos.slice(0, 4).map((video: any) => (
+                    )}
                     <Link
-                      key={video.id}
-                      to={`/app/videos/${video.id}`}
-                      className="group"
+                      to={card.cta.to}
+                      className="w-full bg-coral text-cream py-4 px-6 rounded-xl text-sm font-semibold tracking-wide hover:opacity-90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-coral/20 flex items-center justify-center gap-2"
                     >
-                      <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                        {video.thumbnail_url ? (
-                          <img
-                            src={video.thumbnail_url}
-                            alt={video.title}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-muted">
-                            <Play className="h-8 w-8 text-muted-foreground/50" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="bg-white/90 rounded-full p-2 shadow-lg">
-                            <Play className="h-4 w-4 text-primary fill-primary ml-0.5" />
-                          </div>
-                        </div>
-                      </div>
-                      <p className="text-sm font-medium mt-1.5 group-hover:text-primary transition-colors line-clamp-1">
-                        {video.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground capitalize">{video.level}</p>
+                      {card.cta.label}
+                      <span className="material-symbols-outlined text-base">{card.cta.icon}</span>
                     </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card className="border-amber/20 hover:shadow-md transition-shadow duration-300">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2 font-heading">
-                  <Sparkles className="h-5 w-5 text-amber" />
-                  WalletClub
-                </CardTitle>
-                <span className="text-2xl font-bold text-amber font-heading">{pointsBalance} pts</span>
+                  </>
+                ) : null}
               </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {loyaltyRewardsLoading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-44" />
-                  <Skeleton className="h-2 w-full" />
-                </div>
-              ) : nextReward ? (
-                <div className="space-y-2">
-                  <div className="flex justify-between gap-3 text-sm">
-                    <span className="text-muted-foreground truncate">
-                      Próxima recompensa: {nextReward.name}
+            </div>
+          </section>
+
+          {/* Quick actions */}
+          <section className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+            <Link
+              to="/app/book"
+              className="flex flex-col items-center justify-center p-6 bg-card rounded-[1.5rem] hover:bg-cream/60 transition-colors group shadow-sm"
+            >
+              <div className="w-14 h-14 rounded-full bg-coral/15 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <span className="material-symbols-outlined text-coral text-[26px]">calendar_month</span>
+              </div>
+              <span className="text-sm font-semibold text-foreground tracking-wide">Reservar Clase</span>
+            </Link>
+            <Link
+              to="/app/wallet"
+              className="flex flex-col items-center justify-center p-6 bg-card rounded-[1.5rem] hover:bg-cream/60 transition-colors group shadow-sm"
+            >
+              <div className="w-14 h-14 rounded-full bg-amber/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <span className="material-symbols-outlined text-chocolate text-[26px]">account_balance_wallet</span>
+              </div>
+              <span className="text-sm font-semibold text-foreground tracking-wide">
+                WalletClub <span className="text-foreground/50 font-normal">· {pointsBalance} pts</span>
+              </span>
+            </Link>
+          </section>
+
+          {/* Upcoming classes */}
+          <section className="space-y-4 animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
+            <div className="flex items-center justify-between">
+              <h3 className="font-heading text-xl md:text-2xl text-foreground">Próximas Clases</h3>
+              <Link to="/app/classes" className="text-xs font-semibold text-coral tracking-[0.18em] uppercase hover:opacity-80">
+                Ver todas
+              </Link>
+            </div>
+
+            {bookingsLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-16 w-full rounded-2xl" />
+                <Skeleton className="h-16 w-full rounded-2xl" />
+              </div>
+            ) : upcomingClasses.length > 0 ? (
+              <div className="space-y-3">
+                {upcomingClasses.map((cls) => (
+                  <Link
+                    key={cls.booking_id}
+                    to={`/app/classes/${cls.booking_id}`}
+                    className="flex items-center justify-between p-4 rounded-2xl bg-card hover:bg-cream/60 transition-all duration-200 hover:-translate-y-0.5 shadow-sm group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="h-12 w-12 rounded-full flex items-center justify-center shrink-0"
+                        style={{
+                          backgroundColor: cls.class_type_color
+                            ? `${cls.class_type_color}22`
+                            : 'hsl(var(--primary) / 0.15)',
+                        }}
+                      >
+                        <span
+                          className="material-symbols-outlined text-[22px]"
+                          style={{ color: cls.class_type_color || 'hsl(var(--primary))' }}
+                        >
+                          calendar_month
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{cls.class_type_name}</p>
+                        <p className="text-xs text-foreground/60 mt-0.5">
+                          {safeFormat(cls.date, 'EEE d MMM')} · {cls.start_time.slice(0, 5)} · {cls.instructor_name}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="material-symbols-outlined text-foreground/40 group-hover:text-coral transition-colors">
+                      chevron_right
                     </span>
-                    <span className="shrink-0 text-muted-foreground">
-                      {pointsRemaining > 0 ? `${pointsRemaining} pts más` : 'Lista para canjear'}
-                    </span>
-                  </div>
-                  <Progress value={rewardProgress} className="h-2" />
-                  <p className="text-xs text-muted-foreground">
-                    Meta: {rewardTarget} pts
-                  </p>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-card border border-border/30 rounded-[1.5rem] p-10 flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-background flex items-center justify-center">
+                  <span className="material-symbols-outlined text-foreground/40 text-3xl">event_busy</span>
                 </div>
-              ) : (
-                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  Sin recompensas configuradas por ahora.
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground/80">No tienes clases próximas</p>
+                  <p className="text-xs text-foreground/50">Es el momento perfecto para agendar tu próxima sesión.</p>
                 </div>
-              )}
-              <Button variant="outline" asChild className="w-full rounded-xl border-amber/20 hover:border-amber/40 hover:bg-amber/5 font-body">
-                <Link to="/app/wallet">
-                  Ver recompensas
-                  <ChevronRight className="ml-1 h-4 w-4" />
+                <Link
+                  to="/app/book"
+                  className="text-coral font-semibold text-sm border-b-2 border-coral/20 pb-1 hover:border-coral transition-all"
+                >
+                  Reservar ahora
                 </Link>
-              </Button>
-            </CardContent>
-          </Card>
+              </div>
+            )}
+          </section>
+
+          {/* Editorial atmosphere */}
+          <section className="py-6 text-center animate-in fade-in duration-1000 delay-500">
+            <p className="italic text-foreground/45 text-base md:text-lg leading-relaxed max-w-xl mx-auto">
+              "El movimiento es una medicina para crear un cambio en los estados físicos, emocionales y mentales."
+            </p>
+          </section>
         </div>
       </ClientLayout>
     </AuthGuard>
