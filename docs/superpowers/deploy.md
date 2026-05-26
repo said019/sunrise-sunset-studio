@@ -50,14 +50,30 @@ railway up --service sunrise-api --ci
 railway up --service sunrise-web --ci
 
 # 7. Seed the production DB (one-time, from local against the Railway Postgres)
-DATABASE_URL=$(railway variables --service Postgres --json | jq -r '.DATABASE_URL') \
-psql "$DATABASE_URL" -f database/schema_complete.sql
-psql "$DATABASE_URL" -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS pgcrypto;'
-psql "$DATABASE_URL" -f database/migrations/022_credit_buckets.sql
-psql "$DATABASE_URL" -f database/migrations/023_booking_credit_bucket.sql
-psql "$DATABASE_URL" -f database/seeds/sunrise_class_types.sql
-psql "$DATABASE_URL" -f database/seeds/sunrise_packages.sql
-psql "$DATABASE_URL" -f database/seeds/sunrise_singles.sql
+#    NOTE: schema_complete.sql is an OLD snapshot from Catarsis — it's missing
+#    columns that the code references (e.g. users.password_hash, users.is_prospect).
+#    You MUST apply EVERY migration in database/migrations/ after schema_complete,
+#    not just 022/023. All migrations are idempotent (IF NOT EXISTS guards).
+#    Use the proxy DATABASE_URL from `railway variables --service Postgres`.
+DB_PROXY="<paste from `railway variables --service Postgres`>"
+psql "$DB_PROXY" -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS pgcrypto;'
+# Schema snapshot. Use psql WITHOUT -v ON_ERROR_STOP=1; the snapshot contains a
+# bad ADD CONSTRAINT IF NOT EXISTS line that errors on PG18 but is harmless.
+psql "$DB_PROXY" -f database/schema_complete.sql 2>&1 | tail -5
+# All migrations in numeric order (the loop handles the 001/002/003 duplicates fine).
+for f in database/migrations/*.sql; do
+  echo "→ $(basename "$f")"
+  psql "$DB_PROXY" -f "$f" 2>&1 | grep -E "^(ALTER|CREATE|INSERT|UPDATE|DELETE|ERROR)" | tail -2
+done
+# Sunrise catalog seeds.
+psql "$DB_PROXY" -f database/seeds/sunrise_class_types.sql
+psql "$DB_PROXY" -f database/seeds/sunrise_packages.sql
+psql "$DB_PROXY" -f database/seeds/sunrise_singles.sql
+# Sanity (expect: 17 active plans, 3 class_types, 22 buckets, users.password_hash exists)
+psql "$DB_PROXY" -c "SELECT 'plans' k, count(*) FROM plans WHERE is_active UNION ALL
+SELECT 'class_types', count(*) FROM class_types WHERE is_active UNION ALL
+SELECT 'buckets', count(*) FROM plan_credit_buckets;"
+psql "$DB_PROXY" -tAc "SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name IN ('password_hash','is_prospect');"
 
 # 8. Smoke test the live URLs
 curl -s -o /dev/null -w "api/health -> %{http_code}\n" https://<api-public-url>/api/health
