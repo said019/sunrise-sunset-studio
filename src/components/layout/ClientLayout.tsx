@@ -116,11 +116,13 @@ export function ClientLayout({ children, fab }: ClientLayoutProps) {
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Link
-                            to="/app"
-                            className="font-heading text-xl tracking-[0.18em] text-coral select-none uppercase"
-                        >
-                            Sunrise Sunset
+                        <Link to="/app" aria-label="Sunrise Sunset · Inicio" className="block">
+                            <img
+                                src="/logo-wordmark.svg"
+                                alt="Sunrise Sunset"
+                                className="h-12 w-auto rounded-lg select-none"
+                                draggable={false}
+                            />
                         </Link>
                     </div>
 
