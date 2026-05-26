@@ -137,14 +137,21 @@ export default function Plans() {
                                     <article
                                         key={g.key}
                                         className={cn(
-                                            'relative rounded-[1.5rem] p-8 flex flex-col h-full transition-all duration-300 hover:-translate-y-2',
+                                            'relative rounded-[1.5rem] p-8 flex flex-col h-full transition-all duration-300 hover:-translate-y-2 overflow-hidden',
                                             recommended
-                                                ? 'bg-coral text-cream shadow-2xl shadow-coral/30 ring-4 ring-coral/20 lg:scale-[1.04] z-10'
+                                                ? 'bg-sunset text-cream sunset-glow ring-4 ring-coral/20 lg:scale-[1.04] z-10'
                                                 : 'bg-card text-foreground shadow-sm hover:shadow-md'
                                         )}
                                     >
+                                        {/* Inner blobs (recommended card only) */}
                                         {recommended && (
-                                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-chocolate text-cream text-[11px] font-semibold tracking-[0.18em] uppercase px-5 py-2 rounded-full shadow-lg">
+                                            <>
+                                                <div className="pointer-events-none absolute -right-20 -top-20 w-64 h-64 rounded-full bg-cream/20 blur-3xl" />
+                                                <div className="pointer-events-none absolute -left-16 -bottom-16 w-56 h-56 rounded-full bg-wine/40 blur-3xl" />
+                                            </>
+                                        )}
+                                        {recommended && (
+                                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-chocolate text-cream text-[11px] font-semibold tracking-[0.18em] uppercase px-5 py-2 rounded-full shadow-lg z-20">
                                                 Recomendado
                                             </div>
                                         )}

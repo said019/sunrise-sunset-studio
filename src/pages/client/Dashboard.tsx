@@ -134,41 +134,42 @@ export default function ClientDashboard() {
             </h1>
           </section>
 
-          {/* Premium membership card */}
-          <section className="relative group animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-100">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-coral to-amber rounded-[1.5rem] opacity-20 blur group-hover:opacity-30 transition duration-500" />
-            <div className="relative bg-card rounded-[1.5rem] p-6 md:p-8 shadow-editorial overflow-hidden">
-              <div className="absolute -right-10 -top-10 w-40 h-40 bg-coral/10 rounded-full" />
+          {/* Premium membership card — sunset gradient panel */}
+          <section className="relative animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-100">
+            <div className="relative bg-sunset text-cream rounded-[1.5rem] p-6 md:p-8 sunset-glow overflow-hidden">
+              {/* Inner light & shadow blobs for depth */}
+              <div className="pointer-events-none absolute -right-24 -top-24 w-72 h-72 rounded-full bg-cream/20 blur-3xl" />
+              <div className="pointer-events-none absolute -left-20 -bottom-20 w-64 h-64 rounded-full bg-wine/40 blur-3xl" />
               <div className="relative z-10 space-y-6">
                 {membershipLoading ? (
                   <div className="space-y-3">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <Skeleton className="h-7 w-48" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-12 w-full rounded-xl" />
+                    <Skeleton className="h-10 w-10 rounded-full bg-cream/20" />
+                    <Skeleton className="h-7 w-48 bg-cream/20" />
+                    <Skeleton className="h-4 w-3/4 bg-cream/20" />
+                    <Skeleton className="h-12 w-full rounded-xl bg-cream/20" />
                   </div>
                 ) : card ? (
                   <>
                     <div className="flex items-start justify-between">
                       <span
-                        className="material-symbols-outlined text-coral text-4xl filled"
+                        className="material-symbols-outlined text-cream text-4xl filled"
                         aria-hidden
                       >
                         spa
                       </span>
-                      <span className="text-[11px] font-semibold tracking-[0.14em] uppercase bg-cream px-3 py-1 rounded-full text-chocolate/80">
+                      <span className="text-[11px] font-semibold tracking-[0.14em] uppercase bg-cream/20 backdrop-blur-sm px-3 py-1 rounded-full text-cream">
                         {card.badge}
                       </span>
                     </div>
                     <div className="space-y-2">
-                      <h2 className="font-heading text-2xl md:text-3xl text-foreground">{card.title}</h2>
-                      <p className="text-sm md:text-base text-foreground/70 leading-relaxed">{card.body}</p>
+                      <h2 className="font-heading text-2xl md:text-3xl text-cream">{card.title}</h2>
+                      <p className="text-sm md:text-base text-cream/85 leading-relaxed">{card.body}</p>
                     </div>
                     {hasActiveCredits && classLimit && classesRemaining !== null && (
                       <div className="space-y-2">
-                        <div className="h-2 w-full rounded-full bg-cream overflow-hidden">
+                        <div className="h-2 w-full rounded-full bg-cream/20 overflow-hidden">
                           <div
-                            className="h-full bg-coral rounded-full transition-all duration-700"
+                            className="h-full bg-cream rounded-full transition-all duration-700"
                             style={{ width: `${Math.max(0, Math.min(100, (classesRemaining / classLimit) * 100))}%` }}
                           />
                         </div>
@@ -176,7 +177,7 @@ export default function ClientDashboard() {
                     )}
                     <Link
                       to={card.cta.to}
-                      className="w-full bg-coral text-cream py-4 px-6 rounded-xl text-sm font-semibold tracking-wide hover:opacity-90 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-coral/20 flex items-center justify-center gap-2"
+                      className="w-full bg-cream text-coral py-4 px-6 rounded-xl text-sm font-semibold tracking-wide hover:bg-blush active:scale-[0.98] transition-all duration-200 shadow-lg shadow-wine/30 flex items-center justify-center gap-2"
                     >
                       {card.cta.label}
                       <span className="material-symbols-outlined text-base">{card.cta.icon}</span>
