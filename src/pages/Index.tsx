@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import heroImage from "@/assets/hero.jpeg";
 import pilatesImage from "@/assets/hero-pilates.jpg";
+import { nowInStudioTz, formatStudioTime } from "@/lib/date";
 
 type Lang = "es" | "en";
 type ClassType = "sculpt" | "surf" | "yoga" | "barre";
@@ -540,6 +541,9 @@ const content = {
 const formatDate = (d: Date, lang: Lang) =>
   d
     .toLocaleDateString(lang === "es" ? "es-MX" : "en-US", {
+      // Forzar TZ del studio para que la fecha del hero refleje el día
+      // que está corriendo en Los Cabos, no el del dispositivo del visitante.
+      timeZone: "America/Mazatlan",
       weekday: "long",
       day: "2-digit",
       month: "long",
@@ -700,10 +704,10 @@ const Index = () => {
   const [lang, setLang] = useState<Lang>("es");
   const [now, setNow] = useState(() => new Date());
   const [scrolled, setScrolled] = useState(false);
-  const todayIndex = useMemo(() => {
-    const d = new Date().getDay();
-    return d === 0 ? 6 : d - 1;
-  }, []);
+  // Día de la semana en hora del studio (Los Cabos, GMT-7), no en la del
+  // dispositivo del visitante — así una visitante en CDMX a la 0:01am
+  // sigue viendo el día que está corriendo en el studio (Cabos, 11pm).
+  const todayIndex = useMemo(() => nowInStudioTz().dayOfWeekMon0, []);
   const [selectedDay, setSelectedDay] = useState<number>(todayIndex);
   const [selectedFilter, setSelectedFilter] = useState<ClassType | null>(null);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -726,7 +730,11 @@ const Index = () => {
   }, []);
 
   const sunProgress = useMemo(() => {
-    const minutes = now.getHours() * 60 + now.getMinutes();
+    // El arco solar se mueve con la hora del studio (Cabos), no la del
+    // dispositivo. Un visitante en CDMX ve el sol exactamente donde está
+    // sobre el studio en ese instante.
+    const studio = nowInStudioTz(now);
+    const minutes = studio.hours * 60 + studio.minutes;
     const start = 6 * 60;
     const end = 20 * 60;
     if (minutes < start) return 0;
@@ -742,7 +750,9 @@ const Index = () => {
   }, [sunProgress]);
 
   const dateString = formatDate(now, lang);
-  const timeString = now.toLocaleTimeString(lang === "es" ? "es-MX" : "en-US", {
+  // Reloj del hero — siempre en hora Los Cabos (GMT-7), nunca en la TZ del
+  // dispositivo del visitante. Es la hora del studio, no la del visitante.
+  const timeString = formatStudioTime(now, lang === "es" ? "es-MX" : "en-US", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
