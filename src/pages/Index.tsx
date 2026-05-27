@@ -799,7 +799,7 @@ const Index = () => {
       />
 
       {/* TOP META BAR */}
-      <div className="relative z-40 hidden border-b border-chocolate/10 bg-[#FAF1E6]/80 text-[11px] uppercase tracking-[0.22em] text-chocolate/70 backdrop-blur md:block">
+      <div className="relative z-40 hidden border-b border-chocolate/15 bg-[#FFE6BD]/60 text-[11px] uppercase tracking-[0.22em] text-chocolate/75 backdrop-blur md:block">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-2.5">
           <div className="flex items-center gap-5">
             <span className="font-medium text-chocolate/85">{dateString}</span>
@@ -828,7 +828,7 @@ const Index = () => {
       <nav
         className={`sticky top-0 z-40 transition-[background-color,border-color,backdrop-filter] duration-500 ease-sunrise ${
           scrolled
-            ? "border-b border-chocolate/10 bg-[#FAF1E6]/90 backdrop-blur-xl"
+            ? "border-b border-chocolate/15 bg-[#FFE6BD]/80 backdrop-blur-xl"
             : "border-b border-transparent bg-transparent"
         }`}
       >
@@ -882,11 +882,10 @@ const Index = () => {
       </nav>
 
       {/* HERO */}
-      <section ref={heroRef} className="relative px-4 pb-24 pt-14 md:pb-32 md:pt-20">
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_-10%,hsla(33,100%,75%,0.55),transparent_42%),radial-gradient(circle_at_-10%_60%,hsla(16,72%,62%,0.18),transparent_45%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-chocolate/20 to-transparent" />
-        </div>
+      <section ref={heroRef} className="relative overflow-hidden px-4 pb-24 pt-14 md:pb-32 md:pt-20">
+        <div className="absolute inset-0 -z-10 bg-orange-glow-soft" />
+        <div className="orange-grain -z-10" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-px bg-gradient-to-r from-transparent via-wine/30 to-transparent" />
 
         <motion.div
           style={{ y: sunY, rotate: sunRotate }}
@@ -1304,9 +1303,13 @@ const Index = () => {
         </div>
       </section>
 
-      {/* MANIFESTO */}
-      <section id="manifiesto" className="relative scroll-mt-24 overflow-hidden bg-[#FAF1E6] px-4 py-24 md:py-36">
-        <div className="pointer-events-none absolute inset-0 -z-10 opacity-60 [background:radial-gradient(circle_at_50%_80%,hsla(33,100%,72%,0.35),transparent_55%)]" />
+      {/* MANIFESTO — saturated coral glow centerpiece */}
+      <section id="manifiesto" className="relative scroll-mt-24 overflow-hidden px-4 py-28 md:py-40">
+        <div className="absolute inset-0 -z-10 bg-orange-glow" />
+        <div className="orange-grain -z-10" />
+        <div className="pointer-events-none absolute -left-32 -top-32 -z-10 h-[420px] w-[420px] text-cream/15">
+          <SunGlyph className="h-full w-full" />
+        </div>
         <motion.div
           variants={fadeUp}
           initial="hidden"
@@ -1315,23 +1318,27 @@ const Index = () => {
           transition={{ duration: 1.05, ease: easeBreath }}
           className="mx-auto max-w-5xl text-center"
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-coral">{t.manifestoLabel}</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-amber">
+            {t.manifestoLabel}
+          </p>
           <blockquote
-            className="mt-9 font-heading text-[clamp(2.2rem,5vw,4.5rem)] font-light leading-[1.05] tracking-[-0.015em] text-chocolate"
+            className="mt-9 font-heading text-[clamp(2.2rem,5vw,4.5rem)] font-light leading-[1.05] tracking-[-0.015em] text-cream"
             style={{ fontVariationSettings: '"opsz" 144' }}
           >
-            <span className="block italic text-coral">"</span>
+            <span className="block italic text-amber">"</span>
             {t.manifestoQuote}
-            <span className="block italic text-coral">"</span>
+            <span className="block italic text-amber">"</span>
           </blockquote>
-          <p className="mt-8 text-sm uppercase tracking-[0.22em] text-chocolate/55">
+          <p className="mt-8 text-sm uppercase tracking-[0.22em] text-cream/75">
             {t.manifestoAuthor}
           </p>
         </motion.div>
       </section>
 
       {/* STUDIO MOOD */}
-      <section className="relative scroll-mt-24 overflow-hidden bg-coral px-4 py-24 text-cream md:py-32">
+      <section className="relative scroll-mt-24 overflow-hidden px-4 py-24 text-cream md:py-32">
+        <div className="absolute inset-0 -z-10 bg-orange-glow-deep" />
+        <div className="orange-grain -z-10" />
         <div className="pointer-events-none absolute -right-32 -top-32 h-[420px] w-[420px] text-cream/15">
           <SunGlyph className="h-full w-full" />
         </div>
@@ -1369,11 +1376,14 @@ const Index = () => {
             </h2>
             <p className="mt-7 max-w-xl text-base leading-[1.8] text-cream/80 md:text-lg">{t.moodCopy}</p>
 
-            <div className="mt-10 grid gap-px overflow-hidden rounded-[1.5rem] bg-cream/12 sm:grid-cols-2">
+            <div className="mt-10 grid gap-px overflow-hidden rounded-[1.5rem] bg-cream/20 backdrop-blur-sm sm:grid-cols-2">
               {t.moodChips.map(([title, copy]) => (
-                <div key={title} className="bg-coral p-5 transition-colors duration-300 hover:bg-wine">
+                <div
+                  key={title}
+                  className="bg-wine/30 p-5 backdrop-blur-sm transition-colors duration-300 hover:bg-wine/55"
+                >
                   <p className="font-heading text-xl italic text-cream">{title}</p>
-                  <p className="mt-2 text-sm leading-[1.65] text-cream/75">{copy}</p>
+                  <p className="mt-2 text-sm leading-[1.65] text-cream/85">{copy}</p>
                 </div>
               ))}
             </div>
@@ -1511,7 +1521,9 @@ const Index = () => {
       </section>
 
       {/* PACKAGES */}
-      <section id="paquetes" className="scroll-mt-24 bg-[#F4E7D4] px-4 py-24 md:py-32">
+      <section id="paquetes" className="relative scroll-mt-24 overflow-hidden px-4 py-24 md:py-32">
+        <div className="absolute inset-0 -z-10 bg-orange-wash" />
+        <div className="orange-grain -z-10" />
         <div className="mx-auto max-w-[1400px]">
           <motion.div
             variants={fadeUp}
@@ -1697,12 +1709,13 @@ const Index = () => {
           whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 1, ease: easeBreath }}
-          className="relative mx-auto max-w-[1400px] overflow-hidden rounded-[2.5rem] bg-wine text-cream shadow-[0_60px_150px_-50px_hsla(0,100%,18%,0.55)]"
+          className="relative mx-auto max-w-[1400px] overflow-hidden rounded-[2.5rem] text-cream shadow-[0_60px_150px_-50px_hsla(0,100%,18%,0.55)]"
         >
+          <div className="absolute inset-0 bg-orange-glow-deep" />
+          <div className="orange-grain" />
           <div className="pointer-events-none absolute -right-20 -top-20 h-[420px] w-[420px] text-cream/10">
             <SunGlyph className="h-full w-full" />
           </div>
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_120%,hsla(33,100%,72%,0.32),transparent_55%)]" />
 
           <div className="relative grid gap-12 px-7 py-16 md:grid-cols-[1.1fr_0.9fr] md:items-end md:px-12 md:py-20 lg:px-16 lg:py-24">
             <div>

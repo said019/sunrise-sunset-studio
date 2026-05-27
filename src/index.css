@@ -358,3 +358,59 @@
 .sunset-glow {
   box-shadow: 0 30px 60px -20px hsla(14, 72%, 50%, 0.45), 0 12px 32px -12px hsla(0, 100%, 24%, 0.18);
 }
+
+/* === Sunrise Sunset · Orange-dominant brand surfaces ===
+ * The owner's palette leans warm and saturated. These utilities create
+ * the luminous coral/amber atmospheres referenced in the brand mood
+ * boards — a gradient mesh of cream, amber, coral and wine, finished
+ * with a soft film grain for that wellness-retreat warmth.
+ */
+
+.bg-orange-glow {
+  background:
+    radial-gradient(ellipse 65% 55% at 18% 22%, hsla(36, 100%, 80%, 0.85) 0%, transparent 55%),
+    radial-gradient(ellipse 75% 60% at 82% 16%, hsla(16, 92%, 64%, 0.95) 0%, transparent 58%),
+    radial-gradient(ellipse 70% 60% at 88% 92%, hsla(0, 100%, 24%, 0.55) 0%, transparent 62%),
+    radial-gradient(ellipse 80% 65% at 22% 88%, hsla(31, 100%, 70%, 0.7) 0%, transparent 60%),
+    linear-gradient(135deg, #F8B069 0%, #EF704E 50%, #C4441F 100%);
+}
+
+.bg-orange-glow-soft {
+  background:
+    radial-gradient(ellipse 70% 60% at 15% 25%, hsla(36, 100%, 86%, 0.85) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 65% at 88% 12%, hsla(16, 88%, 70%, 0.65) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 75% 90%, hsla(14, 72%, 60%, 0.45) 0%, transparent 65%),
+    linear-gradient(140deg, #FFE6BD 0%, #FBC58D 35%, #F39466 75%, #E36F4C 100%);
+}
+
+.bg-orange-glow-deep {
+  background:
+    radial-gradient(ellipse 55% 45% at 12% 18%, hsla(36, 100%, 75%, 0.7) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 60% at 78% 26%, hsla(16, 92%, 58%, 0.95) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 70% at 90% 98%, hsla(0, 100%, 22%, 0.85) 0%, transparent 62%),
+    radial-gradient(ellipse 70% 55% at 18% 95%, hsla(14, 72%, 48%, 0.85) 0%, transparent 60%),
+    linear-gradient(160deg, #F39466 0%, #E36F4C 35%, #9C2914 70%, #4A0E0E 100%);
+}
+
+.bg-orange-wash {
+  /* Soft warm cream-to-peach wash for sections that need calm + orange */
+  background:
+    radial-gradient(ellipse 80% 60% at 85% 0%, hsla(33, 100%, 75%, 0.55) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 55% at 0% 100%, hsla(16, 88%, 70%, 0.32) 0%, transparent 60%),
+    linear-gradient(180deg, #FFEFD9 0%, #FCD9B3 100%);
+}
+
+/* Soft film grain overlay — pairs with the glow backgrounds to add
+ * the atmospheric, sun-bleached texture from the reference boards. */
+.orange-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+  background-image:
+    radial-gradient(circle at 14% 22%, hsla(36, 100%, 85%, 0.35) 0 1.2px, transparent 1.5px),
+    radial-gradient(circle at 78% 64%, hsla(25, 46%, 30%, 0.28) 0 1.2px, transparent 1.5px),
+    radial-gradient(circle at 48% 88%, hsla(14, 72%, 50%, 0.32) 0 1.4px, transparent 1.6px);
+  background-size: 11px 11px, 17px 17px, 23px 23px;
+}
