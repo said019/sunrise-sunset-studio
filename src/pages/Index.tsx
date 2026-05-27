@@ -15,6 +15,18 @@ import heroImage from "@/assets/hero.jpeg";
 import pilatesImage from "@/assets/hero-pilates.jpg";
 
 type Lang = "es" | "en";
+type ClassType = "sculpt" | "surf" | "yoga" | "barre";
+type Slot = {
+  time: string;
+  duration: number;
+  title: string;
+  modifier?: string;
+  type: ClassType;
+  coach: string;
+  intensity: 1 | 2 | 3;
+  spots: number;
+  capacity: number;
+};
 
 const easeOut = [0.23, 1, 0.32, 1] as const;
 const easeBreath = [0.65, 0, 0.35, 1] as const;
@@ -50,14 +62,78 @@ const content = {
     ritualLabel: "Hoy en el studio",
     ritualNote:
       "El día corre como una pausa cuidada. Llega, respira y elige el momento que te sienta mejor.",
-    ritualSlots: [
-      { time: "06:30", title: "Sunrise Yoga", coach: "Ceci", tone: "soft" },
-      { time: "07:00", title: "Surf-Pilates · Ocean Flow", coach: "Adri", tone: "hot" },
-      { time: "08:30", title: "Sculpt-Funcional", coach: "Adri", tone: "warm" },
-      { time: "10:00", title: "Barre & Sculpt", coach: "Amber", tone: "warm" },
-      { time: "17:30", title: "Surf-Pilates · Wave Starter", coach: "Khalia", tone: "hot" },
-      { time: "19:00", title: "Sunset Vinyasa", coach: "Ceci", tone: "soft" },
+    dayShort: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+    dayLong: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"],
+    scheduleFilters: [
+      { label: "Todas", type: null as ClassType | null },
+      { label: "Sculpt", type: "sculpt" as ClassType | null },
+      { label: "Surf-Pilates", type: "surf" as ClassType | null },
+      { label: "Yoga", type: "yoga" as ClassType | null },
+      { label: "Barre", type: "barre" as ClassType | null },
     ],
+    intensityLabels: ["Suave", "Cálido", "Intenso"],
+    intensityShort: "Intensidad",
+    minLabel: "min",
+    spotsLeft: (n: number) => `${n} ${n === 1 ? "lugar" : "lugares"}`,
+    nearlyFull: "Casi lleno",
+    fullLabel: "Sin lugares",
+    bookLabel: "Reservar",
+    waitlistLabel: "Lista de espera",
+    closedLabel: "Cerrado los domingos. Nos vemos el lunes.",
+    emptyFilter: "No hay clases con este filtro hoy.",
+    weekCta: "Ver semana completa",
+    todayPill: "Hoy",
+    weekSchedule: [
+      // Mon
+      [
+        { time: "06:30", duration: 55, title: "Sunrise Yoga", type: "yoga", coach: "Ceci", intensity: 1, spots: 8, capacity: 10 },
+        { time: "08:00", duration: 55, title: "Sculpt-Funcional", type: "sculpt", coach: "Adri", intensity: 2, spots: 2, capacity: 8 },
+        { time: "18:00", duration: 50, title: "Surf-Pilates", modifier: "Ocean Flow", type: "surf", coach: "Adri", intensity: 3, spots: 5, capacity: 6 },
+        { time: "19:30", duration: 60, title: "Sunset Vinyasa", type: "yoga", coach: "Ceci", intensity: 1, spots: 7, capacity: 10 },
+      ],
+      // Tue
+      [
+        { time: "07:00", duration: 55, title: "Sculpt-Funcional", type: "sculpt", coach: "Adri", intensity: 2, spots: 4, capacity: 8 },
+        { time: "08:30", duration: 50, title: "Surf-Pilates", modifier: "Wave Starter", type: "surf", coach: "Khalia", intensity: 3, spots: 3, capacity: 6 },
+        { time: "10:00", duration: 55, title: "Barre & Sculpt", type: "barre", coach: "Amber", intensity: 2, spots: 6, capacity: 8 },
+        { time: "18:00", duration: 50, title: "Surf-Pilates", modifier: "Ocean Flow", type: "surf", coach: "Adri", intensity: 3, spots: 0, capacity: 6 },
+        { time: "19:30", duration: 60, title: "Hatha Yoga", type: "yoga", coach: "Ceci", intensity: 1, spots: 8, capacity: 10 },
+      ],
+      // Wed
+      [
+        { time: "06:30", duration: 55, title: "Sunrise Yoga", type: "yoga", coach: "Ceci", intensity: 1, spots: 6, capacity: 10 },
+        { time: "07:00", duration: 50, title: "Surf-Pilates", modifier: "Ocean Flow", type: "surf", coach: "Adri", intensity: 3, spots: 2, capacity: 6 },
+        { time: "08:30", duration: 55, title: "Sculpt-Funcional", type: "sculpt", coach: "Adri", intensity: 2, spots: 3, capacity: 8 },
+        { time: "10:00", duration: 55, title: "Barre & Sculpt", type: "barre", coach: "Amber", intensity: 2, spots: 4, capacity: 8 },
+        { time: "17:30", duration: 50, title: "Surf-Pilates", modifier: "Wave Starter", type: "surf", coach: "Khalia", intensity: 3, spots: 5, capacity: 6 },
+        { time: "19:00", duration: 60, title: "Sunset Vinyasa", type: "yoga", coach: "Ceci", intensity: 1, spots: 7, capacity: 10 },
+      ],
+      // Thu
+      [
+        { time: "06:30", duration: 55, title: "Sunrise Yoga", type: "yoga", coach: "Ceci", intensity: 1, spots: 7, capacity: 10 },
+        { time: "08:00", duration: 55, title: "Sculpt-Funcional", type: "sculpt", coach: "Adri", intensity: 2, spots: 4, capacity: 8 },
+        { time: "09:30", duration: 50, title: "Surf-Pilates", modifier: "Deep Flow", type: "surf", coach: "Adri", intensity: 3, spots: 1, capacity: 6 },
+        { time: "17:30", duration: 55, title: "Barre & Sculpt", type: "barre", coach: "Amber", intensity: 2, spots: 5, capacity: 8 },
+        { time: "19:00", duration: 60, title: "Yoga Vinyasa", type: "yoga", coach: "Ceci", intensity: 1, spots: 8, capacity: 10 },
+      ],
+      // Fri
+      [
+        { time: "06:30", duration: 55, title: "Sunrise Yoga", type: "yoga", coach: "Ceci", intensity: 1, spots: 9, capacity: 10 },
+        { time: "07:00", duration: 50, title: "Surf-Pilates", modifier: "Ocean Flow", type: "surf", coach: "Adri", intensity: 3, spots: 4, capacity: 6 },
+        { time: "08:30", duration: 55, title: "Sculpt-Funcional", type: "sculpt", coach: "Khalia", intensity: 2, spots: 3, capacity: 8 },
+        { time: "10:00", duration: 55, title: "Barre & Sculpt", type: "barre", coach: "Amber", intensity: 2, spots: 6, capacity: 8 },
+        { time: "17:00", duration: 50, title: "Surf-Pilates", modifier: "Wave Starter", type: "surf", coach: "Adri", intensity: 3, spots: 2, capacity: 6 },
+        { time: "18:30", duration: 60, title: "Sunset Vinyasa", type: "yoga", coach: "Ceci", intensity: 1, spots: 6, capacity: 10 },
+      ],
+      // Sat
+      [
+        { time: "08:00", duration: 55, title: "Sculpt-Funcional", type: "sculpt", coach: "Adri", intensity: 2, spots: 4, capacity: 8 },
+        { time: "09:30", duration: 50, title: "Surf-Pilates", modifier: "Ocean Flow", type: "surf", coach: "Adri", intensity: 3, spots: 5, capacity: 6 },
+        { time: "11:00", duration: 60, title: "Yoga Slow Flow", type: "yoga", coach: "Ceci", intensity: 1, spots: 8, capacity: 10 },
+      ],
+      // Sun (closed)
+      [],
+    ] as Slot[][],
 
     practiceLabel: "Lo que practicamos",
     practiceTitle: "Tres formas de moverte con intención.",
@@ -234,14 +310,78 @@ const content = {
     ritualLabel: "Today at the studio",
     ritualNote:
       "The day moves like a curated pause. Arrive, breathe, and choose the moment that suits you best.",
-    ritualSlots: [
-      { time: "06:30", title: "Sunrise Yoga", coach: "Ceci", tone: "soft" },
-      { time: "07:00", title: "Surf-Pilates · Ocean Flow", coach: "Adri", tone: "hot" },
-      { time: "08:30", title: "Sculpt-Functional", coach: "Adri", tone: "warm" },
-      { time: "10:00", title: "Barre & Sculpt", coach: "Amber", tone: "warm" },
-      { time: "17:30", title: "Surf-Pilates · Wave Starter", coach: "Khalia", tone: "hot" },
-      { time: "19:00", title: "Sunset Vinyasa", coach: "Ceci", tone: "soft" },
+    dayShort: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    dayLong: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    scheduleFilters: [
+      { label: "All", type: null as ClassType | null },
+      { label: "Sculpt", type: "sculpt" as ClassType | null },
+      { label: "Surf-Pilates", type: "surf" as ClassType | null },
+      { label: "Yoga", type: "yoga" as ClassType | null },
+      { label: "Barre", type: "barre" as ClassType | null },
     ],
+    intensityLabels: ["Soft", "Warm", "Intense"],
+    intensityShort: "Intensity",
+    minLabel: "min",
+    spotsLeft: (n: number) => `${n} ${n === 1 ? "spot" : "spots"}`,
+    nearlyFull: "Almost full",
+    fullLabel: "No spots",
+    bookLabel: "Book",
+    waitlistLabel: "Waitlist",
+    closedLabel: "Closed on Sundays. See you Monday.",
+    emptyFilter: "No classes match this filter today.",
+    weekCta: "See the full week",
+    todayPill: "Today",
+    weekSchedule: [
+      // Mon
+      [
+        { time: "06:30", duration: 55, title: "Sunrise Yoga", type: "yoga", coach: "Ceci", intensity: 1, spots: 8, capacity: 10 },
+        { time: "08:00", duration: 55, title: "Sculpt-Functional", type: "sculpt", coach: "Adri", intensity: 2, spots: 2, capacity: 8 },
+        { time: "18:00", duration: 50, title: "Surf-Pilates", modifier: "Ocean Flow", type: "surf", coach: "Adri", intensity: 3, spots: 5, capacity: 6 },
+        { time: "19:30", duration: 60, title: "Sunset Vinyasa", type: "yoga", coach: "Ceci", intensity: 1, spots: 7, capacity: 10 },
+      ],
+      // Tue
+      [
+        { time: "07:00", duration: 55, title: "Sculpt-Functional", type: "sculpt", coach: "Adri", intensity: 2, spots: 4, capacity: 8 },
+        { time: "08:30", duration: 50, title: "Surf-Pilates", modifier: "Wave Starter", type: "surf", coach: "Khalia", intensity: 3, spots: 3, capacity: 6 },
+        { time: "10:00", duration: 55, title: "Barre & Sculpt", type: "barre", coach: "Amber", intensity: 2, spots: 6, capacity: 8 },
+        { time: "18:00", duration: 50, title: "Surf-Pilates", modifier: "Ocean Flow", type: "surf", coach: "Adri", intensity: 3, spots: 0, capacity: 6 },
+        { time: "19:30", duration: 60, title: "Hatha Yoga", type: "yoga", coach: "Ceci", intensity: 1, spots: 8, capacity: 10 },
+      ],
+      // Wed
+      [
+        { time: "06:30", duration: 55, title: "Sunrise Yoga", type: "yoga", coach: "Ceci", intensity: 1, spots: 6, capacity: 10 },
+        { time: "07:00", duration: 50, title: "Surf-Pilates", modifier: "Ocean Flow", type: "surf", coach: "Adri", intensity: 3, spots: 2, capacity: 6 },
+        { time: "08:30", duration: 55, title: "Sculpt-Functional", type: "sculpt", coach: "Adri", intensity: 2, spots: 3, capacity: 8 },
+        { time: "10:00", duration: 55, title: "Barre & Sculpt", type: "barre", coach: "Amber", intensity: 2, spots: 4, capacity: 8 },
+        { time: "17:30", duration: 50, title: "Surf-Pilates", modifier: "Wave Starter", type: "surf", coach: "Khalia", intensity: 3, spots: 5, capacity: 6 },
+        { time: "19:00", duration: 60, title: "Sunset Vinyasa", type: "yoga", coach: "Ceci", intensity: 1, spots: 7, capacity: 10 },
+      ],
+      // Thu
+      [
+        { time: "06:30", duration: 55, title: "Sunrise Yoga", type: "yoga", coach: "Ceci", intensity: 1, spots: 7, capacity: 10 },
+        { time: "08:00", duration: 55, title: "Sculpt-Functional", type: "sculpt", coach: "Adri", intensity: 2, spots: 4, capacity: 8 },
+        { time: "09:30", duration: 50, title: "Surf-Pilates", modifier: "Deep Flow", type: "surf", coach: "Adri", intensity: 3, spots: 1, capacity: 6 },
+        { time: "17:30", duration: 55, title: "Barre & Sculpt", type: "barre", coach: "Amber", intensity: 2, spots: 5, capacity: 8 },
+        { time: "19:00", duration: 60, title: "Yoga Vinyasa", type: "yoga", coach: "Ceci", intensity: 1, spots: 8, capacity: 10 },
+      ],
+      // Fri
+      [
+        { time: "06:30", duration: 55, title: "Sunrise Yoga", type: "yoga", coach: "Ceci", intensity: 1, spots: 9, capacity: 10 },
+        { time: "07:00", duration: 50, title: "Surf-Pilates", modifier: "Ocean Flow", type: "surf", coach: "Adri", intensity: 3, spots: 4, capacity: 6 },
+        { time: "08:30", duration: 55, title: "Sculpt-Functional", type: "sculpt", coach: "Khalia", intensity: 2, spots: 3, capacity: 8 },
+        { time: "10:00", duration: 55, title: "Barre & Sculpt", type: "barre", coach: "Amber", intensity: 2, spots: 6, capacity: 8 },
+        { time: "17:00", duration: 50, title: "Surf-Pilates", modifier: "Wave Starter", type: "surf", coach: "Adri", intensity: 3, spots: 2, capacity: 6 },
+        { time: "18:30", duration: 60, title: "Sunset Vinyasa", type: "yoga", coach: "Ceci", intensity: 1, spots: 6, capacity: 10 },
+      ],
+      // Sat
+      [
+        { time: "08:00", duration: 55, title: "Sculpt-Functional", type: "sculpt", coach: "Adri", intensity: 2, spots: 4, capacity: 8 },
+        { time: "09:30", duration: 50, title: "Surf-Pilates", modifier: "Ocean Flow", type: "surf", coach: "Adri", intensity: 3, spots: 5, capacity: 6 },
+        { time: "11:00", duration: 60, title: "Yoga Slow Flow", type: "yoga", coach: "Ceci", intensity: 1, spots: 8, capacity: 10 },
+      ],
+      // Sun
+      [],
+    ] as Slot[][],
 
     practiceLabel: "What we practice",
     practiceTitle: "Three ways to move with intention.",
@@ -470,10 +610,102 @@ const SunGlyph = ({ className = "" }: { className?: string }) => (
   </svg>
 );
 
+const IntensityDots = ({ level, label }: { level: 1 | 2 | 3; label: string }) => (
+  <span className="inline-flex items-center gap-2">
+    <span className="inline-flex items-center gap-1">
+      {[1, 2, 3].map((i) => (
+        <span
+          key={i}
+          className={`h-1.5 w-1.5 rounded-full transition-colors ${
+            i <= level ? "bg-coral" : "bg-chocolate/20"
+          }`}
+        />
+      ))}
+    </span>
+    <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-chocolate/65">
+      {label}
+    </span>
+  </span>
+);
+
+const SpotsMeter = ({
+  spots,
+  capacity,
+  fullLabel,
+  nearlyFull,
+  spotsLeft,
+}: {
+  spots: number;
+  capacity: number;
+  fullLabel: string;
+  nearlyFull: string;
+  spotsLeft: (n: number) => string;
+}) => {
+  const isFull = spots === 0;
+  const isLow = !isFull && spots <= 2;
+  const pct = Math.max(0, Math.min(1, (capacity - spots) / capacity));
+  return (
+    <div className="flex w-full max-w-[140px] flex-col gap-1.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <span
+          className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${
+            isFull ? "text-chocolate/45" : isLow ? "text-wine" : "text-chocolate/75"
+          }`}
+        >
+          {isFull ? fullLabel : isLow ? nearlyFull : spotsLeft(spots)}
+        </span>
+        <span className="text-[10px] tabular-nums text-chocolate/40">
+          {spots}/{capacity}
+        </span>
+      </div>
+      <div className="h-[3px] w-full overflow-hidden rounded-full bg-chocolate/10">
+        <div
+          className={`h-full rounded-full ${isFull ? "bg-chocolate/30" : isLow ? "bg-wine" : "bg-coral"}`}
+          style={{ width: `${pct * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
+const BookButton = ({
+  to,
+  full,
+  highlight,
+  bookLabel,
+  waitlistLabel,
+}: {
+  to: string;
+  full: boolean;
+  highlight?: boolean;
+  bookLabel: string;
+  waitlistLabel: string;
+}) => (
+  <Link
+    to={to}
+    className={`group/btn inline-flex min-h-[2.5rem] items-center gap-2 rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.18em] transition-[transform,background-color,color] duration-200 ease-sunrise active:scale-[0.97] ${
+      full
+        ? "border border-chocolate/20 bg-transparent text-chocolate/65 hover:border-chocolate/50 hover:text-chocolate"
+        : highlight
+        ? "bg-coral text-cream hover:bg-wine"
+        : "bg-chocolate text-cream hover:bg-coral"
+    }`}
+  >
+    {full ? waitlistLabel : bookLabel}
+    <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+  </Link>
+);
+
 const Index = () => {
   const [lang, setLang] = useState<Lang>("es");
   const [now, setNow] = useState(() => new Date());
   const [scrolled, setScrolled] = useState(false);
+  const todayIndex = useMemo(() => {
+    const d = new Date().getDay();
+    return d === 0 ? 6 : d - 1;
+  }, []);
+  const [selectedDay, setSelectedDay] = useState<number>(todayIndex);
+  const [selectedFilter, setSelectedFilter] = useState<ClassType | null>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const t = content[lang];
 
@@ -518,6 +750,29 @@ const Index = () => {
 
   const sunriseStr = lang === "es" ? "06:42" : "06:42";
   const sunsetStr = lang === "es" ? "19:48" : "19:48";
+
+  const weekDates = useMemo(() => {
+    const base = new Date();
+    const dow = base.getDay();
+    const offsetToMonday = dow === 0 ? -6 : 1 - dow;
+    base.setDate(base.getDate() + offsetToMonday);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(base);
+      d.setDate(base.getDate() + i);
+      return d;
+    });
+  }, [now]);
+
+  const daySlots = t.weekSchedule[selectedDay] ?? [];
+  const visibleSlots = selectedFilter
+    ? daySlots.filter((s) => s.type === selectedFilter)
+    : daySlots;
+  const selectedDayLabel = t.dayLong[selectedDay];
+  const selectedDate = weekDates[selectedDay];
+  const selectedMonth = selectedDate.toLocaleDateString(
+    lang === "es" ? "es-MX" : "en-US",
+    { month: "long" }
+  );
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#FAF1E6] text-chocolate font-body">
@@ -719,78 +974,248 @@ const Index = () => {
         </div>
       </section>
 
-      {/* RITUAL DAY RAIL */}
-      <section id="ritual" className="relative scroll-mt-24 border-y border-chocolate/10 bg-[#F4E7D4] px-4 py-16 md:py-20">
+      {/* RITUAL — pro studio booking schedule */}
+      <section
+        id="ritual"
+        className="relative scroll-mt-24 border-y border-chocolate/10 bg-[#F4E7D4] px-4 py-20 md:py-24"
+      >
         <div className="mx-auto max-w-[1400px]">
+          {/* Header */}
           <motion.div
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.8, ease: easeBreath }}
-            className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
+            transition={{ duration: 0.85, ease: easeBreath }}
+            className="grid items-end gap-8 md:grid-cols-[1.1fr_0.9fr]"
           >
-            <div className="flex items-end gap-6">
-              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-coral">
+            <div>
+              <div className="flex items-center gap-4 text-[11px] font-bold uppercase tracking-[0.24em] text-coral">
+                <span className="h-px w-8 bg-coral" />
                 {t.ritualLabel}
-              </p>
-              <p className="hidden font-heading text-sm italic text-chocolate/55 md:block">{dateString}</p>
+              </div>
+              <h2 className="mt-5 font-heading text-4xl font-light leading-[1.05] tracking-[-0.01em] text-chocolate md:text-6xl">
+                {selectedDayLabel},{" "}
+                <span
+                  className="italic text-coral"
+                  style={{ fontVariationSettings: '"opsz" 144' }}
+                >
+                  {selectedDate.getDate()} de {selectedMonth}.
+                </span>
+              </h2>
             </div>
-            <p className="max-w-md text-sm leading-[1.7] text-chocolate/70">{t.ritualNote}</p>
+            <p className="max-w-md text-base leading-[1.8] text-chocolate/70 md:justify-self-end md:text-lg">
+              {t.ritualNote}
+            </p>
           </motion.div>
 
-          <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-3 scrollbar-none md:mx-0 md:px-0">
-            {t.ritualSlots.map((slot, index) => {
-              const isHot = slot.tone === "hot";
-              const isSoft = slot.tone === "soft";
+          {/* Day picker */}
+          <div className="mt-10 -mx-4 flex gap-2 overflow-x-auto px-4 scrollbar-none md:mx-0 md:px-0">
+            {weekDates.map((d, i) => {
+              const isActive = i === selectedDay;
+              const isToday = i === todayIndex;
               return (
-                <motion.article
-                  key={slot.time + slot.title}
-                  initial={{ opacity: 0, y: 18 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-60px" }}
-                  transition={{ duration: 0.6, delay: index * 0.05, ease: easeOut }}
-                  className={`group relative flex min-w-[230px] flex-1 flex-col justify-between gap-6 rounded-[1.4rem] border p-5 transition-[transform,background-color,border-color] duration-300 ease-sunrise hover:-translate-y-1 ${
-                    isHot
-                      ? "border-transparent bg-coral text-cream hover:bg-wine"
-                      : isSoft
-                      ? "border-chocolate/12 bg-cream text-chocolate hover:border-coral/30"
-                      : "border-chocolate/15 bg-[#FAF1E6] text-chocolate hover:border-coral/40"
+                <button
+                  key={d.toISOString()}
+                  type="button"
+                  onClick={() => setSelectedDay(i)}
+                  className={`group relative flex min-w-[88px] flex-col items-center gap-1.5 rounded-2xl border px-4 py-4 transition-[background-color,border-color,color,transform] duration-300 ease-sunrise active:scale-[0.97] ${
+                    isActive
+                      ? "border-chocolate bg-chocolate text-cream shadow-[0_18px_40px_-22px_hsla(13,66%,28%,0.55)]"
+                      : "border-chocolate/15 bg-transparent text-chocolate hover:border-chocolate/40 hover:-translate-y-0.5"
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`font-heading text-2xl tabular-nums ${
-                        isHot ? "text-cream" : "text-chocolate"
-                      }`}
-                    >
-                      {slot.time}
-                    </span>
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-[0.18em] ${
-                        isHot ? "text-amber" : "text-coral"
-                      }`}
-                    >
-                      {slot.coach}
-                    </span>
-                  </div>
-                  <div>
-                    <p
-                      className={`font-heading text-lg leading-snug ${
-                        isHot ? "text-cream" : "text-chocolate"
-                      }`}
-                    >
-                      {slot.title}
-                    </p>
-                  </div>
-                  <ArrowUpRight
-                    className={`h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${
-                      isHot ? "text-cream/80" : "text-chocolate/55"
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-[0.22em] ${
+                      isActive ? "text-amber" : "text-chocolate/55"
                     }`}
-                  />
-                </motion.article>
+                  >
+                    {t.dayShort[i]}
+                  </span>
+                  <span className="font-heading text-2xl font-light leading-none tabular-nums">
+                    {d.getDate()}
+                  </span>
+                  {isToday ? (
+                    <span
+                      className={`absolute -top-2 right-3 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] ${
+                        isActive ? "bg-amber text-chocolate" : "bg-coral text-cream"
+                      }`}
+                    >
+                      {t.todayPill}
+                    </span>
+                  ) : null}
+                </button>
               );
             })}
+          </div>
+
+          {/* Filters */}
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            {t.scheduleFilters.map((f) => {
+              const isActive = f.type === selectedFilter;
+              return (
+                <button
+                  key={f.label}
+                  type="button"
+                  onClick={() => setSelectedFilter(f.type)}
+                  className={`rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition-[background-color,border-color,color] duration-200 ease-sunrise ${
+                    isActive
+                      ? "border-coral bg-coral text-cream"
+                      : "border-chocolate/15 bg-cream/60 text-chocolate/65 hover:border-coral/40 hover:text-chocolate"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Schedule list */}
+          <motion.div
+            key={`${selectedDay}-${selectedFilter ?? "all"}`}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: easeOut }}
+            className="mt-8 overflow-hidden rounded-[1.6rem] border border-chocolate/10 bg-cream"
+          >
+            {/* Column headers (desktop only) */}
+            <div className="hidden grid-cols-[100px_90px_1fr_140px_120px_140px_140px] items-center gap-4 border-b border-chocolate/10 bg-[#FAF1E6] px-7 py-3.5 text-[10px] font-bold uppercase tracking-[0.22em] text-chocolate/55 lg:grid">
+              <span>Hora</span>
+              <span>Duración</span>
+              <span>Clase</span>
+              <span>Coach</span>
+              <span>{t.intensityShort}</span>
+              <span>Lugares</span>
+              <span className="text-right" />
+            </div>
+
+            {daySlots.length === 0 ? (
+              <div className="flex min-h-[160px] flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+                <Sunset className="h-6 w-6 text-coral" strokeWidth={1.6} />
+                <p className="font-heading text-xl italic text-chocolate">
+                  {t.closedLabel}
+                </p>
+              </div>
+            ) : visibleSlots.length === 0 ? (
+              <div className="flex min-h-[160px] items-center justify-center px-6 py-10 text-sm text-chocolate/60">
+                {t.emptyFilter}
+              </div>
+            ) : (
+              <ul className="divide-y divide-chocolate/10">
+                {visibleSlots.map((slot, index) => {
+                  const isFull = slot.spots === 0;
+                  const isLow = !isFull && slot.spots <= 2;
+                  return (
+                    <motion.li
+                      key={`${slot.time}-${slot.title}-${index}`}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.45, delay: index * 0.04, ease: easeOut }}
+                      className="group grid grid-cols-1 items-center gap-4 px-6 py-5 transition-colors duration-200 ease-sunrise hover:bg-[#FAF1E6] md:px-7 md:py-6 lg:grid-cols-[100px_90px_1fr_140px_120px_140px_140px]"
+                    >
+                      {/* Mobile top row: time + status pill */}
+                      <div className="flex items-baseline justify-between gap-3 lg:contents">
+                        <span className="font-heading text-3xl font-light leading-none tabular-nums text-chocolate lg:text-2xl">
+                          {slot.time}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-chocolate/55 lg:text-[11px]">
+                          {slot.duration} {t.minLabel}
+                        </span>
+                      </div>
+
+                      {/* Title (col 3) */}
+                      <div className="lg:contents">
+                        <div>
+                          <p className="font-heading text-xl font-light leading-tight text-chocolate md:text-2xl">
+                            {slot.title}
+                            {slot.modifier ? (
+                              <>
+                                <span className="mx-2 text-chocolate/30">·</span>
+                                <span
+                                  className="italic text-coral"
+                                  style={{ fontVariationSettings: '"opsz" 144' }}
+                                >
+                                  {slot.modifier}
+                                </span>
+                              </>
+                            ) : null}
+                          </p>
+                          {/* mobile-only meta below title */}
+                          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] uppercase tracking-[0.18em] text-chocolate/60 lg:hidden">
+                            <span>{slot.coach}</span>
+                            <span className="text-chocolate/25">·</span>
+                            <IntensityDots
+                              level={slot.intensity}
+                              label={t.intensityLabels[slot.intensity - 1]}
+                            />
+                          </div>
+                        </div>
+
+                        <span className="hidden text-[11px] font-semibold uppercase tracking-[0.18em] text-chocolate/75 lg:inline">
+                          {slot.coach}
+                        </span>
+
+                        <div className="hidden lg:inline-flex">
+                          <IntensityDots
+                            level={slot.intensity}
+                            label={t.intensityLabels[slot.intensity - 1]}
+                          />
+                        </div>
+
+                        <div className="hidden lg:block">
+                          <SpotsMeter
+                            spots={slot.spots}
+                            capacity={slot.capacity}
+                            fullLabel={t.fullLabel}
+                            nearlyFull={t.nearlyFull}
+                            spotsLeft={t.spotsLeft}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Mobile spots + button row */}
+                      <div className="flex items-center justify-between gap-3 lg:hidden">
+                        <SpotsMeter
+                          spots={slot.spots}
+                          capacity={slot.capacity}
+                          fullLabel={t.fullLabel}
+                          nearlyFull={t.nearlyFull}
+                          spotsLeft={t.spotsLeft}
+                        />
+                        <BookButton
+                          to="/register"
+                          full={isFull}
+                          bookLabel={t.bookLabel}
+                          waitlistLabel={t.waitlistLabel}
+                        />
+                      </div>
+
+                      {/* Desktop button (col 7) */}
+                      <div className="hidden justify-end lg:flex">
+                        <BookButton
+                          to="/register"
+                          full={isFull}
+                          highlight={isLow}
+                          bookLabel={t.bookLabel}
+                          waitlistLabel={t.waitlistLabel}
+                        />
+                      </div>
+                    </motion.li>
+                  );
+                })}
+              </ul>
+            )}
+          </motion.div>
+
+          {/* Footer link */}
+          <div className="mt-6 flex justify-end">
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-coral transition-colors hover:text-wine"
+            >
+              {t.weekCta}
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
         </div>
       </section>
