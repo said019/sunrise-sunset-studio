@@ -167,7 +167,7 @@ const content = {
     manifestoLabel: "Manifiesto",
     manifestoQuote:
       "Una pausa bonita dentro del día. Movimiento consciente, energía y una sensación tipo wellness retreat con estética cuidada.",
-    manifestoAuthor: "— La idea detrás de Sunrise Sunset",
+    manifestoAuthor: "La idea detrás de Sunrise Sunset",
 
     moodLabel: "La vibra del studio",
     moodTitle: "Naranja, cálido, boutique. Una experiencia con energía de comunidad.",
@@ -267,8 +267,8 @@ const content = {
     visitCopy:
       "Nos vas a encontrar en El Tezal, Cabo San Lucas. Si es tu primera visita, llega 10 minutos antes para acomodarte sin prisa.",
     visitHours: [
-      ["Lun — Vie", "06:00 — 20:00"],
-      ["Sábado", "07:00 — 13:00"],
+      ["Lun a Vie", "06:00 / 20:00"],
+      ["Sábado", "07:00 / 13:00"],
       ["Domingo", "Cerrado"],
     ],
     visitAddress: "El Tezal · Cabo San Lucas, BCS",
@@ -415,7 +415,7 @@ const content = {
     manifestoLabel: "Manifesto",
     manifestoQuote:
       "A beautiful pause inside the day. Conscious movement, energy and a wellness-retreat feeling with a careful aesthetic.",
-    manifestoAuthor: "— The idea behind Sunrise Sunset",
+    manifestoAuthor: "The idea behind Sunrise Sunset",
 
     moodLabel: "Studio mood",
     moodTitle: "Orange, warm, boutique. An experience with community energy.",
@@ -515,8 +515,8 @@ const content = {
     visitCopy:
       "Find us in El Tezal, Cabo San Lucas. If it's your first visit, arrive 10 minutes early so you can settle in without rushing.",
     visitHours: [
-      ["Mon — Fri", "06:00 — 20:00"],
-      ["Saturday", "07:00 — 13:00"],
+      ["Mon to Fri", "06:00 / 20:00"],
+      ["Saturday", "07:00 / 13:00"],
       ["Sunday", "Closed"],
     ],
     visitAddress: "El Tezal · Cabo San Lucas, BCS",
@@ -882,7 +882,10 @@ const Index = () => {
       </nav>
 
       {/* HERO */}
-      <section ref={heroRef} className="relative overflow-hidden px-4 pb-24 pt-14 md:pb-32 md:pt-20">
+      <section
+        ref={heroRef}
+        className="relative isolate overflow-hidden px-4 pb-24 pt-14 md:pb-32 md:pt-20"
+      >
         <div className="absolute inset-0 -z-10 bg-orange-glow-soft" />
         <div className="orange-grain -z-10" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-px bg-gradient-to-r from-transparent via-wine/30 to-transparent" />
@@ -1304,7 +1307,10 @@ const Index = () => {
       </section>
 
       {/* MANIFESTO — saturated coral glow centerpiece */}
-      <section id="manifiesto" className="relative scroll-mt-24 overflow-hidden px-4 py-28 md:py-40">
+      <section
+        id="manifiesto"
+        className="relative isolate scroll-mt-24 overflow-hidden px-4 py-28 md:py-40"
+      >
         <div className="absolute inset-0 -z-10 bg-orange-glow" />
         <div className="orange-grain -z-10" />
         <div className="pointer-events-none absolute -left-32 -top-32 -z-10 h-[420px] w-[420px] text-cream/15">
@@ -1336,7 +1342,7 @@ const Index = () => {
       </section>
 
       {/* STUDIO MOOD */}
-      <section className="relative scroll-mt-24 overflow-hidden px-4 py-24 text-cream md:py-32">
+      <section className="relative isolate scroll-mt-24 overflow-hidden px-4 py-24 text-cream md:py-32">
         <div className="absolute inset-0 -z-10 bg-orange-glow-deep" />
         <div className="orange-grain -z-10" />
         <div className="pointer-events-none absolute -right-32 -top-32 h-[420px] w-[420px] text-cream/15">
@@ -1376,11 +1382,11 @@ const Index = () => {
             </h2>
             <p className="mt-7 max-w-xl text-base leading-[1.8] text-cream/80 md:text-lg">{t.moodCopy}</p>
 
-            <div className="mt-10 grid gap-px overflow-hidden rounded-[1.5rem] bg-cream/20 backdrop-blur-sm sm:grid-cols-2">
+            <div className="mt-10 grid gap-px overflow-hidden rounded-[1.5rem] bg-cream/15 sm:grid-cols-2">
               {t.moodChips.map(([title, copy]) => (
                 <div
                   key={title}
-                  className="bg-wine/30 p-5 backdrop-blur-sm transition-colors duration-300 hover:bg-wine/55"
+                  className="bg-wine/45 p-5 transition-colors duration-300 hover:bg-wine/65"
                 >
                   <p className="font-heading text-xl italic text-cream">{title}</p>
                   <p className="mt-2 text-sm leading-[1.65] text-cream/85">{copy}</p>
@@ -1521,7 +1527,10 @@ const Index = () => {
       </section>
 
       {/* PACKAGES */}
-      <section id="paquetes" className="relative scroll-mt-24 overflow-hidden px-4 py-24 md:py-32">
+      <section
+        id="paquetes"
+        className="relative isolate scroll-mt-24 overflow-hidden px-4 py-24 md:py-32"
+      >
         <div className="absolute inset-0 -z-10 bg-orange-wash" />
         <div className="orange-grain -z-10" />
         <div className="mx-auto max-w-[1400px]">
