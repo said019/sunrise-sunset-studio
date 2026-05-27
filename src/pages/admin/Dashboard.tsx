@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { AdminLayout } from '@/components/layout/AdminLayout';
@@ -5,427 +6,600 @@ import { AuthGuard } from '@/components/layout/AuthGuard';
 import api from '@/lib/api';
 import type { AdminStats, Membership } from '@/types/auth';
 import type { Order } from '@/types/order';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import {
-    Calendar,
-    Users,
-    CreditCard,
-    TrendingUp,
-    AlertCircle,
-    ChevronRight,
-    CheckCircle2,
-    UserPlus,
-    Receipt,
-    Clock,
+    ArrowUpRight,
     Banknote,
-    Sparkles,
-    Ticket,
     Cake,
+    CheckCircle2,
+    Receipt,
+    Ticket,
+    UserPlus,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { safeFormat } from '@/lib/date';
 
+const SunGlyph = ({ className = '' }: { className?: string }) => (
+    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
+        <circle cx="24" cy="24" r="7" fill="currentColor" />
+        {Array.from({ length: 12 }).map((_, i) => {
+            const a = (i * Math.PI * 2) / 12;
+            const x1 = 24 + Math.cos(a) * 12;
+            const y1 = 24 + Math.sin(a) * 12;
+            const x2 = 24 + Math.cos(a) * 18;
+            const y2 = 24 + Math.sin(a) * 18;
+            return (
+                <line
+                    key={i}
+                    x1={x1}
+                    y1={y1}
+                    x2={x2}
+                    y2={y2}
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                />
+            );
+        })}
+    </svg>
+);
+
+type MembershipStatus = Membership['status'];
+
+const statusCopy: Record<MembershipStatus, { label: string; tone: 'good' | 'warn' | 'mute' }> = {
+    active: { label: 'Activa', tone: 'good' },
+    pending_payment: { label: 'Pendiente pago', tone: 'warn' },
+    pending_activation: { label: 'Pendiente activación', tone: 'warn' },
+    expired: { label: 'Vencida', tone: 'mute' },
+    cancelled: { label: 'Cancelada', tone: 'mute' },
+    paused: { label: 'Pausada', tone: 'mute' },
+};
+
 export default function AdminDashboard() {
     const { user } = useAuthStore();
+    const [now, setNow] = useState(() => new Date());
 
-    // Fetch Stats
+    useEffect(() => {
+        const id = window.setInterval(() => setNow(new Date()), 60_000);
+        return () => window.clearInterval(id);
+    }, []);
+
     const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
         queryKey: ['admin-stats'],
-        queryFn: async () => {
-            const { data } = await api.get('/admin/stats');
-            return data;
-        },
+        queryFn: async () => (await api.get('/admin/stats')).data,
     });
 
-    // Fetch Pending/Recent Memberships
     const { data: memberships, isLoading: membershipsLoading } = useQuery<Membership[]>({
         queryKey: ['recent-memberships'],
-        queryFn: async () => {
-            const { data } = await api.get('/memberships');
-            return data;
-        },
+        queryFn: async () => (await api.get('/memberships')).data,
     });
 
-    // Fetch Pending Orders (payments to verify)
     const { data: pendingOrders, isLoading: ordersLoading } = useQuery<Order[]>({
         queryKey: ['pending-orders'],
-        queryFn: async () => {
-            const { data } = await api.get('/orders/pending');
-            return data;
-        },
+        queryFn: async () => (await api.get('/orders/pending')).data,
     });
 
-    // Fetch Pending Event Registrations
     const { data: pendingEventRegs = [] } = useQuery<any[]>({
         queryKey: ['pending-event-registrations'],
-        queryFn: async () => {
-            const { data } = await api.get('/events/registrations/pending');
-            return data;
-        },
+        queryFn: async () => (await api.get('/events/registrations/pending')).data,
     });
 
-    // Fetch Birthdays this month
     const { data: birthdays = [] } = useQuery<any[]>({
         queryKey: ['admin-birthdays'],
-        queryFn: async () => {
-            const { data } = await api.get('/admin/birthdays');
-            return data;
-        },
+        queryFn: async () => (await api.get('/admin/birthdays')).data,
     });
 
     const recentMemberships = memberships?.slice(0, 5) || [];
-    const pendingMemberships = memberships?.filter(m =>
-        m.status === 'pending_payment' || m.status === 'pending_activation'
-    ).length || 0;
-    
-    const pendingVerificationOrders = pendingOrders?.filter(o => o.status === 'pending_verification' || o.status === 'pending_payment') || [];
+    const pendingMemberships =
+        memberships?.filter(
+            (m) => m.status === 'pending_payment' || m.status === 'pending_activation'
+        ).length || 0;
+    const pendingVerificationOrders =
+        pendingOrders?.filter(
+            (o) => o.status === 'pending_verification' || o.status === 'pending_payment'
+        ) || [];
+
+    const firstName = user?.display_name?.split(' ')[0] || 'Admin';
+    const dateString = safeFormat(now, "EEEE d 'de' MMMM, yyyy");
+    const timeString = now.toLocaleTimeString('es-MX', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    });
+    const greetingEyebrow = (() => {
+        const h = now.getHours();
+        if (h < 11) return 'Buenos días';
+        if (h < 19) return 'Buenas tardes';
+        return 'Buenas noches';
+    })();
+
+    const pulse = [
+        {
+            label: 'Clases hoy',
+            value: stats?.scheduledClasses ?? 0,
+            subtitle: 'programadas',
+        },
+        {
+            label: 'Reservas',
+            value: stats?.confirmedBookings ?? 0,
+            subtitle: 'confirmadas',
+        },
+        {
+            label: 'Miembros',
+            value: stats?.activeMemberships ?? 0,
+            subtitle: 'activos',
+        },
+        {
+            label: 'Ingresos hoy',
+            value: `$${(stats?.revenue ?? 0).toLocaleString()}`,
+            subtitle: 'MXN',
+        },
+    ];
 
     return (
         <AuthGuard requiredRoles={['admin', 'instructor']}>
             <AdminLayout>
-                <div className="space-y-6">
-                    {/* Header with gradient */}
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-chocolate via-[#3D3229] to-chocolate p-6 sm:p-8">
-                        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-amber/[0.08] blur-3xl" />
-                        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-coral/[0.1] blur-3xl" />
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-2 mb-1">
-                                <Sparkles className="h-4 w-4 text-amber/60" />
-                                <p className="text-[10px] uppercase tracking-[3px] text-amber/60 font-semibold font-body">
-                                    Panel de Control
+                <div className="space-y-8">
+                    {/* HERO — welcome with coral glow */}
+                    <section className="relative isolate overflow-hidden rounded-[1.8rem] shadow-[0_40px_100px_-50px_hsla(13,66%,28%,0.45)]">
+                        <div className="absolute inset-0 -z-10 bg-orange-glow" />
+                        <div className="orange-grain -z-10" />
+                        <div className="pointer-events-none absolute -right-20 -top-24 -z-10 h-[320px] w-[320px] text-cream/15">
+                            <SunGlyph className="h-full w-full" />
+                        </div>
+
+                        <div className="relative grid gap-6 p-6 text-cream sm:p-8 md:grid-cols-[1.2fr_0.8fr] md:items-end md:gap-10">
+                            <div>
+                                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-[0.24em] text-amber">
+                                    <span className="inline-flex items-center gap-2">
+                                        <span className="h-px w-6 bg-amber" />
+                                        Panel de control
+                                    </span>
+                                    <span className="text-cream/40">·</span>
+                                    <span className="text-cream/85">{greetingEyebrow}</span>
+                                </div>
+                                <h1 className="mt-4 font-heading text-[clamp(2rem,4.6vw,3.6rem)] font-light leading-[0.95] tracking-[-0.015em] text-cream">
+                                    <span
+                                        className="italic text-amber"
+                                        style={{ fontVariationSettings: '"opsz" 144' }}
+                                    >
+                                        Hola,
+                                    </span>{' '}
+                                    {firstName}.
+                                </h1>
+                                <p className="mt-3 text-sm uppercase tracking-[0.18em] text-cream/65">
+                                    {dateString}
                                 </p>
                             </div>
-                            <h1 className="text-2xl sm:text-3xl font-heading font-bold text-white">
-                                Bienvenido, {user?.display_name?.split(' ')[0]}
-                            </h1>
-                            <p className="text-cream/60 font-body text-sm mt-1">
-                                {safeFormat(new Date(), "EEEE d 'de' MMMM, yyyy")}
+
+                            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[1.2rem] bg-cream/15 md:justify-self-end">
+                                <div className="bg-wine/35 p-4">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber">
+                                        Cabo
+                                    </p>
+                                    <p className="mt-2 font-heading text-2xl tabular-nums text-cream">
+                                        {timeString}
+                                    </p>
+                                </div>
+                                <div className="bg-wine/35 p-4">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber">
+                                        Estatus
+                                    </p>
+                                    <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-cream">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="absolute inset-0 animate-ping rounded-full bg-amber/70" />
+                                            <span className="relative h-2 w-2 rounded-full bg-amber" />
+                                        </span>
+                                        Abierto
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* ALERTS */}
+                    {(pendingVerificationOrders.length > 0 || pendingMemberships > 0) && (
+                        <div className="grid gap-3 md:grid-cols-2">
+                            {pendingVerificationOrders.length > 0 && (
+                                <Link
+                                    to="/admin/orders"
+                                    className="group flex items-center justify-between gap-4 rounded-[1.2rem] border border-coral/35 bg-coral/8 p-4 transition-[border-color,background-color] duration-200 ease-sunrise hover:border-coral hover:bg-coral/15"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-coral text-cream">
+                                            <Banknote className="h-5 w-5" strokeWidth={1.6} />
+                                        </span>
+                                        <div>
+                                            <p className="text-sm font-semibold text-chocolate">
+                                                {pendingVerificationOrders.length} pago
+                                                {pendingVerificationOrders.length > 1 ? 's' : ''} por verificar
+                                            </p>
+                                            <p className="text-[11px] uppercase tracking-[0.18em] text-chocolate/55">
+                                                Revisar y aprobar
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <ArrowUpRight className="h-4 w-4 text-coral transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                </Link>
+                            )}
+
+                            {pendingMemberships > 0 && (
+                                <Link
+                                    to="/admin/memberships/pending"
+                                    className="group flex items-center justify-between gap-4 rounded-[1.2rem] border border-amber/45 bg-amber/12 p-4 transition-[border-color,background-color] duration-200 ease-sunrise hover:border-amber hover:bg-amber/22"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber text-chocolate">
+                                            <UserPlus className="h-5 w-5" strokeWidth={1.6} />
+                                        </span>
+                                        <div>
+                                            <p className="text-sm font-semibold text-chocolate">
+                                                {pendingMemberships} membresía
+                                                {pendingMemberships > 1 ? 's' : ''} requieren atención
+                                            </p>
+                                            <p className="text-[11px] uppercase tracking-[0.18em] text-chocolate/55">
+                                                Activar o cobrar
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <ArrowUpRight className="h-4 w-4 text-amber-700 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                </Link>
+                            )}
+                        </div>
+                    )}
+
+                    {/* PULSE — horizontal at-a-glance row, no card wrappers */}
+                    <section
+                        aria-label="Pulso del día"
+                        className="overflow-hidden rounded-[1.4rem] border border-chocolate/12 bg-cream"
+                    >
+                        <div className="flex items-center justify-between border-b border-chocolate/10 bg-[#FAF1E6] px-5 py-3">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-coral">
+                                Pulso de hoy
+                            </p>
+                            <p className="text-[10px] uppercase tracking-[0.18em] text-chocolate/45">
+                                actualiza en vivo
                             </p>
                         </div>
-                    </div>
-
-                    {/* Alerts */}
-                    {pendingVerificationOrders.length > 0 && (
-                        <div className="bg-coral/10 border border-coral/30 text-foreground p-4 rounded-xl flex items-center justify-between animate-fade-in">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-full bg-coral/15 flex items-center justify-center shrink-0">
-                                    <Banknote className="h-5 w-5 text-coral" />
-                                </div>
-                                <span className="font-medium text-sm">
-                                    {pendingVerificationOrders.length} pago{pendingVerificationOrders.length > 1 ? 's' : ''} pendiente{pendingVerificationOrders.length > 1 ? 's' : ''} de verificación
-                                </span>
-                            </div>
-                            <Button variant="default" size="sm" className="bg-coral hover:bg-coral/90 rounded-xl" asChild>
-                                <Link to="/admin/orders">
-                                    Verificar <ChevronRight className="ml-1 h-4 w-4" />
-                                </Link>
-                            </Button>
-                        </div>
-                    )}
-                    
-                    {pendingMemberships > 0 && (
-                        <div className="bg-warning/10 border border-warning/30 text-warning-foreground p-4 rounded-xl flex items-center justify-between animate-fade-in">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-full bg-warning/15 flex items-center justify-center shrink-0">
-                                    <AlertCircle className="h-5 w-5 text-warning" />
-                                </div>
-                                <span className="font-medium text-sm">
-                                    {pendingMemberships} membresías requieren atención
-                                </span>
-                            </div>
-                            <Button variant="ghost" size="sm" asChild className="text-warning-foreground hover:bg-warning/20 rounded-xl">
-                                <Link to="/admin/memberships/pending">
-                                    Ver <ChevronRight className="ml-1 h-4 w-4" />
-                                </Link>
-                            </Button>
-                        </div>
-                    )}
-
-                    {/* KPIs — with colored accents */}
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        {[
-                            {
-                                title: 'Clases Hoy',
-                                value: stats?.scheduledClasses || 0,
-                                subtitle: 'programadas',
-                                icon: Calendar,
-                                color: 'bg-amber/10 text-amber',
-                                border: 'border-amber/20',
-                            },
-                            {
-                                title: 'Reservas',
-                                value: stats?.confirmedBookings || 0,
-                                subtitle: 'confirmadas',
-                                icon: Users,
-                                color: 'bg-coral/10 text-coral',
-                                border: 'border-coral/20',
-                            },
-                            {
-                                title: 'Membresías Activas',
-                                value: stats?.activeMemberships || 0,
-                                subtitle: 'clientes activos',
-                                icon: CheckCircle2,
-                                color: 'bg-emerald-500/10 text-emerald-600',
-                                border: 'border-emerald-500/20',
-                            },
-                            {
-                                title: 'Ingresos Hoy',
-                                value: `$${stats?.revenue?.toLocaleString() || '0'}`,
-                                subtitle: 'hoy',
-                                subtitleIcon: TrendingUp,
-                                icon: CreditCard,
-                                color: 'bg-violet-500/10 text-violet-600',
-                                border: 'border-violet-500/20',
-                            },
-                        ].map((kpi) => (
-                            <Card key={kpi.title} className={`border ${kpi.border} hover:shadow-md transition-all duration-300 hover:-translate-y-0.5`}>
-                                <CardContent className="p-5">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-sm font-medium text-muted-foreground font-body">{kpi.title}</span>
-                                        <div className={`h-9 w-9 rounded-xl ${kpi.color} flex items-center justify-center`}>
-                                            <kpi.icon className="h-4.5 w-4.5" />
-                                        </div>
-                                    </div>
-                                    {statsLoading ? (
-                                        <Skeleton className="h-9 w-20" />
-                                    ) : (
-                                        <div className="text-3xl font-bold font-heading tracking-tight">
-                                            {kpi.value}
-                                        </div>
-                                    )}
-                                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 font-body">
-                                        {kpi.subtitleIcon && <kpi.subtitleIcon className="h-3 w-3 text-emerald-500" />}
-                                        {kpi.subtitle}
+                        <div className="grid grid-cols-2 divide-chocolate/10 lg:grid-cols-4 lg:divide-x">
+                            {pulse.map((m, i) => (
+                                <div
+                                    key={m.label}
+                                    className={`flex flex-col gap-2 px-5 py-6 ${
+                                        i < 2 ? 'border-b border-chocolate/10 lg:border-b-0' : ''
+                                    } ${i === 0 ? 'border-r border-chocolate/10 lg:border-r-0' : ''} ${
+                                        i === 2 ? 'border-r border-chocolate/10 lg:border-r-0' : ''
+                                    }`}
+                                >
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-coral">
+                                        {m.label}
                                     </p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-
-                    <div className="grid gap-6 lg:grid-cols-2">
-                        {/* Recent Memberships */}
-                        <Card className="border-border/60 hover:shadow-md transition-shadow duration-300">
-                            <CardHeader className="pb-3">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <CardTitle className="text-lg font-heading">Membresías Recientes</CardTitle>
-                                        <CardDescription className="font-body">Últimas asignaciones y cambios</CardDescription>
-                                    </div>
-                                    <Button variant="outline" size="sm" className="rounded-xl font-body" asChild>
-                                        <Link to="/admin/memberships">Ver todas</Link>
-                                    </Button>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-3">
-                                    {membershipsLoading ? (
-                                        Array(3).fill(0).map((_, i) => (
-                                            <div key={i} className="flex items-center gap-4 p-3">
-                                                <Skeleton className="h-10 w-10 rounded-xl" />
-                                                <div className="space-y-2 flex-1">
-                                                    <Skeleton className="h-4 w-40" />
-                                                    <Skeleton className="h-3 w-20" />
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : recentMemberships.length > 0 ? (
-                                        recentMemberships.map((membership) => (
-                                            <div key={membership.id} className="flex items-start gap-4 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
-                                                <div className="h-9 w-9 rounded-xl bg-amber/10 flex items-center justify-center mt-0.5 shrink-0">
-                                                    <UserPlus className="h-4 w-4 text-amber" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold font-body">{membership.user_name}</p>
-                                                    <p className="text-xs text-muted-foreground font-body">
-                                                        {membership.plan_name} •{' '}
-                                                        <span className={
-                                                            membership.status === 'active' ? 'text-emerald-600' :
-                                                                membership.status === 'pending_payment' ? 'text-warning' :
-                                                                    'text-muted-foreground'
-                                                        }>
-                                                            {membership.status === 'active' ? 'Activa' :
-                                                                membership.status === 'pending_payment' ? 'Pendiente Pago' :
-                                                                    membership.status === 'pending_activation' ? 'Pendiente Activación' :
-                                                                        membership.status}
-                                                        </span>
-                                                    </p>
-                                                </div>
-                                                <div className="text-[11px] text-muted-foreground whitespace-nowrap font-body">
-                                                    {new Date(membership.created_at).toLocaleDateString()}
-                                                </div>
-                                            </div>
-                                        ))
+                                    {statsLoading ? (
+                                        <Skeleton className="h-10 w-20" />
                                     ) : (
-                                        <div className="text-center py-10 text-muted-foreground">
-                                            <Users className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                                            <p className="text-sm font-body">No hay actividad reciente</p>
-                                        </div>
+                                        <p className="font-heading text-4xl font-light leading-none tabular-nums text-chocolate md:text-5xl">
+                                            {m.value}
+                                        </p>
                                     )}
+                                    <p className="text-[11px] uppercase tracking-[0.18em] text-chocolate/55">
+                                        {m.subtitle}
+                                    </p>
                                 </div>
-                            </CardContent>
-                        </Card>
+                            ))}
+                        </div>
+                    </section>
 
-                        {/* Payments to verify */}
-                        <Card className="border-border/60 hover:shadow-md transition-shadow duration-300">
-                            <CardHeader className="pb-3">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <CardTitle className="text-lg font-heading">Pagos Pendientes</CardTitle>
-                                        <CardDescription className="font-body">Pagos por verificar o cobrar</CardDescription>
-                                    </div>
-                                    <Button variant="outline" size="sm" className="rounded-xl font-body" asChild>
-                                        <Link to="/admin/orders">Ver todos</Link>
-                                    </Button>
+                    {/* TWO PANELS — Memberships + Pending payments */}
+                    <div className="grid gap-6 lg:grid-cols-2">
+                        {/* Recent memberships */}
+                        <section className="overflow-hidden rounded-[1.4rem] border border-chocolate/12 bg-cream">
+                            <div className="flex items-end justify-between border-b border-chocolate/10 px-6 py-5">
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-coral">
+                                        Membresías recientes
+                                    </p>
+                                    <h3 className="mt-2 font-heading text-2xl font-light leading-tight text-chocolate">
+                                        Últimas{' '}
+                                        <span
+                                            className="italic text-coral"
+                                            style={{ fontVariationSettings: '"opsz" 144' }}
+                                        >
+                                            asignaciones.
+                                        </span>
+                                    </h3>
                                 </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-3">
-                                    {ordersLoading ? (
-                                        Array(3).fill(0).map((_, i) => (
-                                            <div key={i} className="flex items-center gap-4 p-3">
-                                                <Skeleton className="h-10 w-10 rounded-xl" />
-                                                <div className="space-y-2 flex-1">
-                                                    <Skeleton className="h-4 w-40" />
-                                                    <Skeleton className="h-3 w-24" />
+                                <Link
+                                    to="/admin/memberships"
+                                    className="text-[11px] font-semibold uppercase tracking-[0.18em] text-coral hover:text-wine"
+                                >
+                                    Ver todas
+                                </Link>
+                            </div>
+
+                            <div>
+                                {membershipsLoading ? (
+                                    <div className="space-y-3 p-6">
+                                        {Array(3)
+                                            .fill(0)
+                                            .map((_, i) => (
+                                                <div key={i} className="flex items-center gap-4">
+                                                    <Skeleton className="h-10 w-10 rounded-full" />
+                                                    <div className="flex-1 space-y-2">
+                                                        <Skeleton className="h-4 w-40" />
+                                                        <Skeleton className="h-3 w-24" />
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))
-                                    ) : (pendingVerificationOrders.length > 0 || pendingEventRegs.length > 0) ? (
-                                        <>
+                                            ))}
+                                    </div>
+                                ) : recentMemberships.length > 0 ? (
+                                    <ul className="divide-y divide-chocolate/10">
+                                        {recentMemberships.map((membership) => {
+                                            const sc = statusCopy[membership.status] ?? {
+                                                label: membership.status,
+                                                tone: 'mute' as const,
+                                            };
+                                            const toneClass =
+                                                sc.tone === 'good'
+                                                    ? 'text-emerald-700 bg-emerald-100/60'
+                                                    : sc.tone === 'warn'
+                                                      ? 'text-coral bg-coral/12'
+                                                      : 'text-chocolate/55 bg-chocolate/8';
+                                            return (
+                                                <li
+                                                    key={membership.id}
+                                                    className="flex items-center gap-4 px-6 py-4 transition-colors duration-200 hover:bg-[#FAF1E6]"
+                                                >
+                                                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber/25 text-amber-800">
+                                                        <UserPlus className="h-4 w-4" strokeWidth={1.7} />
+                                                    </span>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="truncate font-heading text-base font-light text-chocolate">
+                                                            {membership.user_name}
+                                                        </p>
+                                                        <p className="mt-0.5 truncate text-[11px] uppercase tracking-[0.16em] text-chocolate/55">
+                                                            {membership.plan_name}
+                                                        </p>
+                                                    </div>
+                                                    <span
+                                                        className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${toneClass}`}
+                                                    >
+                                                        {sc.label}
+                                                    </span>
+                                                    <span className="hidden text-[10px] tabular-nums text-chocolate/40 md:inline">
+                                                        {safeFormat(membership.created_at, 'd MMM')}
+                                                    </span>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                ) : (
+                                    <EmptyPanel
+                                        title="Sin actividad reciente"
+                                        copy="Las nuevas asignaciones de membresía aparecerán aquí."
+                                    />
+                                )}
+                            </div>
+                        </section>
+
+                        {/* Pending payments */}
+                        <section className="overflow-hidden rounded-[1.4rem] border border-chocolate/12 bg-cream">
+                            <div className="flex items-end justify-between border-b border-chocolate/10 px-6 py-5">
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-coral">
+                                        Pagos pendientes
+                                    </p>
+                                    <h3 className="mt-2 font-heading text-2xl font-light leading-tight text-chocolate">
+                                        Por{' '}
+                                        <span
+                                            className="italic text-coral"
+                                            style={{ fontVariationSettings: '"opsz" 144' }}
+                                        >
+                                            verificar o cobrar.
+                                        </span>
+                                    </h3>
+                                </div>
+                                <Link
+                                    to="/admin/orders"
+                                    className="text-[11px] font-semibold uppercase tracking-[0.18em] text-coral hover:text-wine"
+                                >
+                                    Ver todos
+                                </Link>
+                            </div>
+
+                            <div>
+                                {ordersLoading ? (
+                                    <div className="space-y-3 p-6">
+                                        {Array(3)
+                                            .fill(0)
+                                            .map((_, i) => (
+                                                <div key={i} className="flex items-center gap-4">
+                                                    <Skeleton className="h-10 w-10 rounded-full" />
+                                                    <div className="flex-1 space-y-2">
+                                                        <Skeleton className="h-4 w-40" />
+                                                        <Skeleton className="h-3 w-24" />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                ) : pendingVerificationOrders.length > 0 || pendingEventRegs.length > 0 ? (
+                                    <ul className="divide-y divide-chocolate/10">
                                         {pendingVerificationOrders.slice(0, 5).map((order) => (
-                                            <Link
-                                                key={order.id}
-                                                to="/admin/orders"
-                                                className="flex items-start gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors group"
-                                            >
-                                                <div className="h-9 w-9 rounded-xl bg-warning/10 flex items-center justify-center mt-0.5 shrink-0">
-                                                    <Receipt className="h-4 w-4 text-warning" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold font-body group-hover:text-amber transition-colors">
-                                                        {order.user_name}
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground font-body">
-                                                        {order.plan_name} • ${Number(order.total).toLocaleString()}
-                                                    </p>
-                                                </div>
-                                                <div className="text-right shrink-0">
-                                                    <Badge variant="outline" className={`text-[10px] rounded-lg ${order.status === 'pending_verification' ? 'bg-warning/10 text-warning border-warning/30' : 'bg-coral/10 text-coral border-coral/30'}`}>
-                                                        <Clock className="h-3 w-3 mr-1" />
-                                                        {order.status === 'pending_verification' ? 'Verificar' : 'Por cobrar'}
-                                                    </Badge>
-                                                    <p className="text-[11px] text-muted-foreground mt-1 font-body">
-                                                        {safeFormat(order.created_at, "d MMM")}
-                                                    </p>
-                                                </div>
-                                            </Link>
+                                            <li key={order.id}>
+                                                <Link
+                                                    to="/admin/orders"
+                                                    className="group flex items-center gap-4 px-6 py-4 transition-colors duration-200 hover:bg-[#FAF1E6]"
+                                                >
+                                                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-coral/15 text-coral">
+                                                        <Receipt className="h-4 w-4" strokeWidth={1.7} />
+                                                    </span>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="truncate font-heading text-base font-light text-chocolate transition-colors group-hover:text-coral">
+                                                            {order.user_name}
+                                                        </p>
+                                                        <p className="mt-0.5 truncate text-[11px] uppercase tracking-[0.16em] text-chocolate/55">
+                                                            {order.plan_name}
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="font-heading text-base tabular-nums text-chocolate">
+                                                            ${Number(order.total).toLocaleString()}
+                                                        </p>
+                                                        <p className="text-[10px] uppercase tracking-[0.16em] text-coral">
+                                                            {order.status === 'pending_verification'
+                                                                ? 'Verificar'
+                                                                : 'Por cobrar'}
+                                                        </p>
+                                                    </div>
+                                                    <ArrowUpRight className="h-4 w-4 text-chocolate/35 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-coral" />
+                                                </Link>
+                                            </li>
                                         ))}
                                         {pendingEventRegs.slice(0, 5).map((reg: any) => (
-                                            <Link
-                                                key={reg.id}
-                                                to="/admin/events"
-                                                className="flex items-start gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors group"
-                                            >
-                                                <div className="h-9 w-9 rounded-xl bg-pink-500/10 flex items-center justify-center mt-0.5 shrink-0">
-                                                    <Ticket className="h-4 w-4 text-pink-500" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold font-body group-hover:text-amber transition-colors">
-                                                        {reg.user_name}
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground font-body">
-                                                        {reg.event_title} • ${Number(reg.amount).toLocaleString()}
-                                                    </p>
-                                                </div>
-                                                <div className="text-right shrink-0">
-                                                    <Badge variant="outline" className="text-[10px] rounded-lg bg-pink-500/10 text-pink-600 border-pink-300">
-                                                        <Ticket className="h-3 w-3 mr-1" />
-                                                        Evento
-                                                    </Badge>
-                                                    <p className="text-[11px] text-muted-foreground mt-1 font-body">
-                                                        {safeFormat(reg.created_at, "d MMM")}
-                                                    </p>
-                                                </div>
-                                            </Link>
+                                            <li key={reg.id}>
+                                                <Link
+                                                    to="/admin/events"
+                                                    className="group flex items-center gap-4 px-6 py-4 transition-colors duration-200 hover:bg-[#FAF1E6]"
+                                                >
+                                                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber/25 text-amber-800">
+                                                        <Ticket className="h-4 w-4" strokeWidth={1.7} />
+                                                    </span>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="truncate font-heading text-base font-light text-chocolate transition-colors group-hover:text-coral">
+                                                            {reg.user_name}
+                                                        </p>
+                                                        <p className="mt-0.5 truncate text-[11px] uppercase tracking-[0.16em] text-chocolate/55">
+                                                            {reg.event_title}
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="font-heading text-base tabular-nums text-chocolate">
+                                                            ${Number(reg.amount).toLocaleString()}
+                                                        </p>
+                                                        <p className="text-[10px] uppercase tracking-[0.16em] text-amber-700">
+                                                            Evento
+                                                        </p>
+                                                    </div>
+                                                    <ArrowUpRight className="h-4 w-4 text-chocolate/35 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-coral" />
+                                                </Link>
+                                            </li>
                                         ))}
-                                        </>
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center py-10 text-center">
-                                            <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-3">
-                                                <CheckCircle2 className="h-7 w-7 text-emerald-500" />
-                                            </div>
-                                            <p className="text-sm font-semibold font-body">
-                                                ¡Todo al día!
-                                            </p>
-                                            <p className="text-xs text-muted-foreground font-body mt-1">
-                                                No hay pagos pendientes de verificar 🎉
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
+                                    </ul>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
+                                        <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-coral/12 text-coral">
+                                            <CheckCircle2 className="h-6 w-6" strokeWidth={1.6} />
+                                        </span>
+                                        <p className="font-heading text-xl font-light italic text-chocolate">
+                                            Todo al día.
+                                        </p>
+                                        <p className="mt-2 text-[11px] uppercase tracking-[0.18em] text-chocolate/55">
+                                            Sin pagos por verificar
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
                     </div>
 
-                {/* Birthdays this month */}
-                {birthdays.length > 0 && (
-                    <Card className="rounded-2xl border-pink-200/50 bg-gradient-to-br from-pink-50/50 to-orange-50/30">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-base font-heading flex items-center gap-2">
-                                <div className="h-8 w-8 rounded-xl bg-pink-500/10 flex items-center justify-center">
-                                    <Cake className="h-4 w-4 text-pink-500" />
+                    {/* BIRTHDAYS — brand-colored */}
+                    {birthdays.length > 0 && (
+                        <section className="overflow-hidden rounded-[1.4rem] border border-chocolate/12 bg-cream">
+                            <div className="flex items-center justify-between border-b border-chocolate/10 px-6 py-5">
+                                <div className="flex items-center gap-3">
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-coral/15 text-coral">
+                                        <Cake className="h-4 w-4" strokeWidth={1.7} />
+                                    </span>
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-coral">
+                                            Cumpleaños del mes
+                                        </p>
+                                        <h3 className="mt-1 font-heading text-xl font-light leading-tight text-chocolate">
+                                            {birthdays.length}{' '}
+                                            <span
+                                                className="italic text-coral"
+                                                style={{ fontVariationSettings: '"opsz" 144' }}
+                                            >
+                                                clientas.
+                                            </span>
+                                        </h3>
+                                    </div>
                                 </div>
-                                Cumpleaños del mes
-                                <Badge variant="secondary" className="ml-auto text-xs rounded-lg bg-pink-100 text-pink-700">
-                                    {birthdays.length}
-                                </Badge>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                            </div>
+                            <ul className="grid gap-px bg-chocolate/10 sm:grid-cols-2 lg:grid-cols-3">
                                 {birthdays.map((b: any) => {
                                     const bday = new Date(b.date_of_birth);
                                     const day = bday.getUTCDate();
-                                    const today = new Date();
+                                    const today = now;
                                     const isToday = day === today.getDate();
                                     const isPast = day < today.getDate();
 
                                     return (
-                                        <Link
-                                            key={b.id}
-                                            to={`/admin/members/${b.id}`}
-                                            className={`flex items-center gap-3 p-3 rounded-xl transition-all hover:shadow-sm ${
-                                                isToday
-                                                    ? 'bg-pink-100 border border-pink-300 ring-2 ring-pink-200'
-                                                    : isPast
-                                                    ? 'bg-white/50 border border-border/30 opacity-60'
-                                                    : 'bg-white/80 border border-border/40 hover:border-pink-200'
-                                            }`}
-                                        >
-                                            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
-                                                isToday ? 'bg-pink-500 text-white' : 'bg-pink-100 text-pink-600'
-                                            }`}>
-                                                {day}
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-sm font-semibold truncate">{b.display_name}</p>
-                                                <p className="text-xs text-muted-foreground truncate">
-                                                    {isToday ? '🎉 ¡Hoy cumple años!' : `${day} de ${safeFormat(bday, 'MMMM')}`}
-                                                </p>
-                                            </div>
-                                            {isToday && <span className="text-lg">🎂</span>}
-                                        </Link>
+                                        <li key={b.id} className="bg-cream">
+                                            <Link
+                                                to={`/admin/members/${b.id}`}
+                                                className={`group flex items-center gap-4 px-5 py-4 transition-colors duration-200 ${
+                                                    isToday
+                                                        ? 'bg-coral text-cream hover:bg-wine'
+                                                        : isPast
+                                                          ? 'opacity-60 hover:bg-[#FAF1E6]'
+                                                          : 'hover:bg-[#FAF1E6]'
+                                                }`}
+                                            >
+                                                <span
+                                                    className={`flex h-10 w-10 items-center justify-center rounded-full font-heading text-base tabular-nums ${
+                                                        isToday
+                                                            ? 'bg-cream text-coral'
+                                                            : 'bg-coral/12 text-coral'
+                                                    }`}
+                                                >
+                                                    {day}
+                                                </span>
+                                                <div className="min-w-0 flex-1">
+                                                    <p
+                                                        className={`truncate font-heading text-base font-light ${
+                                                            isToday ? 'text-cream' : 'text-chocolate'
+                                                        }`}
+                                                    >
+                                                        {b.display_name}
+                                                    </p>
+                                                    <p
+                                                        className={`mt-0.5 truncate text-[11px] uppercase tracking-[0.16em] ${
+                                                            isToday ? 'text-amber' : 'text-chocolate/55'
+                                                        }`}
+                                                    >
+                                                        {isToday
+                                                            ? 'Hoy cumple años'
+                                                            : `${day} de ${safeFormat(bday, 'MMMM')}`}
+                                                    </p>
+                                                </div>
+                                                <ArrowUpRight
+                                                    className={`h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${
+                                                        isToday ? 'text-cream' : 'text-chocolate/35'
+                                                    }`}
+                                                />
+                                            </Link>
+                                        </li>
                                     );
                                 })}
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
+                            </ul>
+                        </section>
+                    )}
                 </div>
             </AdminLayout>
         </AuthGuard>
+    );
+}
+
+function EmptyPanel({ title, copy }: { title: string; copy: string }) {
+    return (
+        <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
+            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber/20 text-amber-800">
+                <SunGlyph className="h-6 w-6" />
+            </span>
+            <p className="font-heading text-xl font-light italic text-chocolate">{title}</p>
+            <p className="mt-2 max-w-xs text-[11px] uppercase tracking-[0.18em] text-chocolate/55">
+                {copy}
+            </p>
+        </div>
     );
 }
