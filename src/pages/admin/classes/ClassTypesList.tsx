@@ -258,7 +258,7 @@ export default function ClassTypesList() {
                             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="name">Nombre</Label>
-                                    <Input id="name" {...register('name')} placeholder="Ej. Catarsis Studio" />
+                                    <Input id="name" {...register('name')} placeholder="Ej. Sculpt-Funcional" />
                                     {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
                                 </div>
 

@@ -620,7 +620,7 @@ INSERT INTO plans (name, description, price, duration_days, class_limit, feature
 
 -- Insert default system settings
 INSERT INTO system_settings (key, value, description) VALUES
-('studio_info', '{"name": "Catarsis Studio", "address": "", "phone": "", "email": "", "social_media": {}}', 'Información del estudio'),
+('studio_info', '{"name": "Sunrise Sunset", "address": "El Tezal, Cabo San Lucas, BCS", "phone": "", "email": "hola@sunrisesunset.mx", "social_media": {"instagram": "@sunrisesunsetloscabos"}}', 'Información del estudio'),
 ('booking_policies', '{"cancellation_hours": 12, "no_show_penalty": true, "max_advance_days": 14}', 'Políticas de reservación'),
 ('loyalty_settings', '{"points_per_class": 10, "welcome_bonus": 50, "referral_bonus": 100}', 'Configuración del programa de lealtad'),
 ('notification_settings', '{"reminder_hours": 24, "expiring_days": [7, 3, 1]}', 'Configuración de notificaciones');

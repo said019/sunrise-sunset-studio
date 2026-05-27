@@ -1,6 +1,6 @@
 -- ============================================
--- CATARSIS - Actualización de roles de usuario
--- Migración 005: Agregar roles adicionales
+-- Migration 005: Actualización de roles de usuario
+-- Agregar roles adicionales (instructor, reception, super_admin)
 -- ============================================
 
 -- Agregar nuevos valores al enum user_role si no existen

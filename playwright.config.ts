@@ -4,7 +4,7 @@ import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.test" });
 
 /**
- * Playwright E2E Configuration — Catarsis Studio
+ * Playwright E2E Configuration — Sunrise Sunset
  * Skill: e2e-testing-patterns
  */
 export default defineConfig({

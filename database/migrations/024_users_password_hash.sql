@@ -1,6 +1,6 @@
--- Add password_hash to users (bcrypt) — code references it (auth.ts, seed-users.sql)
--- but no prior migration nor schema_complete.sql defines it. Bug inherited from Catarsis.
--- Idempotent: ADD COLUMN IF NOT EXISTS.
+-- Migration 024: Add password_hash to users (bcrypt).
+-- Code references it (auth.ts) but no prior migration nor schema_complete.sql
+-- defines the column. Idempotent: ADD COLUMN IF NOT EXISTS.
 
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);

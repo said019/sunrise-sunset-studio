@@ -21,12 +21,12 @@ function getFromEmail(): string {
 
 // Get frontend URL - single source of truth for all email links
 function getFrontendUrl(): string {
-    return process.env.FRONTEND_URL || 'https://www.catarsis-studio.com.mx';
+    return process.env.FRONTEND_URL || 'https://sunrise-web-production.up.railway.app';
 }
 
 // Get logo URL for emails
 function getLogoUrl(): string {
-    return `${getFrontendUrl()}/catarsis.jpg`;
+    return `${getFrontendUrl()}/logo-wordmark.svg`;
 }
 
 interface SendMagicLinkParams {

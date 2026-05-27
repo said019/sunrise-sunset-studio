@@ -1,6 +1,6 @@
 -- ============================================
 -- MIGRATION 014: Egresos (Expenses) System
--- Catarsis Studio - Módulo de Egresos
+-- Módulo de Egresos
 -- ============================================
 
 -- Enum: categorías de egreso

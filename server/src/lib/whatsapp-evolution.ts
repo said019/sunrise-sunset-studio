@@ -11,7 +11,7 @@ export class EvolutionAPIClient {
     constructor() {
         const baseURL = process.env.EVOLUTION_API_URL;
         const apiKey = process.env.EVOLUTION_API_KEY;
-        this.instanceName = process.env.EVOLUTION_INSTANCE_NAME || 'catarsis';
+        this.instanceName = process.env.EVOLUTION_INSTANCE_NAME || 'sunrise';
 
         if (!baseURL || !apiKey) {
             console.warn('[Evolution] EVOLUTION_API_URL o EVOLUTION_API_KEY no configurados');

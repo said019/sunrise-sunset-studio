@@ -1,5 +1,5 @@
 -- ============================================================
--- CATARSIS STUDIO — ESQUEMA COMPLETO DE POSTGRESQL
+-- SUNRISE SUNSET — ESQUEMA COMPLETO DE POSTGRESQL
 -- Versión consolidada: base schema + todas las migraciones
 -- Fecha: 2026
 -- ============================================================
@@ -1366,7 +1366,7 @@ CREATE TABLE IF NOT EXISTS events (
     date                 DATE NOT NULL,
     start_time           TIME NOT NULL,
     end_time             TIME NOT NULL,
-    location             VARCHAR(255) DEFAULT 'Catarsis Studio',
+    location             VARCHAR(255) DEFAULT 'Sunrise Sunset · El Tezal',
     capacity             INTEGER NOT NULL DEFAULT 20,
     registered           INTEGER NOT NULL DEFAULT 0,
     price                DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
@@ -1931,7 +1931,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO system_settings (key, value, description) VALUES
 (
     'studio_info',
-    '{"name": "Catarsis Studio", "address": "", "phone": "", "email": "", "social_media": {}}'::jsonb,
+    '{"name": "Sunrise Sunset", "address": "El Tezal, Cabo San Lucas, BCS", "phone": "", "email": "hola@sunrisesunset.mx", "social_media": {"instagram": "@sunrisesunsetloscabos"}}'::jsonb,
     'Información del estudio'
 ),
 (
@@ -2021,9 +2021,9 @@ ON CONFLICT DO NOTHING;
 -- ============================================================
 -- Descomenta y edita según tu configuración:
 
--- GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO catarsis_app;
--- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO catarsis_app;
--- GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO catarsis_app;
+-- GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO sunrise_app;
+-- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO sunrise_app;
+-- GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO sunrise_app;
 
 -- ============================================================
 -- FIN DEL ESQUEMA COMPLETO
@@ -2032,7 +2032,7 @@ ON CONFLICT DO NOTHING;
 -- ============================================================
 DO $$
 BEGIN
-    RAISE NOTICE '✅ Catarsis Studio — Esquema completo cargado correctamente.';
+    RAISE NOTICE '✅ Sunrise Sunset — Esquema completo cargado correctamente.';
     RAISE NOTICE '   Tablas: users, plans, memberships, class_types, facilities, instructors,';
     RAISE NOTICE '           schedules, classes, bookings, loyalty_points, rewards, redemptions,';
     RAISE NOTICE '           notifications, wallet_passes, payments, system_settings, admin_notes,';

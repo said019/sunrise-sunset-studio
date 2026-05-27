@@ -172,7 +172,7 @@ router.post('/prospect-booking', requireRole('admin'), async (req: Request, res:
     if (phoneDigits.length < 8) {
         return res.status(400).json({ error: 'Teléfono inválido' });
     }
-    const placeholderEmail = `muestra.${phoneDigits}@catarsis.local`;
+    const placeholderEmail = `muestra.${phoneDigits}@sunrise.local`;
 
     try {
         const plan = await resolveProspectPlan();
@@ -388,7 +388,7 @@ router.post('/:id/convert', requireRole('admin'), async (req: Request, res: Resp
     const { email, displayName, phone, dateOfBirth, planId, paymentMethod, paymentReference, notes } = validation.data;
     const cleanEmail = email.toLowerCase();
 
-    if (cleanEmail.endsWith('@catarsis.local')) {
+    if (cleanEmail.endsWith('@sunrise.local')) {
         return res.status(400).json({ error: 'Captura un email real para convertir a la clienta.' });
     }
 

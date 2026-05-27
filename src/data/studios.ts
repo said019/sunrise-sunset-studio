@@ -75,13 +75,13 @@ const studioDirectory: Record<string, StudioInfo> = {
     mapUrl: 'https://maps.google.com/?q=Carretera+Transpeninsular+km+3.5+El+Tezal+Cabo+San+Lucas+BCS',
     classTypes: [
       {
-        name: 'Catarsis',
+        name: 'Sculpt-Funcional',
         description:
-          'Combina lo mejor del ballet, pilates y ejercicios funcionales. Se realizan ejercicios isométricos y pulsos, cuidando siempre el equilibrio y la carga. El objetivo principal es aislar grupos de músculos para llegar al punto de máxima tensión permitiendo tonificar, alargar y compactar todo el cuerpo. Es una práctica efectiva que se siente como un entrenamiento y una danza a la vez.',
+          'Entrenamiento que combina movimientos funcionales con resistencia para tonificar, fortalecer y dar forma. Se trabaja con peso corporal, ligas y mancuernas ligeras en circuitos diseñados para activar todos los grupos musculares. Cardio bajo impacto, fuerza y movilidad en una sola sesión.',
         level: 'all',
         durationMinutes: 50,
         maxCapacity: 8,
-        icon: '🩰',
+        icon: '💪',
       },
       {
         name: 'Pilates Mat',

@@ -1,6 +1,6 @@
 -- ============================================
 -- MIGRATION 008: Events System
--- Catarsis Studio - Sistema de Eventos
+-- Sistema de Eventos (workshops, masterclasses, retreats)
 -- ============================================
 
 -- ============================================
@@ -56,7 +56,7 @@ CREATE TABLE events (
     end_time TIME NOT NULL,
     
     -- Location
-    location VARCHAR(255) DEFAULT 'Catarsis Studio',
+    location VARCHAR(255) DEFAULT 'Sunrise Sunset · El Tezal',
     
     -- Capacity
     capacity INTEGER NOT NULL DEFAULT 20,

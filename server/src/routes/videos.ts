@@ -201,7 +201,7 @@ async function uploadBufferToGoogleDrive(
         metadata.parents = [process.env.GOOGLE_DRIVE_FOLDER_ID];
     }
 
-    const boundary = `catarsis_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const boundary = `sunrise_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const metadataPart = Buffer.from(
         `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`
     );
@@ -364,7 +364,7 @@ router.post(
 
             if (isCloudinaryConfigured) {
                 const fileBaseName = toSlug(path.parse(videoFile.originalname).name || 'video') || 'video';
-                const videoPublicId = `catarsis/videos/${fileBaseName}-${Date.now()}`;
+                const videoPublicId = `sunrise/videos/${fileBaseName}-${Date.now()}`;
 
                 const uploadedVideo = await uploadBufferToCloudinary(videoFile.buffer, {
                     resource_type: 'video',
@@ -381,7 +381,7 @@ router.post(
                         return res.status(400).json({ error: 'La miniatura debe ser una imagen válida' });
                     }
 
-                    const thumbnailPublicId = `catarsis/thumbnails/${fileBaseName}-${Date.now()}`;
+                    const thumbnailPublicId = `sunrise/thumbnails/${fileBaseName}-${Date.now()}`;
                     const uploadedThumb = await uploadBufferToCloudinary(thumbnailFile.buffer, {
                         resource_type: 'image',
                         type: 'upload',

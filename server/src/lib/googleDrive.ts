@@ -94,7 +94,7 @@ export async function uploadBufferToGoogleDrive(
     const parentFolderId = folderId || process.env.GOOGLE_DRIVE_FOLDER_ID;
     if (parentFolderId) metadata.parents = [parentFolderId];
 
-    const boundary = `catarsis_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const boundary = `sunrise_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const metadataPart = Buffer.from(
         `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`
     );

@@ -134,7 +134,7 @@ router.post('/test', async (req: Request, res: Response) => {
 
 /**
  * POST /api/evolution/create-instance
- * Crear la instancia de catarsis (solo si no existe)
+ * Crear la instancia de Sunrise (solo si no existe)
  */
 router.post('/create-instance', async (req: Request, res: Response) => {
     try {
@@ -227,7 +227,7 @@ router.get('/info', async (req: Request, res: Response) => {
         
         res.json({
             provider: 'evolution',
-            instanceName: process.env.EVOLUTION_INSTANCE_NAME || 'catarsis',
+            instanceName: process.env.EVOLUTION_INSTANCE_NAME || 'sunrise',
             apiUrl: process.env.EVOLUTION_API_URL ? '✓ Configurado' : '✗ No configurado',
             apiKey: process.env.EVOLUTION_API_KEY ? '✓ Configurado' : '✗ No configurado',
             baseUrl: baseUrl ? '✓ Configurado' : '✗ No configurado',

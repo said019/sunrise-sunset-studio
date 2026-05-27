@@ -42,7 +42,7 @@ SELECT (SELECT id FROM plans WHERE name='Clase Suelta - Yoga'),
 INSERT INTO plans (name, price, currency, duration_days, class_limit, description, features, is_active, sort_order)
 VALUES ('Inscripción', 500.00, 'MXN', 365, 0, 'Inscripción · pago único', '["Pago único de inscripción","Vigencia 1 año"]'::jsonb, true, 5);
 
--- Deactivate any non-Sunrise plans (Catarsis defaults seeded by schema_complete.sql),
+-- Deactivate any non-Sunrise plans (legacy defaults seeded by schema_complete.sql),
 -- so only the Sunrise catalog (12 packages + 4 singles + inscripción = 17) is active.
 UPDATE plans SET is_active = false
 WHERE name NOT IN (

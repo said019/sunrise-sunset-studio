@@ -14,7 +14,7 @@ const api = axios.create({
 });
 
 // Token storage key
-const TOKEN_KEY = 'forma_pilates_token';
+const TOKEN_KEY = 'sunrise_token';
 
 // Get stored token
 export function getStoredToken(): string | null {

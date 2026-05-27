@@ -1,144 +1,82 @@
-# Catarsis Studio - Base de Datos PostgreSQL
+# Sunrise Sunset — Base de Datos PostgreSQL
 
-## Estructura de la Base de Datos
+## Estructura
 
 ### Tablas Principales
 
 | Tabla | Descripción |
 |-------|-------------|
-| `users` | Usuarios del sistema (clientes, instructores, admins) |
+| `users` | Usuarios del sistema (clientes, instructores, recepción, admin) |
 | `plans` | Planes de membresía disponibles |
-| `memberships` | Membresías de clientes con su estado y clases restantes |
-| `class_types` | Tipos de clases (Barre Studio, Pilates Mat, Yoga Sculpt) |
+| `plan_credit_buckets` | Composición type-aware de créditos por plan |
+| `memberships` | Membresías de clientes con su estado y créditos restantes |
+| `membership_credits` | Buckets de créditos activos por membresía |
+| `class_types` | Tipos de clase (Sculpt-Funcional, Surf-Pilates, Yoga) |
 | `instructors` | Instructores con su perfil y especialidades |
 | `schedules` | Horarios recurrentes de clases |
 | `classes` | Instancias de clases programadas |
 | `bookings` | Reservaciones de clientes a clases |
-| `loyalty_points` | Puntos del programa WalletClub |
+| `loyalty_points` | Puntos del programa de lealtad |
 | `rewards` | Catálogo de recompensas canjeables |
 | `redemptions` | Canjes de recompensas |
 | `notifications` | Notificaciones a usuarios |
-| `wallet_passes` | Pases de Apple/Google Wallet |
+| `wallet_passes` | Pases de Apple/Google Wallet emitidos |
+| `apple_wallet_devices` | Dispositivos registrados para push de Apple Wallet |
+| `apple_wallet_updates` | Log de actualizaciones de pase para sync |
 | `payments` | Registro de pagos |
 | `system_settings` | Configuración del sistema |
-| `admin_notes` | Notas internas sobre clientes |
+| `referral_codes` | Códigos de referido para acumular puntos |
 
-### Vistas Útiles
+### Tipos ENUM relevantes
 
-| Vista | Descripción |
-|-------|-------------|
-| `active_memberships_view` | Membresías activas con info del usuario y plan |
-| `upcoming_classes_view` | Próximas clases con detalles completos |
-| `user_bookings_view` | Reservaciones de usuarios con detalles de clase |
-
-### Tipos ENUM
-
-- `user_role`: client, instructor, admin
+- `user_role`: client, instructor, admin, super_admin, reception
 - `membership_status`: pending_payment, pending_activation, active, expired, paused, cancelled
 - `payment_method`: cash, transfer, card, online
-- `class_level`: beginner, intermediate, advanced, all
 - `class_status`: scheduled, in_progress, completed, cancelled
 - `booking_status`: confirmed, waitlist, checked_in, no_show, cancelled
-- `loyalty_points_type`: class_attended, referral, bonus, redemption
-- `reward_category`: merchandise, class, discount, experience
-- `redemption_status`: pending, fulfilled, cancelled
-- `notification_type`: booking_reminder, class_cancelled, membership_expiring, points_earned, promotion
 - `wallet_platform`: apple, google
 
-## Comandos Útiles
+## Aplicación de migraciones
 
-### Conectar a la base de datos
+El orden de despliegue está documentado en `docs/superpowers/deploy.md`.
+Resumen: aplica `schema_complete.sql` (o las migraciones en orden numérico)
++ los seeds Sunrise.
+
+### Comandos útiles (local)
+
 ```bash
-psql -d forma_pilates
+# Crear DB
+createdb sunrise_sunset
+
+# Aplicar esquema base
+psql -d sunrise_sunset -f database/schema_complete.sql
+
+# Aplicar migraciones posteriores en orden
+for f in database/migrations/0*.sql; do
+  psql -d sunrise_sunset -f "$f"
+done
+
+# Aplicar seeds Sunrise (catálogo de planes + clases)
+psql -d sunrise_sunset -f database/seeds/sunrise_class_types.sql
+psql -d sunrise_sunset -f database/seeds/sunrise_packages.sql
+psql -d sunrise_sunset -f database/seeds/sunrise_singles.sql
 ```
 
-### Ver todas las tablas
+### Producción
+
+`DATABASE_URL` se configura por env en Railway. Para aplicar una migración nueva:
+
 ```bash
-psql -d forma_pilates -c "\dt"
+psql "$DATABASE_URL" -f database/migrations/NNN_nueva_migracion.sql
 ```
 
-### Ver estructura de una tabla
-```bash
-psql -d forma_pilates -c "\d+ users"
-```
+## Conexión desde la aplicación
 
-### Ejecutar el esquema (primera vez o reset)
-```bash
-# Crear la base de datos
-createdb forma_pilates
-
-# Ejecutar el esquema
-psql -d forma_pilates -f database/schema.sql
-```
-
-### Resetear la base de datos
-```bash
-dropdb forma_pilates
-createdb forma_pilates
-psql -d forma_pilates -f database/schema.sql
-```
-
-## Datos Iniciales
-
-El esquema incluye datos iniciales para:
-
-### Planes de Membresía
-- **Drop-in**: $350 MXN, 1 clase, 30 días
-- **Pack 5**: $1,500 MXN, 5 clases, 45 días
-- **Pack 10**: $2,700 MXN, 10 clases, 60 días
-- **Ilimitado Mensual**: $3,500 MXN, clases ilimitadas, 30 días
-
-### Tipos de Clase
-- Barre Studio (todos los niveles)
-- Pilates Mat (todos los niveles)
-- Yoga Sculpt (intermedio)
-
-### Configuración del Sistema
-- Información del estudio
-- Políticas de reservación
-- Configuración de lealtad
-- Configuración de notificaciones
-
-## Triggers Automáticos
-
-1. **update_updated_at_column**: Actualiza automáticamente el campo `updated_at` en todas las tablas relevantes
-2. **update_class_booking_count**: Mantiene actualizado el contador `current_bookings` en la tabla `classes`
-3. **decrement_membership_classes**: Decrementa las clases restantes cuando un cliente hace check-in
-
-## Funciones Útiles
-
-### Obtener puntos totales de un usuario
-```sql
-SELECT get_user_points('user-uuid-here');
-```
-
-## Conexión desde la Aplicación
-
-### Node.js con pg
-```javascript
-import { Pool } from 'pg';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-```
-
-### Con Drizzle ORM (recomendado)
 ```typescript
-import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }, // Railway uses managed certs
 });
-
-export const db = drizzle(pool);
-```
-
-### Con Prisma
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
 ```

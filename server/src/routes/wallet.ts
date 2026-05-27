@@ -58,7 +58,7 @@ const WALLET_ELIGIBLE_STATUSES = new Set([
 // ============================================
 
 const buildQrPayload = (userId: string, membershipId?: string | null) => {
-    const secret = process.env.CHECKIN_SECRET || 'catarsis-studio-secret';
+    const secret = process.env.CHECKIN_SECRET || 'sunrise-studio-secret';
     const expiresAt = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
     const hashSource = `${userId}:${membershipId || 'none'}:${expiresAt}:${secret}`;
     const hash = createHash('sha256').update(hashSource).digest('hex');
@@ -74,7 +74,7 @@ const buildQrPayload = (userId: string, membershipId?: string | null) => {
 
 // Build QR payload for event check-in
 export const buildEventQrPayload = (userId: string, eventId: string, regId: string) => {
-    const secret = process.env.CHECKIN_SECRET || 'catarsis-studio-secret';
+    const secret = process.env.CHECKIN_SECRET || 'sunrise-studio-secret';
     const expiresAt = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30; // 30 days
     const hashSource = `event:${userId}:${eventId}:${regId}:${expiresAt}:${secret}`;
     const hash = createHash('sha256').update(hashSource).digest('hex');

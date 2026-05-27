@@ -1,6 +1,6 @@
 -- Sunrise Sunset class types: Sculpt-Funcional, Surf-Pilates, Yoga.
--- Removes the Catarsis default class types (Barre Studio, Pilates Mat, Yoga Sculpt)
--- and seeds Sunrise's. Idempotent: re-running inserts nothing new.
+-- Removes any legacy class types and seeds Sunrise's catalog.
+-- Idempotent: re-running inserts nothing new.
 -- NOTE: max_capacity (8) is a default; the studio adjusts capacity per class/schedule in admin.
 
 DELETE FROM class_types WHERE name NOT IN ('Sculpt-Funcional', 'Surf-Pilates', 'Yoga');

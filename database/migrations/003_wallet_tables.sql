@@ -1,5 +1,5 @@
 -- ============================================
--- CATARSIS STUDIO - Apple Wallet & Google Wallet Tables
+-- Migration 003: Apple Wallet & Google Wallet Tables
 -- Run this migration to add wallet support
 -- ============================================
 

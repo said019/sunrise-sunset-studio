@@ -50,7 +50,7 @@ railway up --service sunrise-api --ci
 railway up --service sunrise-web --ci
 
 # 7. Seed the production DB (one-time, from local against the Railway Postgres)
-#    NOTE: schema_complete.sql is an OLD snapshot from Catarsis — it's missing
+#    NOTE: schema_complete.sql is an older consolidated snapshot — it's missing
 #    columns that the code references (e.g. users.password_hash, users.is_prospect).
 #    You MUST apply EVERY migration in database/migrations/ after schema_complete,
 #    not just 022/023. All migrations are idempotent (IF NOT EXISTS guards).

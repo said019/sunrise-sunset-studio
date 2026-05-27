@@ -1,6 +1,5 @@
 -- ============================================
--- CATARSIS - Sistema de Check-ins y Reseñas
--- Migración 004: Check-in logs, Reviews, Seguridad
+-- Migration 004: Check-in logs, Reviews, Seguridad
 -- ============================================
 
 -- ============================================

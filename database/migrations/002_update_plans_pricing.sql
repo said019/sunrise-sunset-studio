@@ -1,5 +1,5 @@
--- Migration: Update plans with Catarsis pricing structure
--- Based on official pricing from client
+-- Migration 002: Initial plan pricing structure
+-- Historical migration; superseded by sunrise seed catalog.
 
 -- First, clear existing plans
 DELETE FROM plans;
