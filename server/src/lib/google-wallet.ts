@@ -1,16 +1,22 @@
 /**
- * Google Wallet Integration for Sunrise Sunset
- * 
- * Implements OAuth2, Loyalty Class/Object creation, and messaging
- * Adapted for Pilates studio with memberships, classes, and loyalty points
+ * Google Wallet — Sunrise Sunset Pass
+ *
+ * Implements OAuth2 with the issuer service account, creates/updates the
+ * single LoyaltyClass (`sunrise_pass_v1`), creates/updates per-membership
+ * LoyaltyObjects, and sends in-wallet messages on lifecycle events.
+ *
+ * Visual: hexBackgroundColor cream, heroImage = sunset gradient (matches
+ * the web app's `.bg-sunset`), cream wordmark as programLogo. Plan name
+ * shows as the secondaryLoyaltyPoints label; credits remaining is the
+ * primary loyaltyPoints value.
  */
 
 import jwt from 'jsonwebtoken';
 import { query, queryOne } from '../config/database.js';
 
-// ============================================
+// ---------------------------------------------------------------------------
 // Types
-// ============================================
+// ---------------------------------------------------------------------------
 
 interface MembershipData {
     id: string;
@@ -28,6 +34,9 @@ interface MembershipData {
     end_date: Date | null;
     status: string;
     member_since: Date;
+    next_class_date: string | null;
+    next_class_type: string | null;
+    referral_code: string | null;
     next_event?: {
         title: string;
         date: string;
@@ -42,42 +51,24 @@ interface GoogleCredentials {
     privateKey: string;
 }
 
-type PlanType = 'basico' | 'premium' | 'ilimitado' | 'intro';
-
-// ============================================
+// ---------------------------------------------------------------------------
 // Configuration
-// ============================================
+// ---------------------------------------------------------------------------
 
 const GOOGLE_WALLET_API = 'https://walletobjects.googleapis.com/walletobjects/v1';
 const GOOGLE_OAUTH_URL = 'https://oauth2.googleapis.com/token';
 
-// Styles for different plan types (Sunrise Sunset 2026 palette - White/Clean Design)
-const PLAN_STYLES: Record<PlanType, {
-    hexBackgroundColor: string;
-    badge: string;
-    programName: string;
-}> = {
-    basico: {
-        hexBackgroundColor: '#FFFFFF',  // White
-        badge: 'MEMBER',
-        programName: 'Membresía',
-    },
-    premium: {
-        hexBackgroundColor: '#FFFFFF',  // White
-        badge: 'PREMIUM',
-        programName: 'Membresía Premium',
-    },
-    ilimitado: {
-        hexBackgroundColor: '#FFFFFF',  // White
-        badge: 'UNLIMITED',
-        programName: 'Membresía Ilimitada',
-    },
-    intro: {
-        hexBackgroundColor: '#FFFFFF',  // White
-        badge: 'INTRO',
-        programName: 'Clase de Prueba',
-    },
-};
+// Single class — no per-plan-tier variants. The plan name surfaces as a
+// secondary label on the object, the visual treatment stays uniform.
+const CLASS_SUFFIX = 'sunrise_pass_v1';
+
+// Studio location — El Tezal, Cabo San Lucas, Baja California Sur.
+const STUDIO_LAT = 22.8755;
+const STUDIO_LNG = -109.9120;
+const STUDIO_TZ_OFFSET = '-07:00';
+
+// Pass color — cream surface so the sunset hero photo carries the warmth.
+const PASS_HEX_BG = '#EFE7D9';
 
 const WALLET_ELIGIBLE_STATUSES = new Set([
     'active',
@@ -87,23 +78,13 @@ const WALLET_ELIGIBLE_STATUSES = new Set([
     'expired',
 ]);
 
-// ============================================
-// Helper Functions
-// ============================================
+// ---------------------------------------------------------------------------
+// Formatters
+// ---------------------------------------------------------------------------
 
-function getPlanType(planName: string): PlanType {
-    const lower = planName.toLowerCase();
-
-    if (lower.includes('premium') || lower.includes('vip') || lower.includes('gold')) {
-        return 'premium';
-    }
-    if (lower.includes('ilimitado') || lower.includes('unlimited') || lower.includes('libre')) {
-        return 'ilimitado';
-    }
-    if (lower.includes('intro') || lower.includes('prueba') || lower.includes('trial')) {
-        return 'intro';
-    }
-    return 'basico';
+function planBadge(planName: string | null | undefined): string {
+    const raw = (planName || 'Miembro').replace(/[—–·\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    return raw.slice(0, 32);
 }
 
 function formatDate(date: Date | string | null | undefined): string {
@@ -118,10 +99,25 @@ function formatDate(date: Date | string | null | undefined): string {
 }
 
 function formatClassesRemaining(classes: number | null): string {
-    if (classes === null || classes === -1) {
-        return '∞';
-    }
+    if (classes === null || classes === -1) return 'ILIMITADAS';
+    if (classes === 0) return '0';
     return String(classes);
+}
+
+function formatNextClass(iso: string | null | undefined): string {
+    if (!iso) return '—';
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    if (!m) return '—';
+    const [, y, mo, d, hh, mm] = m;
+    const date = new Date(Date.UTC(Number(y), Number(mo) - 1, Number(d)));
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const day = days[date.getUTCDay()];
+    const hour = parseInt(hh, 10);
+    const min = parseInt(mm, 10);
+    const period = hour >= 12 ? 'pm' : 'am';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    const displayMin = min === 0 ? '' : `:${mm}`;
+    return `${day} ${displayHour}${displayMin}${period}`;
 }
 
 function parseValidDate(value: Date | string | null | undefined): Date | null {
@@ -130,9 +126,9 @@ function parseValidDate(value: Date | string | null | undefined): Date | null {
     return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-// ============================================
+// ---------------------------------------------------------------------------
 // Credential Loading
-// ============================================
+// ---------------------------------------------------------------------------
 
 let cachedCredentials: GoogleCredentials | null = null;
 let cachedAccessToken: { token: string; expiresAt: number } | null = null;
@@ -153,22 +149,16 @@ function getCredentials(): GoogleCredentials {
         );
     }
 
-    // Handle escaped newlines in private key
     privateKey = privateKey.replace(/\\n/g, '\n');
-
     cachedCredentials = { issuerId, email, privateKey };
     return cachedCredentials;
 }
 
-// ============================================
-// OAuth2 Authentication
-// ============================================
+// ---------------------------------------------------------------------------
+// OAuth2
+// ---------------------------------------------------------------------------
 
-/**
- * Get OAuth2 access token for Google Wallet API
- */
 export async function getGoogleWalletAccessToken(): Promise<string> {
-    // Return cached token if still valid
     if (cachedAccessToken && cachedAccessToken.expiresAt > Date.now() + 60000) {
         return cachedAccessToken.token;
     }
@@ -176,7 +166,6 @@ export async function getGoogleWalletAccessToken(): Promise<string> {
     const creds = getCredentials();
     const now = Math.floor(Date.now() / 1000);
 
-    // Create JWT assertion
     const assertion = jwt.sign(
         {
             iss: creds.email,
@@ -189,7 +178,6 @@ export async function getGoogleWalletAccessToken(): Promise<string> {
         { algorithm: 'RS256' }
     );
 
-    // Exchange for access token
     const response = await fetch(GOOGLE_OAUTH_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -214,13 +202,13 @@ export async function getGoogleWalletAccessToken(): Promise<string> {
     return data.access_token;
 }
 
-// ============================================
-// Database Queries
-// ============================================
+// ---------------------------------------------------------------------------
+// Data
+// ---------------------------------------------------------------------------
 
 async function getMembershipData(membershipId: string): Promise<MembershipData | null> {
     return await queryOne<MembershipData>(`
-        SELECT 
+        SELECT
             m.id,
             m.user_id,
             m.plan_id,
@@ -231,16 +219,28 @@ async function getMembershipData(membershipId: string): Promise<MembershipData |
             u.phone as user_phone,
             m.classes_remaining,
             COALESCE((
-                SELECT COUNT(*) FROM bookings b 
+                SELECT COUNT(*) FROM bookings b
                 WHERE b.membership_id = m.id AND b.status = 'checked_in'
             ), 0)::int as classes_used,
-            COALESCE((
-                SELECT SUM(points) FROM loyalty_points lp WHERE lp.user_id = m.user_id
-            ), 0)::int as loyalty_points,
+            COALESCE(u.loyalty_points, 0)::int as loyalty_points,
             m.start_date,
             m.end_date,
             m.status,
-            u.created_at as member_since
+            u.created_at as member_since,
+            (SELECT rc.code FROM referral_codes rc WHERE rc.user_id = m.user_id LIMIT 1) as referral_code,
+            (SELECT (c.date || 'T' || SUBSTRING(c.start_time::text, 1, 5) || ':00${STUDIO_TZ_OFFSET}')
+             FROM bookings b2 JOIN classes c ON b2.class_id = c.id
+             WHERE b2.user_id = m.user_id AND b2.status = 'confirmed'
+             AND (c.date + c.start_time) > (NOW() AT TIME ZONE 'America/Mazatlan')
+             ORDER BY c.date ASC, c.start_time ASC LIMIT 1
+            ) as next_class_date,
+            (SELECT ct.name FROM bookings b3
+             JOIN classes c2 ON b3.class_id = c2.id
+             LEFT JOIN class_types ct ON c2.class_type_id = ct.id
+             WHERE b3.user_id = m.user_id AND b3.status = 'confirmed'
+             AND (c2.date + c2.start_time) > (NOW() AT TIME ZONE 'America/Mazatlan')
+             ORDER BY c2.date ASC, c2.start_time ASC LIMIT 1
+            ) as next_class_type
         FROM memberships m
         JOIN users u ON m.user_id = u.id
         JOIN plans p ON m.plan_id = p.id
@@ -248,45 +248,48 @@ async function getMembershipData(membershipId: string): Promise<MembershipData |
     `, [membershipId]);
 }
 
-// ============================================
-// Loyalty Class Management
-// ============================================
+function getBusinessLocations(): Array<{ latitude: number; longitude: number }> {
+    // Hardcodeado a las coordenadas reales de Sunrise Sunset
+    // (El Tezal, Cabo San Lucas). Antes leía BUSINESS_LATITUDE/LONGITUDE
+    // de env vars que podrían heredar valor de otro proyecto.
+    return [{ latitude: STUDIO_LAT, longitude: STUDIO_LNG }];
+}
 
-/**
- * Create a Loyalty Class for a specific plan type
- */
-export async function createGoogleLoyaltyClass(
-    planType: PlanType = 'basico'
-): Promise<{ success: boolean; classId: string; error?: string }> {
+// ---------------------------------------------------------------------------
+// Loyalty Class — single class for all Sunrise Sunset passes
+// ---------------------------------------------------------------------------
+
+export async function createGoogleLoyaltyClass(): Promise<{ success: boolean; classId: string; error?: string }> {
     try {
         const creds = getCredentials();
         const token = await getGoogleWalletAccessToken();
-        const style = PLAN_STYLES[planType];
 
-        const classId = `${creds.issuerId}.catarsis_membership_${planType}_v1`;
-        const frontendUrl = process.env.FRONTEND_URL || 'https://catarsis-production.up.railway.app';
-        let baseUrl = process.env.BASE_URL || 'https://valiant-imagination-production-0462.up.railway.app';
+        const classId = `${creds.issuerId}.${CLASS_SUFFIX}`;
+        const frontendUrl = (process.env.FRONTEND_URL || 'https://sunrise-web-production.up.railway.app').replace(/\/$/, '');
+        let baseUrl = process.env.BASE_URL || 'https://sunrise-api-production.up.railway.app';
         if (!baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
 
-        // Use frontend URLs for images (they exist in the public folder)
-        const logoUrl = `${frontendUrl}/catarsis.jpg`;
-        const heroUrl = `${frontendUrl}/hero.jpg`;
+        const logoUrl = `${frontendUrl}/wallet/sunrise-logo.png`;
+        const heroUrl = `${frontendUrl}/wallet/sunset-hero.png`;
 
         const loyaltyClass = {
             id: classId,
             issuerName: 'Sunrise Sunset',
-            programName: style.programName,
-            hexBackgroundColor: style.hexBackgroundColor,
+            programName: 'Pase Sunrise Sunset',
+            hexBackgroundColor: PASS_HEX_BG,
 
             programLogo: {
                 sourceUri: { uri: logoUrl },
-                contentDescription: { defaultValue: { language: 'es', value: 'Sunrise Sunset Logo' } },
+                contentDescription: {
+                    defaultValue: { language: 'es', value: 'Sunrise Sunset' },
+                },
             },
 
-            // Hero image - prominent display
             heroImage: {
                 sourceUri: { uri: heroUrl },
-                contentDescription: { defaultValue: { language: 'es', value: 'Sunrise Sunset' } },
+                contentDescription: {
+                    defaultValue: { language: 'es', value: 'Atardecer Sunrise Sunset' },
+                },
             },
 
             localizedIssuerName: {
@@ -294,47 +297,39 @@ export async function createGoogleLoyaltyClass(
             },
 
             localizedProgramName: {
-                defaultValue: { language: 'es', value: style.programName },
+                defaultValue: { language: 'es', value: 'Pase Sunrise Sunset' },
             },
 
-            // Country code required for discoverableProgram
             countryCode: 'MX',
 
-            // Welcome message
             discoverableProgram: {
                 merchantSignupInfo: {
                     signupWebsite: { uri: frontendUrl },
                 },
                 merchantSigninInfo: {
-                    signinWebsite: { uri: `${frontendUrl}/auth/login` },
+                    signinWebsite: { uri: `${frontendUrl}/login` },
                 },
             },
 
-            // Welcome messages
             messages: [
                 {
-                    header: '¡Bienvenido a Sunrise Sunset!',
-                    body: 'Tu bienestar comienza aquí. Reserva tus clases y acumula puntos con cada visita. 🧘‍♀️',
+                    header: 'Bienvenida a Sunrise Sunset ☀️',
+                    body: 'Estudio boutique en El Tezal. Tu pase se actualiza solo con tus créditos y tu próxima clase.',
                     id: 'welcome_msg_v1',
                 },
             ],
 
-            // Business location for geofencing
             locations: getBusinessLocations(),
 
-            // Review status
             reviewStatus: 'UNDER_REVIEW',
-
-            // Allow multiple devices
             multipleDevicesAndHoldersAllowedStatus: 'MULTIPLE_HOLDERS',
 
-            // Callback URL for updates
             callbackOptions: {
                 url: `${baseUrl}/api/wallet/google/callback`,
             },
         };
 
-        // Try to create, or update if exists
+        // Try create, fall back to update on 409
         let response = await fetch(`${GOOGLE_WALLET_API}/loyaltyClass`, {
             method: 'POST',
             headers: {
@@ -345,7 +340,6 @@ export async function createGoogleLoyaltyClass(
         });
 
         if (response.status === 409) {
-            // Class exists, update it
             response = await fetch(`${GOOGLE_WALLET_API}/loyaltyClass/${classId}`, {
                 method: 'PUT',
                 headers: {
@@ -358,49 +352,31 @@ export async function createGoogleLoyaltyClass(
 
         if (!response.ok) {
             const error = await response.text();
-            console.error('Failed to create/update loyalty class:', error);
+            console.error('[GOOGLE] Failed to create/update loyalty class:', error);
             return { success: false, classId, error };
         }
 
-        console.log(`✅ Google Loyalty Class created/updated: ${classId}`);
+        console.log(`[GOOGLE] Loyalty Class ready: ${classId}`);
         return { success: true, classId };
 
     } catch (error) {
-        console.error('Error creating Google Loyalty Class:', error);
+        console.error('[GOOGLE] Error creating Loyalty Class:', error);
         return { success: false, classId: '', error: String(error) };
     }
 }
 
-/**
- * Create all loyalty classes for each plan type
- */
+// Kept for backward compat with callers expecting the old multi-class entry
+// point. With a single class, this just creates the one.
 export async function createAllLoyaltyClasses(): Promise<void> {
-    const planTypes: PlanType[] = ['basico', 'premium', 'ilimitado', 'intro'];
-
-    for (const planType of planTypes) {
-        await createGoogleLoyaltyClass(planType);
-    }
-
-    console.log('✅ All Google Loyalty Classes created');
+    await createGoogleLoyaltyClass();
+    console.log('[GOOGLE] Loyalty Class created/updated.');
 }
 
-function getBusinessLocations(): Array<{ latitude: number; longitude: number }> {
-    // Hardcodeado a las coordenadas reales de Sunrise Sunset
-    // (El Tezal, Los Cabos). Antes leia BUSINESS_LATITUDE/LONGITUDE
-    // de env vars que podrian heredar valor de otro proyecto.
-    return [{ latitude: 20.3862419, longitude: -99.9982146 }];
-}
+// ---------------------------------------------------------------------------
+// Loyalty Object — one per membership
+// ---------------------------------------------------------------------------
 
-// ============================================
-// Loyalty Object Management
-// ============================================
-
-/**
- * Create or update a Loyalty Object (the actual pass)
- */
-export async function upsertGoogleLoyaltyObject(
-    membershipId: string
-): Promise<{ success: boolean; objectId: string; error?: string }> {
+export async function upsertGoogleLoyaltyObject(membershipId: string): Promise<{ success: boolean; objectId: string; error?: string }> {
     try {
         const creds = getCredentials();
         const token = await getGoogleWalletAccessToken();
@@ -410,115 +386,111 @@ export async function upsertGoogleLoyaltyObject(
             return { success: false, objectId: '', error: 'Membership not found' };
         }
 
-        const planType = getPlanType(membership.plan_name);
-        const style = PLAN_STYLES[planType];
-
         const objectId = `${creds.issuerId}.${membership.id}_v1`;
-        const classId = `${creds.issuerId}.catarsis_membership_${planType}_v1`;
-        const frontendUrl = process.env.FRONTEND_URL || 'https://catarsis-production.up.railway.app';
+        const classId = `${creds.issuerId}.${CLASS_SUFFIX}`;
+        const frontendUrl = (process.env.FRONTEND_URL || 'https://sunrise-web-production.up.railway.app').replace(/\/$/, '');
 
         const startDate = parseValidDate(membership.start_date);
         const endDate = parseValidDate(membership.end_date);
-        const daysRemainingText = endDate
-            ? `${Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} días`
-            : 'Sin vencimiento';
 
         const loyaltyObject: Record<string, unknown> = {
             id: objectId,
             classId: classId,
             state: membership.status === 'active' ? 'active' : 'inactive',
 
-            // Account info
             accountId: membership.id,
             accountName: membership.user_name,
 
-            // Barcode for check-in
             barcode: {
                 type: 'QR_CODE',
                 value: membership.id,
                 alternateText: membership.id.substring(0, 8).toUpperCase(),
             },
 
-            // Points display
+            // Primary on-card number — credits remaining (or ILIMITADAS)
             loyaltyPoints: {
-                balance: { int: membership.loyalty_points },
-                label: 'PUNTOS',
+                balance: { string: formatClassesRemaining(membership.classes_remaining) },
+                label: 'CRÉDITOS',
             },
 
+            // Secondary on-card — plan name
             secondaryLoyaltyPoints: {
-                balance: {
-                    string: formatClassesRemaining(membership.classes_remaining)
-                },
-                label: 'CLASES',
+                balance: { string: planBadge(membership.plan_name) },
+                label: 'PLAN',
             },
 
-            // Custom text fields
             textModulesData: [
+                ...(membership.next_class_date ? [{
+                    id: 'next_class',
+                    header: 'PRÓXIMA CLASE',
+                    body: formatNextClass(membership.next_class_date)
+                        + (membership.next_class_type ? ` · ${membership.next_class_type}` : ''),
+                }] : []),
                 {
-                    id: 'member_name',
-                    header: 'MIEMBRO',
-                    body: membership.user_name,
+                    id: 'valid_until',
+                    header: 'VENCE',
+                    body: formatDate(membership.end_date),
                 },
                 {
-                    id: 'plan_type',
-                    header: 'PLAN',
-                    body: `${membership.plan_name} (${style.badge})`,
+                    id: 'points',
+                    header: 'PUNTOS',
+                    body: `${membership.loyalty_points} pts`,
                 },
                 {
                     id: 'classes_used',
                     header: 'CLASES TOMADAS',
-                    body: `${membership.classes_used} clases`,
-                },
-                {
-                    id: 'days_remaining',
-                    header: 'DÍAS RESTANTES',
-                    body: daysRemainingText,
-                },
-                {
-                    id: 'valid_until',
-                    header: 'VÁLIDO HASTA',
-                    body: formatDate(membership.end_date),
+                    body: `${membership.classes_used}`,
                 },
                 {
                     id: 'member_since',
                     header: 'MIEMBRO DESDE',
                     body: formatDate(membership.member_since),
                 },
+                ...(membership.referral_code ? [{
+                    id: 'referral',
+                    header: 'CÓDIGO DE REFERIDO',
+                    body: `${membership.referral_code} — compártelo y gana puntos`,
+                }] : []),
                 ...(membership.next_event ? [{
                     id: 'next_event',
                     header: 'PRÓXIMO EVENTO',
-                    body: `${membership.next_event.title}\n${formatDate(membership.next_event.date)} • ${membership.next_event.start_time}\n${membership.next_event.location}`,
+                    body: `${membership.next_event.title}\n${formatDate(membership.next_event.date)} · ${membership.next_event.start_time.substring(0, 5)}\n${membership.next_event.location}`,
                 }] : []),
+                {
+                    id: 'studio',
+                    header: 'ESTUDIO',
+                    body: 'Sunrise Sunset · El Tezal\nCabo San Lucas, BCS',
+                },
+                {
+                    id: 'terms',
+                    header: 'TÉRMINOS',
+                    body: 'Pase personal e intransferible. Cancela mínimo 5 horas antes. Máximo 2 cancelaciones por membresía. Hora Los Cabos (GMT-7).',
+                },
             ],
 
-            // Image module removed - optional and images not available
-            // imageModulesData: [...],
-
-            // Links
             linksModuleData: {
                 uris: [
                     {
-                        uri: `${frontendUrl}/client/dashboard`,
-                        description: 'Ver mi cuenta',
-                        id: 'dashboard_link',
-                    },
-                    {
-                        uri: `${frontendUrl}/client/schedule`,
+                        uri: `${frontendUrl}/app/book`,
                         description: 'Reservar clase',
-                        id: 'schedule_link',
+                        id: 'book_link',
                     },
                     {
-                        uri: `${frontendUrl}/client/rewards`,
-                        description: 'Ver recompensas',
-                        id: 'rewards_link',
+                        uri: `${frontendUrl}/app/wallet`,
+                        description: 'Mi cuenta',
+                        id: 'wallet_link',
+                    },
+                    {
+                        uri: `${frontendUrl}/app`,
+                        description: 'Inicio',
+                        id: 'home_link',
                     },
                 ],
             },
 
-            // Locations
             locations: getBusinessLocations(),
 
-            hexBackgroundColor: style.hexBackgroundColor,
+            hexBackgroundColor: PASS_HEX_BG,
         };
 
         if (startDate && endDate && endDate.getTime() > Date.now()) {
@@ -528,14 +500,12 @@ export async function upsertGoogleLoyaltyObject(
             };
         }
 
-        // Try to get existing object
         let response = await fetch(`${GOOGLE_WALLET_API}/loyaltyObject/${objectId}`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` },
         });
 
         if (response.status === 404) {
-            // Create new object
             response = await fetch(`${GOOGLE_WALLET_API}/loyaltyObject`, {
                 method: 'POST',
                 headers: {
@@ -545,7 +515,6 @@ export async function upsertGoogleLoyaltyObject(
                 body: JSON.stringify(loyaltyObject),
             });
         } else {
-            // Update existing object
             response = await fetch(`${GOOGLE_WALLET_API}/loyaltyObject/${objectId}`, {
                 method: 'PUT',
                 headers: {
@@ -558,30 +527,27 @@ export async function upsertGoogleLoyaltyObject(
 
         if (!response.ok) {
             const error = await response.text();
-            console.error('Failed to upsert loyalty object:', error);
+            console.error('[GOOGLE] Failed to upsert loyalty object:', error);
             return { success: false, objectId, error };
         }
 
-        console.log(`✅ Google Loyalty Object upserted: ${objectId}`);
-        console.log(`   Member: ${membership.user_name}`);
-        console.log(`   Plan: ${membership.plan_name}`);
-        console.log(`   Classes: ${formatClassesRemaining(membership.classes_remaining)}`);
+        console.log(`[GOOGLE] Loyalty Object upserted: ${objectId}`);
+        console.log(`         Member: ${membership.user_name}`);
+        console.log(`         Plan: ${membership.plan_name}`);
+        console.log(`         Credits: ${formatClassesRemaining(membership.classes_remaining)}`);
 
         return { success: true, objectId };
 
     } catch (error) {
-        console.error('Error upserting Google Loyalty Object:', error);
+        console.error('[GOOGLE] Error upserting Loyalty Object:', error);
         return { success: false, objectId: '', error: String(error) };
     }
 }
 
-// ============================================
-// Save URL Generation
-// ============================================
+// ---------------------------------------------------------------------------
+// Save URL
+// ---------------------------------------------------------------------------
 
-/**
- * Build a "Save to Google Wallet" URL
- */
 export async function buildGoogleSaveUrl(membershipId: string): Promise<string> {
     const membership = await getMembershipData(membershipId);
 
@@ -593,22 +559,18 @@ export async function buildGoogleSaveUrl(membershipId: string): Promise<string> 
         throw new Error(`Membership is not eligible for wallet: ${membership.status}`);
     }
 
-    const planType = getPlanType(membership.plan_name);
-
-    // Ensure class exists
-    await createGoogleLoyaltyClass(planType);
-
-    // Upsert object
+    // Ensure class exists, then upsert object
+    await createGoogleLoyaltyClass();
     await upsertGoogleLoyaltyObject(membershipId);
 
     const creds = getCredentials();
     const objectId = `${creds.issuerId}.${membership.id}_v1`;
+    const frontendUrl = (process.env.FRONTEND_URL || 'https://sunrise-web-production.up.railway.app').replace(/\/$/, '');
 
-    // Create JWT for save URL
     const claims = {
         iss: creds.email,
         aud: 'google',
-        origins: [process.env.FRONTEND_URL || 'https://catarsis.up.railway.app'],
+        origins: [frontendUrl],
         typ: 'savetowallet',
         payload: {
             loyaltyObjects: [{ id: objectId }],
@@ -616,17 +578,13 @@ export async function buildGoogleSaveUrl(membershipId: string): Promise<string> 
     };
 
     const token = jwt.sign(claims, creds.privateKey, { algorithm: 'RS256' });
-
     return `https://pay.google.com/gp/v/save/${token}`;
 }
 
-// ============================================
+// ---------------------------------------------------------------------------
 // Messaging
-// ============================================
+// ---------------------------------------------------------------------------
 
-/**
- * Send a message to a loyalty object (visible in Google Wallet)
- */
 export async function sendGoogleWalletMessage(params: {
     membershipId: string;
     title: string;
@@ -639,7 +597,7 @@ export async function sendGoogleWalletMessage(params: {
 
         const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`;
         const now = new Date();
-        const end = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
+        const end = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
         const message = {
             message: {
@@ -668,26 +626,23 @@ export async function sendGoogleWalletMessage(params: {
 
         if (!response.ok) {
             const error = await response.text();
-            console.error('Failed to send Google Wallet message:', error);
+            console.error('[GOOGLE] Failed to send wallet message:', error);
             return false;
         }
 
-        console.log(`✅ Google Wallet message sent to ${params.membershipId.substring(0, 8)}...`);
+        console.log(`[GOOGLE] Message sent to ${params.membershipId.substring(0, 8)}…`);
         return true;
 
     } catch (error) {
-        console.error('Error sending Google Wallet message:', error);
+        console.error('[GOOGLE] Error sending wallet message:', error);
         return false;
     }
 }
 
-// ============================================
+// ---------------------------------------------------------------------------
 // Diagnostics
-// ============================================
+// ---------------------------------------------------------------------------
 
-/**
- * Check Google Wallet configuration status
- */
 export async function checkGoogleWalletConfig(): Promise<{
     configured: boolean;
     issuerId: string | null;
@@ -712,7 +667,6 @@ export async function checkGoogleWalletConfig(): Promise<{
         result.hasPrivateKey = !!creds.privateKey;
         result.configured = true;
 
-        // Try to get access token
         await getGoogleWalletAccessToken();
         result.canAuthenticate = true;
 
@@ -723,45 +677,33 @@ export async function checkGoogleWalletConfig(): Promise<{
     return result;
 }
 
-// ============================================
-// High-Level Functions for App Integration
-// ============================================
+// ---------------------------------------------------------------------------
+// Lifecycle hooks
+// ---------------------------------------------------------------------------
 
-/**
- * Called when a class is attended
- */
 export async function onClassAttended(membershipId: string): Promise<void> {
     await upsertGoogleLoyaltyObject(membershipId);
-    console.log(`✅ Google pass updated after class attendance`);
+    console.log('[GOOGLE] Pass updated after class attendance.');
 }
 
-/**
- * Called when points are earned
- */
 export async function onPointsEarned(membershipId: string, points: number): Promise<void> {
     await upsertGoogleLoyaltyObject(membershipId);
     await sendGoogleWalletMessage({
         membershipId,
         title: '¡Puntos ganados! ⭐',
-        body: `Ganaste ${points} puntos. ¡Sigue acumulando!`,
+        body: `Ganaste ${points} puntos. Sigue acumulando.`,
     });
 }
 
-/**
- * Called when membership is renewed
- */
 export async function onMembershipRenewed(membershipId: string): Promise<void> {
     await upsertGoogleLoyaltyObject(membershipId);
     await sendGoogleWalletMessage({
         membershipId,
         title: '¡Membresía renovada! 🎉',
-        body: 'Tu membresía ha sido renovada exitosamente.',
+        body: 'Tu pase Sunrise Sunset está activo nuevamente.',
     });
 }
 
-/**
- * Send message to ALL active Google Wallet objects (for event announcements)
- */
 export async function sendMessageToAllGoogleObjects(title: string, body: string): Promise<number> {
     try {
         const memberships = await query<{ id: string }>(`
@@ -775,10 +717,10 @@ export async function sendMessageToAllGoogleObjects(title: string, body: string)
             } catch { /* skip individual failures */ }
             if (memberships.length > 10) await new Promise(r => setTimeout(r, 150));
         }
-        console.log(`[Google Wallet] Message sent to ${count}/${memberships.length} objects`);
+        console.log(`[GOOGLE] Message sent to ${count}/${memberships.length} objects.`);
         return count;
     } catch (error) {
-        console.error('[Google Wallet] sendMessageToAllGoogleObjects error:', error);
+        console.error('[GOOGLE] sendMessageToAllGoogleObjects error:', error);
         return 0;
     }
 }

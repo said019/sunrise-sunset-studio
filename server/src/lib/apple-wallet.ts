@@ -1,5 +1,12 @@
 /**
- * Apple Wallet Integration for Sunrise Sunset
+ * Apple Wallet — Sunrise Sunset Pass
+ *
+ * Generates .pkpass storeCard passes for studio memberships, registers
+ * device push tokens, and sends APNs notifications when the pass changes.
+ *
+ * Visual: single sunset hero strip (matches the web app's `.bg-sunset`),
+ * cream surface, chocolate body type, rose label tone. The plan name
+ * appears as a header badge; the member's first name overlays the strip.
  */
 
 import fs from 'fs';
@@ -18,9 +25,24 @@ const APPLE_PASS_TYPE_ID = process.env.APPLE_PASS_TYPE_ID;
 const APPLE_KEY_ID = process.env.APPLE_KEY_ID;
 const APPLE_APNS_KEY_BASE64 = process.env.APPLE_APNS_KEY_BASE64;
 // Hardcodeado a "Sunrise Sunset" para que NUNCA herede valor de otro
-// proyecto que use el mismo PassTypeID si por error se
-// configura APPLE_ORG_NAME en Railway con un valor distinto.
+// proyecto que use el mismo PassTypeID si por error se configura
+// APPLE_ORG_NAME en Railway con un valor distinto.
 const APPLE_ORG_NAME = 'Sunrise Sunset';
+
+// Studio location — El Tezal, Cabo San Lucas, Baja California Sur.
+// MST year-round, no DST → fixed `-07:00` offset for any ISO timestamps
+// the pass emits (relevantDate, etc.).
+const STUDIO_LAT = 22.8755;
+const STUDIO_LNG = -109.9120;
+const STUDIO_TZ_OFFSET = '-07:00';
+
+// Pass color scheme — cream surface + chocolate body + rose label.
+// The sunset strip supplies all the warmth; everything else stays calm.
+const PASS_STYLE = {
+    backgroundColor: 'rgb(239, 231, 217)',   // #EFE7D9 cream
+    foregroundColor: 'rgb(110, 69, 40)',     // #6E4528 chocolate
+    labelColor: 'rgb(199, 126, 111)',        // #C67E6F rose
+};
 
 interface MembershipData {
     id: string;
@@ -39,6 +61,7 @@ interface MembershipData {
     status: string;
     member_since: Date;
     next_class_date: string | null;
+    next_class_type: string | null;
     referral_code: string | null;
     next_event?: {
         title: string;
@@ -48,18 +71,6 @@ interface MembershipData {
     } | null;
 }
 
-type PlanType = 'basico' | 'premium' | 'ilimitado' | 'intro';
-
-// Sunrise Sunset wallet palette.
-// Warm gold: #A48550, olive: #81836F, sand: #D3C39F, cream: #F6F6EA, dark chocolate: #322A1E.
-
-const PLAN_STYLES: Record<PlanType, { badge: string; backgroundColor: string; foregroundColor: string; labelColor: string; stripPrefix: string; }> = {
-    basico: { badge: 'MEMBER', backgroundColor: 'rgb(242, 239, 231)', foregroundColor: 'rgb(62, 58, 52)', labelColor: 'rgb(140, 132, 117)', stripPrefix: 'hero' },
-    premium: { badge: 'PREMIUM', backgroundColor: 'rgb(242, 239, 231)', foregroundColor: 'rgb(62, 58, 52)', labelColor: 'rgb(140, 132, 117)', stripPrefix: 'hero' },
-    ilimitado: { badge: 'UNLIMITED', backgroundColor: 'rgb(242, 239, 231)', foregroundColor: 'rgb(62, 58, 52)', labelColor: 'rgb(140, 132, 117)', stripPrefix: 'hero' },
-    intro: { badge: 'INTRO', backgroundColor: 'rgb(242, 239, 231)', foregroundColor: 'rgb(62, 58, 52)', labelColor: 'rgb(140, 132, 117)', stripPrefix: 'hero' }
-};
-
 const WALLET_ELIGIBLE_STATUSES = new Set([
     'active',
     'pending_activation',
@@ -68,12 +79,17 @@ const WALLET_ELIGIBLE_STATUSES = new Set([
     'expired',
 ]);
 
-function getPlanType(planName: string): PlanType {
-    const lower = planName.toLowerCase();
-    if (lower.includes('premium') || lower.includes('vip')) return 'premium';
-    if (lower.includes('ilimitado') || lower.includes('unlimited')) return 'ilimitado';
-    if (lower.includes('intro') || lower.includes('prueba')) return 'intro';
-    return 'basico';
+// ---------------------------------------------------------------------------
+// Formatters
+// ---------------------------------------------------------------------------
+
+function planBadge(planName: string | null | undefined): string {
+    const raw = (planName || 'Miembro').replace(/[—–·\-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    return raw.toUpperCase().slice(0, 22);
+}
+
+function firstName(fullName: string | null | undefined): string {
+    return (fullName || 'Miembro').split(/\s+/)[0];
 }
 
 function formatDate(date: Date | string | null | undefined): string {
@@ -85,8 +101,27 @@ function formatDate(date: Date | string | null | undefined): string {
 
 function formatClassesRemaining(classes: number | null): string {
     if (classes === null || classes === -1) return 'ILIMITADAS';
-    if (classes === 0) return 'SIN CRÉDITOS';
-    return classes + ' restantes';
+    if (classes === 0) return 'Sin créditos';
+    if (classes === 1) return '1 clase';
+    return `${classes} clases`;
+}
+
+// Parse our own ISO strings (YYYY-MM-DDTHH:MM:00-07:00) without going through
+// JS Date timezone math — we want the wall-clock components as written.
+function formatNextClass(iso: string | null | undefined): string {
+    if (!iso) return '—';
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    if (!m) return '—';
+    const [, y, mo, d, hh, mm] = m;
+    const date = new Date(Date.UTC(Number(y), Number(mo) - 1, Number(d)));
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const day = days[date.getUTCDay()];
+    const hour = parseInt(hh, 10);
+    const min = parseInt(mm, 10);
+    const period = hour >= 12 ? 'pm' : 'am';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    const displayMin = min === 0 ? '' : `:${mm}`;
+    return `${day} ${displayHour}${displayMin}${period}`;
 }
 
 function getValidDate(date: Date | string | null | undefined): Date | null {
@@ -95,9 +130,14 @@ function getValidDate(date: Date | string | null | undefined): Date | null {
     return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+// ---------------------------------------------------------------------------
+// Data
+// ---------------------------------------------------------------------------
+
 export async function getMembershipData(membershipId: string): Promise<MembershipData | null> {
     try {
-        // Keep the requested membership as serial, but display the user's current wallet summary.
+        // Keep the requested membership as serial, but display the user's
+        // current wallet summary (sum of all active memberships' credits).
         const membership = await queryOne<MembershipData>(`
             SELECT m.id, m.user_id, m.plan_id,
                 COALESCE((
@@ -141,18 +181,24 @@ export async function getMembershipData(membershipId: string): Promise<Membershi
                 END as status,
                 u.created_at as member_since,
                 (SELECT rc.code FROM referral_codes rc WHERE rc.user_id = m.user_id LIMIT 1) as referral_code,
-                (SELECT (c.date || 'T' || SUBSTRING(c.start_time::text, 1, 5) || ':00-06:00')
+                (SELECT (c.date || 'T' || SUBSTRING(c.start_time::text, 1, 5) || ':00${STUDIO_TZ_OFFSET}')
                  FROM bookings b2 JOIN classes c ON b2.class_id = c.id
                  WHERE b2.user_id = m.user_id AND b2.status = 'confirmed'
                  AND (c.date + c.start_time) > (NOW() AT TIME ZONE 'America/Mazatlan')
                  ORDER BY c.date ASC, c.start_time ASC LIMIT 1
-                ) as next_class_date
+                ) as next_class_date,
+                (SELECT ct.name FROM bookings b3
+                 JOIN classes c2 ON b3.class_id = c2.id
+                 LEFT JOIN class_types ct ON c2.class_type_id = ct.id
+                 WHERE b3.user_id = m.user_id AND b3.status = 'confirmed'
+                 AND (c2.date + c2.start_time) > (NOW() AT TIME ZONE 'America/Mazatlan')
+                 ORDER BY c2.date ASC, c2.start_time ASC LIMIT 1
+                ) as next_class_type
             FROM memberships m
             JOIN users u ON m.user_id = u.id
             JOIN plans p ON m.plan_id = p.id
             WHERE m.id = $1`, [membershipId]);
 
-        // Fetch next confirmed event for this user
         if (membership) {
             const nextEvent = await queryOne<{
                 title: string; date: string; start_time: string; location: string;
@@ -174,6 +220,10 @@ export async function getMembershipData(membershipId: string): Promise<Membershi
         return null;
     }
 }
+
+// ---------------------------------------------------------------------------
+// Device registration (unchanged — works against apple_wallet_devices table)
+// ---------------------------------------------------------------------------
 
 export async function registerDevice(deviceId: string, pushToken: string, passTypeId: string, membershipId: string): Promise<void> {
     await query('INSERT INTO apple_wallet_devices (device_id, push_token, pass_type_id, membership_id) VALUES ($1, $2, $3, $4) ON CONFLICT (device_id, pass_type_id, membership_id) DO UPDATE SET push_token = $2, updated_at = NOW()', [deviceId, pushToken, passTypeId, membershipId]);
@@ -212,6 +262,10 @@ export async function getUpdatedPassesSince(deviceId: string, passTypeId: string
     );
     return result.map(r => r.membership_id);
 }
+
+// ---------------------------------------------------------------------------
+// APNs push (unchanged)
+// ---------------------------------------------------------------------------
 
 function getAPNsConfig() {
     if (!APPLE_KEY_ID || !APPLE_TEAM_ID || !APPLE_APNS_KEY_BASE64) throw new Error('Faltan credenciales APNs');
@@ -285,20 +339,16 @@ export async function notifyAllDevices(membershipId: string, title?: string, mes
     const devices = await getDevicesForMembership(membershipId);
     let count = 0;
     for (const d of devices) {
-        // 1. Silent push to trigger pass update
         const silentOk = await sendAPNsPushNotification(d.push_token);
-        // 2. Alert push for visible notification on lock screen
         if (title && message) {
             await sendAPNsAlertNotification(d.push_token, title, message);
         }
         if (silentOk) count++;
-        // Auto-clean bad tokens would go here (410 handling)
     }
     return count;
 }
 
 export async function notifyAllUserDevices(userId: string, title?: string, message?: string): Promise<number> {
-    // Find ALL devices registered for ANY membership of this user
     const devices = await query<{ push_token: string; membership_id: string }>(
         `SELECT DISTINCT awd.push_token, awd.membership_id
          FROM apple_wallet_devices awd
@@ -323,7 +373,6 @@ export async function sendAlertToAllDevices(title: string, message: string): Pro
     for (const d of devices) {
         const ok = await sendAPNsAlertNotification(d.push_token, title, message);
         if (ok) count++;
-        // Small delay to avoid rate limiting
         if (devices.length > 10) await new Promise(r => setTimeout(r, 100));
     }
     console.log(`[APNs] Alert sent to ${count}/${devices.length} devices`);
@@ -333,11 +382,14 @@ export async function sendAlertToAllDevices(title: string, message: string): Pro
 export function verifyAuthToken(authHeader: string | undefined, serial?: string): boolean {
     if (!authHeader || !authHeader.startsWith('ApplePass ')) return false;
     const token = authHeader.substring('ApplePass '.length).trim();
-    // Accept APPLE_AUTH_TOKEN or the serial (membership ID) as valid token
     if (APPLE_AUTH_TOKEN && token === APPLE_AUTH_TOKEN) return true;
     if (serial && token === serial) return true;
     return false;
 }
+
+// ---------------------------------------------------------------------------
+// Pass model builder
+// ---------------------------------------------------------------------------
 
 function readPemFile(filePath: string): string {
     const absPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
@@ -347,12 +399,13 @@ function readPemFile(filePath: string): string {
     return match ? match[0].trim() : raw;
 }
 
-function buildTempModelDir(m: MembershipData, style: typeof PLAN_STYLES.basico): string {
-    const base = fs.mkdtempSync(path.join(os.tmpdir(), 'apple-pass-'));
+function buildTempModelDir(m: MembershipData): string {
+    const base = fs.mkdtempSync(path.join(os.tmpdir(), 'sunrise-pass-'));
     const dir = base + '.pass';
     fs.mkdirSync(dir, { recursive: true });
-    let baseUrl = process.env.BASE_URL || 'https://valiant-imagination-production-0462.up.railway.app';
+    let baseUrl = process.env.BASE_URL || 'https://sunrise-api-production.up.railway.app';
     if (!baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
+    const frontendUrl = process.env.FRONTEND_URL || 'https://sunrise-web-production.up.railway.app';
 
     const endDate = getValidDate(m.end_date);
     const hasFutureEndDate = Boolean(endDate && endDate.getTime() > Date.now());
@@ -365,80 +418,147 @@ function buildTempModelDir(m: MembershipData, style: typeof PLAN_STYLES.basico):
         webServiceURL: baseUrl + '/api/wallet',
         authenticationToken: APPLE_AUTH_TOKEN || m.id,
         organizationName: APPLE_ORG_NAME,
-        description: 'Membresia ' + m.plan_name + ' - Sunrise Sunset',
+        description: `Pase ${m.plan_name} · Sunrise Sunset`,
         logoText: 'Sunrise Sunset',
         storeCard: {
-            headerFields: [{ key: 'plan_badge', label: 'PLAN', value: m.plan_name.toUpperCase() }],
-            primaryFields: [],
+            // Header — plan badge, top-right of the logo bar
+            headerFields: [
+                { key: 'plan', label: 'PLAN', value: planBadge(m.plan_name) }
+            ],
+            // Primary — first name overlays the sunset strip
+            primaryFields: [
+                { key: 'member', value: firstName(m.user_name) }
+            ],
+            // Secondary — three quick-glance fields below the strip
             secondaryFields: [
-                { key: 'member_name', label: 'NOMBRE', value: m.user_name },
-                { key: 'classes', label: 'CLASES', value: formatClassesRemaining(m.classes_remaining), changeMessage: 'Sunrise Sunset: %@ clases disponibles 🧘' },
-                { key: 'valid_until', label: 'VENCE', value: formatDate(endDate) }
-            ],
-            auxiliaryFields: [
-                { key: 'points', label: 'PUNTOS', value: m.loyalty_points + ' pts' },
-                ...(m.next_event ? [{ key: 'next_event', label: 'PRÓXIMO EVENTO', value: m.next_event.title }] : []),
-            ],
-            backFields: [
-                ...(m.next_event ? [{
-                    key: 'event_details',
-                    label: 'Tu próximo evento',
-                    value: `${m.next_event.title}\n${formatDate(m.next_event.date)} • ${m.next_event.start_time.substring(0, 5)}\n${m.next_event.location}`,
+                {
+                    key: 'classes',
+                    label: 'CRÉDITOS',
+                    value: formatClassesRemaining(m.classes_remaining),
+                    changeMessage: 'Sunrise Sunset · %@ ☀️',
+                },
+                {
+                    key: 'valid_until',
+                    label: 'VENCE',
+                    value: formatDate(endDate),
+                },
+                ...(m.next_class_date ? [{
+                    key: 'next',
+                    label: 'PRÓXIMA',
+                    value: formatNextClass(m.next_class_date),
                 }] : []),
-                { key: 'member_since', label: 'Miembro desde', value: formatDate(m.member_since) },
-                { key: 'classes_used', label: 'Clases tomadas', value: m.classes_used + ' clases' },
-                ...(m.referral_code ? [{ key: 'referral', label: 'Tu codigo de referido', value: `${m.referral_code} — Comparte con tus amigas y gana puntos` }] : []),
-                { key: 'contact', label: 'Contacto', value: 'WhatsApp: 427 100 7347\nHermenegildo Galeana Int. Local 4\nCentro, San Juan del Rio, Qro.' },
-                { key: 'website', label: 'Reserva en', value: 'www.sunrisesunset.mx' },
-                { key: 'terms', label: 'Terminos', value: 'Membresia personal e intransferible.\nCancelaciones: minimo 5 horas antes.\nMaximo 2 cancelaciones por membresia.' }
-            ]
+            ],
+            // Auxiliary — supporting context
+            auxiliaryFields: [
+                ...(m.next_class_type ? [{
+                    key: 'type',
+                    label: 'TIPO',
+                    value: m.next_class_type,
+                }] : []),
+                {
+                    key: 'points',
+                    label: 'PUNTOS',
+                    value: `${m.loyalty_points} pts`,
+                },
+            ],
+            // Back — editorial copy + studio info + terms
+            backFields: [
+                {
+                    key: 'about',
+                    label: 'Tu pase Sunrise Sunset',
+                    value: 'Llévalo siempre contigo. Se actualiza solo con tus créditos y tu próxima clase.',
+                },
+                ...(m.next_event ? [{
+                    key: 'event',
+                    label: 'Próximo evento',
+                    value: `${m.next_event.title}\n${formatDate(m.next_event.date)} · ${m.next_event.start_time.substring(0, 5)}\n${m.next_event.location}`,
+                }] : []),
+                {
+                    key: 'studio',
+                    label: 'Estudio',
+                    value: 'Sunrise Sunset\nEl Tezal, Cabo San Lucas\nBaja California Sur, México',
+                },
+                {
+                    key: 'book',
+                    label: 'Reservar clase',
+                    value: `${frontendUrl}/app/book`,
+                },
+                {
+                    key: 'wallet',
+                    label: 'Mi cuenta',
+                    value: `${frontendUrl}/app/wallet`,
+                },
+                ...(m.referral_code ? [{
+                    key: 'referral',
+                    label: 'Código de referido',
+                    value: `${m.referral_code}\nCompártelo y gana puntos cuando alguien se inscribe.`,
+                }] : []),
+                {
+                    key: 'member_since',
+                    label: 'Miembro desde',
+                    value: formatDate(m.member_since),
+                },
+                {
+                    key: 'classes_used',
+                    label: 'Clases tomadas',
+                    value: `${m.classes_used}`,
+                },
+                {
+                    key: 'terms',
+                    label: 'Términos',
+                    value: 'Pase personal e intransferible.\nCancela mínimo 5 horas antes de tu clase.\nMáximo 2 cancelaciones por membresía.\nHora Los Cabos (GMT-7).',
+                },
+            ],
         },
-        backgroundColor: style.backgroundColor,
-        foregroundColor: style.foregroundColor,
-        labelColor: style.labelColor,
-        barcodes: [{ format: 'PKBarcodeFormatQR', message: m.id, messageEncoding: 'iso-8859-1' }],
-        expirationDate: hasFutureEndDate ? new Date(endDate!.getTime() + 86400000).toISOString() : undefined,
-        // relevantDate makes the pass appear on lock screen near the time
+        backgroundColor: PASS_STYLE.backgroundColor,
+        foregroundColor: PASS_STYLE.foregroundColor,
+        labelColor: PASS_STYLE.labelColor,
+        barcodes: [{
+            format: 'PKBarcodeFormatQR',
+            message: m.id,
+            messageEncoding: 'iso-8859-1',
+            altText: m.id.substring(0, 8).toUpperCase(),
+        }],
+        expirationDate: hasFutureEndDate
+            ? new Date(endDate!.getTime() + 86400000).toISOString()
+            : undefined,
+        // relevantDate — makes the pass surface on lockscreen near class time
         ...(() => {
             let eventDateStr: string | null = null;
             if (m.next_event) {
-                // Normalize time to HH:MM format
                 const timeParts = m.next_event.start_time.split(':');
                 const normalizedTime = `${timeParts[0]}:${timeParts[1] || '00'}`;
-                eventDateStr = `${m.next_event.date}T${normalizedTime}:00-06:00`;
+                eventDateStr = `${m.next_event.date}T${normalizedTime}:00${STUDIO_TZ_OFFSET}`;
             }
             const relevantDateStr = [m.next_class_date, eventDateStr]
                 .filter(Boolean)
                 .sort()[0] || null;
             return relevantDateStr ? { relevantDate: relevantDateStr } : {};
         })(),
-        // Location-based: show pass when near the studio.
-        // Coordenadas del estudio Sunrise Sunset (El Tezal, Los Cabos).
+        // Location — pass surfaces on lockscreen when near the studio.
         locations: [
-            { latitude: 20.3862419, longitude: -99.9982146, relevantText: '¡Prepárate para tu clase en Sunrise Sunset!' }
+            {
+                latitude: STUDIO_LAT,
+                longitude: STUDIO_LNG,
+                relevantText: '☀️ Estás cerca del estudio · Sunrise Sunset',
+            },
         ],
     };
+
     fs.writeFileSync(path.join(dir, 'pass.json'), JSON.stringify(passJson, null, 2));
+
+    // Copy the asset files. Single sunset strip (no level system) + cream
+    // icon + transparent wordmark logo, all generated by
+    // scripts/build-wallet-assets.mjs.
     const assetsDir = path.resolve(process.cwd(), 'wallet-assets');
-
-    for (const img of ['icon.png', 'icon@2x.png', 'icon@3x.png', 'logo.png', 'logo@2x.png', 'logo@3x.png']) {
-        const src = path.join(assetsDir, img);
-        if (fs.existsSync(src)) fs.copyFileSync(src, path.join(dir, img));
-    }
-
-    const stripsDir = path.join(assetsDir, 'strips');
-    const stripLevel = m.classes_remaining === null || m.classes_remaining === -1
-        ? 6
-        : Math.min(6, Math.max(0, Math.floor((m.classes_remaining / 10) * 6)));
-    const stripBase = `strip-${style.stripPrefix}-${stripLevel}`;
-    const stripFiles = [
-        { src: path.join(stripsDir, `${stripBase}.png`), fallback: path.join(assetsDir, 'strip.png'), dest: 'strip.png' },
-        { src: path.join(stripsDir, `${stripBase}@2x.png`), fallback: path.join(assetsDir, 'strip@2x.png'), dest: 'strip@2x.png' },
-        { src: path.join(stripsDir, `${stripBase}@3x.png`), fallback: path.join(assetsDir, 'strip@3x.png'), dest: 'strip@3x.png' },
+    const requiredAssets = [
+        'icon.png', 'icon@2x.png', 'icon@3x.png',
+        'logo.png', 'logo@2x.png', 'logo@3x.png',
+        'strip.png', 'strip@2x.png', 'strip@3x.png',
     ];
-    for (const file of stripFiles) {
-        const src = fs.existsSync(file.src) ? file.src : file.fallback;
-        if (fs.existsSync(src)) fs.copyFileSync(src, path.join(dir, file.dest));
+    for (const file of requiredAssets) {
+        const src = path.join(assetsDir, file);
+        if (fs.existsSync(src)) fs.copyFileSync(src, path.join(dir, file));
     }
 
     console.log('[APPLE] Modelo: ' + dir);
@@ -451,8 +571,6 @@ export async function buildApplePassBuffer(membershipId: string): Promise<Buffer
     if (!m) throw new Error('Membresia no encontrada: ' + membershipId);
     if (!WALLET_ELIGIBLE_STATUSES.has(m.status)) throw new Error('Membresia no elegible para wallet: ' + m.status);
     if (!APPLE_TEAM_ID || !APPLE_PASS_TYPE_ID) throw new Error('Faltan APPLE_TEAM_ID o APPLE_PASS_TYPE_ID');
-    const planType = getPlanType(m.plan_name);
-    const style = PLAN_STYLES[planType];
     const assetsDir = path.resolve(process.cwd(), 'wallet-assets');
     const certPath = process.env.APPLE_PASS_CERT || path.join(assetsDir, 'pass.pem');
     const keyPath = process.env.APPLE_PASS_KEY || path.join(assetsDir, 'pass.key');
@@ -460,7 +578,7 @@ export async function buildApplePassBuffer(membershipId: string): Promise<Buffer
     const signerCert = readPemFile(certPath);
     const signerKey = fs.readFileSync(path.isAbsolute(keyPath) ? keyPath : path.resolve(process.cwd(), keyPath), 'utf8');
     const wwdr = readPemFile(wwdrPath);
-    const modelDir = buildTempModelDir(m, style);
+    const modelDir = buildTempModelDir(m);
     const buffers: { [key: string]: Buffer } = {};
     for (const file of fs.readdirSync(modelDir)) {
         const fp = path.join(modelDir, file);
@@ -468,10 +586,16 @@ export async function buildApplePassBuffer(membershipId: string): Promise<Buffer
     }
     const passJsonData = JSON.parse(buffers['pass.json'].toString('utf8'));
     const pass = new PKPass(buffers, { wwdr, signerCert, signerKey, signerKeyPassphrase: process.env.APPLE_CERT_PASSWORD || undefined }, {
-        serialNumber: m.id, passTypeIdentifier: APPLE_PASS_TYPE_ID, teamIdentifier: APPLE_TEAM_ID,
-        organizationName: APPLE_ORG_NAME, description: passJsonData.description,
-        backgroundColor: passJsonData.backgroundColor, foregroundColor: passJsonData.foregroundColor, labelColor: passJsonData.labelColor,
-        webServiceURL: passJsonData.webServiceURL, authenticationToken: passJsonData.authenticationToken
+        serialNumber: m.id,
+        passTypeIdentifier: APPLE_PASS_TYPE_ID,
+        teamIdentifier: APPLE_TEAM_ID,
+        organizationName: APPLE_ORG_NAME,
+        description: passJsonData.description,
+        backgroundColor: passJsonData.backgroundColor,
+        foregroundColor: passJsonData.foregroundColor,
+        labelColor: passJsonData.labelColor,
+        webServiceURL: passJsonData.webServiceURL,
+        authenticationToken: passJsonData.authenticationToken,
     });
     if (!pass.type) {
         pass.type = 'storeCard';
@@ -491,10 +615,14 @@ export async function buildApplePassBuffer(membershipId: string): Promise<Buffer
     return buffer;
 }
 
+// ---------------------------------------------------------------------------
+// Lifecycle hooks
+// ---------------------------------------------------------------------------
+
 export async function onClassAttended(membershipId: string): Promise<void> {
     const m = await getMembershipData(membershipId);
     if (m) {
-        await notifyAllUserDevices(m.user_id, '🧘 ¡Clase completada!', `Ganaste 1 punto. Total: ${m.loyalty_points} pts`);
+        await notifyAllUserDevices(m.user_id, '☀️ ¡Clase completada!', `Ganaste 1 punto. Total: ${m.loyalty_points} pts`);
     }
 }
 
@@ -508,15 +636,35 @@ export async function onPointsEarned(membershipId: string, points?: number): Pro
 export async function onMembershipRenewed(membershipId: string): Promise<void> {
     const m = await getMembershipData(membershipId);
     if (m) {
-        await notifyAllUserDevices(m.user_id, '🎉 ¡Membresía activada!', `${m.plan_name} - ${formatClassesRemaining(m.classes_remaining)}`);
+        await notifyAllUserDevices(m.user_id, '🎉 ¡Membresía activada!', `${m.plan_name} · ${formatClassesRemaining(m.classes_remaining)}`);
     } else {
         await recordPassUpdate(membershipId, null, null);
         await notifyAllDevices(membershipId, '🎉 ¡Membresía activada!', 'Tu pase se actualizó');
     }
 }
 
-export async function checkAppleWalletConfig(): Promise<{ configured: boolean; teamId: string | null; passTypeId: string | null; hasAuthToken: boolean; hasAPNsKey: boolean; hasKeyId: boolean; hasCertificates: boolean; canSendPush: boolean; error?: string; }> {
-    const result = { configured: false, teamId: null as string | null, passTypeId: null as string | null, hasAuthToken: false, hasAPNsKey: false, hasKeyId: false, hasCertificates: false, canSendPush: false, error: undefined as string | undefined };
+export async function checkAppleWalletConfig(): Promise<{
+    configured: boolean;
+    teamId: string | null;
+    passTypeId: string | null;
+    hasAuthToken: boolean;
+    hasAPNsKey: boolean;
+    hasKeyId: boolean;
+    hasCertificates: boolean;
+    canSendPush: boolean;
+    error?: string;
+}> {
+    const result = {
+        configured: false,
+        teamId: null as string | null,
+        passTypeId: null as string | null,
+        hasAuthToken: false,
+        hasAPNsKey: false,
+        hasKeyId: false,
+        hasCertificates: false,
+        canSendPush: false,
+        error: undefined as string | undefined,
+    };
     try {
         result.teamId = APPLE_TEAM_ID || null;
         result.passTypeId = APPLE_PASS_TYPE_ID || null;
@@ -524,11 +672,33 @@ export async function checkAppleWalletConfig(): Promise<{ configured: boolean; t
         result.hasAPNsKey = !!APPLE_APNS_KEY_BASE64;
         result.hasKeyId = !!APPLE_KEY_ID;
         const assetsDir = path.resolve(process.cwd(), 'wallet-assets');
-        result.hasCertificates = fs.existsSync(path.join(assetsDir, 'pass.pem')) && fs.existsSync(path.join(assetsDir, 'pass.key')) && fs.existsSync(path.join(assetsDir, 'wwdr.pem'));
+        result.hasCertificates = fs.existsSync(path.join(assetsDir, 'pass.pem'))
+            && fs.existsSync(path.join(assetsDir, 'pass.key'))
+            && fs.existsSync(path.join(assetsDir, 'wwdr.pem'));
         result.configured = !!(result.teamId && result.passTypeId && result.hasAuthToken && result.hasCertificates);
         result.canSendPush = !!(result.teamId && result.hasAPNsKey && result.hasKeyId);
-    } catch (error) { result.error = String(error); }
+    } catch (error) {
+        result.error = String(error);
+    }
     return result;
 }
 
-export default { getMembershipData, buildApplePassBuffer, sendAPNsPushNotification, sendAPNsAlertNotification, registerDevice, unregisterDevice, getDevicesForMembership, getSerialsForDevice, notifyAllDevices, recordPassUpdate, getLastUpdate, getUpdatedPassesSince, verifyAuthToken, onClassAttended, onPointsEarned, onMembershipRenewed, checkAppleWalletConfig };
+export default {
+    getMembershipData,
+    buildApplePassBuffer,
+    sendAPNsPushNotification,
+    sendAPNsAlertNotification,
+    registerDevice,
+    unregisterDevice,
+    getDevicesForMembership,
+    getSerialsForDevice,
+    notifyAllDevices,
+    recordPassUpdate,
+    getLastUpdate,
+    getUpdatedPassesSince,
+    verifyAuthToken,
+    onClassAttended,
+    onPointsEarned,
+    onMembershipRenewed,
+    checkAppleWalletConfig,
+};
