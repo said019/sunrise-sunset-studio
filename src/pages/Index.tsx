@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowUpRight,
+  Check,
+  Download,
   Instagram,
   MapPin,
   Phone,
@@ -16,6 +18,10 @@ import pilatesImage from "@/assets/hero-pilates.jpg";
 import { nowInStudioTz, formatStudioTime } from "@/lib/date";
 
 type Lang = "es" | "en";
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
 type ClassType = "sculpt" | "surf" | "yoga" | "barre";
 type Slot = {
   time: string;
@@ -262,6 +268,45 @@ const content = {
       },
     ],
 
+    installLabel: "Lleva el studio contigo",
+    installTitle: "Instala la app de Sunrise Sunset.",
+    installCopy:
+      "Acceso de un toque a tu calendario, reservas, check-in y WalletClub. Sin tiendas, sin descargas pesadas.",
+    installButton: "Instalar la app",
+    installInstalled: "Ya está instalada en este dispositivo.",
+    installNotSupported: "Sigue las instrucciones de tu dispositivo para añadirla.",
+    installPerks: [
+      "Acceso de un toque a tu cuenta",
+      "Notificaciones de tus reservas",
+      "Funciona aunque pierdas señal",
+      "Icono en tu pantalla de inicio",
+    ],
+    installPlatforms: [
+      {
+        device: "iPhone · Safari",
+        steps: [
+          "Abre esta página en Safari",
+          "Toca el botón Compartir",
+          "Elige Añadir a pantalla de inicio",
+        ],
+      },
+      {
+        device: "Android · Chrome",
+        steps: [
+          "Toca el menú (tres puntos)",
+          "Elige Instalar app o Añadir a inicio",
+          "Confirma Instalar",
+        ],
+      },
+      {
+        device: "Escritorio · Chrome o Edge",
+        steps: [
+          "Mira el icono de instalar en la barra de direcciones",
+          "Toca Instalar",
+          "Ábrela desde tu Dock o Menú Inicio",
+        ],
+      },
+    ],
     visitLabel: "Visítanos",
     visitTitle: "Abrimos con el sol.",
     visitCopy:
@@ -510,6 +555,45 @@ const content = {
       },
     ],
 
+    installLabel: "Take the studio with you",
+    installTitle: "Install the Sunrise Sunset app.",
+    installCopy:
+      "One-tap access to your schedule, bookings, check-in and WalletClub. No stores, no heavy downloads.",
+    installButton: "Install the app",
+    installInstalled: "Already installed on this device.",
+    installNotSupported: "Follow your device's instructions to add it.",
+    installPerks: [
+      "One-tap access to your account",
+      "Booking reminders",
+      "Works even with no signal",
+      "Icon on your home screen",
+    ],
+    installPlatforms: [
+      {
+        device: "iPhone · Safari",
+        steps: [
+          "Open this page in Safari",
+          "Tap the Share button",
+          "Choose Add to Home Screen",
+        ],
+      },
+      {
+        device: "Android · Chrome",
+        steps: [
+          "Tap the menu (three dots)",
+          "Choose Install app or Add to home",
+          "Confirm Install",
+        ],
+      },
+      {
+        device: "Desktop · Chrome or Edge",
+        steps: [
+          "Look for the install icon in the address bar",
+          "Click Install",
+          "Launch it from your Dock or Start menu",
+        ],
+      },
+    ],
     visitLabel: "Visit us",
     visitTitle: "We open with the sun.",
     visitCopy:
@@ -704,6 +788,37 @@ const Index = () => {
   const [lang, setLang] = useState<Lang>("es");
   const [now, setNow] = useState(() => new Date());
   const [scrolled, setScrolled] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    const onBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e as BeforeInstallPromptEvent);
+    };
+    const onInstalled = () => {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    };
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as { standalone?: boolean }).standalone === true;
+    if (standalone) setIsInstalled(true);
+    window.addEventListener("beforeinstallprompt", onBeforeInstall);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+
+  const triggerInstall = async () => {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === "accepted") setIsInstalled(true);
+    setInstallPrompt(null);
+  };
   // Día de la semana en hora del studio (Los Cabos, GMT-7), no en la del
   // dispositivo del visitante — así una visitante en CDMX a la 0:01am
   // sigue viendo el día que está corriendo en el studio (Cabos, 11pm).
@@ -1709,6 +1824,116 @@ const Index = () => {
             </div>
           </motion.div>
         </div>
+      </section>
+
+      {/* INSTALL APP */}
+      <section id="instalar" className="scroll-mt-24 bg-[#FAF1E6] px-4 pb-20 md:pb-28">
+        <motion.div
+          initial={{ opacity: 0, y: 24, filter: "blur(10px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.95, ease: easeBreath }}
+          className="relative isolate mx-auto max-w-[1400px] overflow-hidden rounded-[2rem] shadow-[0_45px_120px_-50px_hsla(13,66%,28%,0.45)]"
+        >
+          <div className="absolute inset-0 -z-10 bg-orange-glow-soft" />
+          <div className="orange-grain -z-10" />
+
+          <div className="relative grid gap-12 p-7 md:grid-cols-[1.05fr_0.95fr] md:items-center md:gap-16 md:p-12 lg:p-16">
+            <div>
+              <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.24em] text-wine">
+                <span className="h-px w-8 bg-wine" />
+                {t.installLabel}
+              </div>
+              <h2 className="mt-5 font-heading text-4xl font-light leading-[1.05] tracking-[-0.01em] text-chocolate md:text-5xl lg:text-6xl">
+                {t.installTitle.split(".")[0]}
+                <span
+                  className="block italic text-coral"
+                  style={{ fontVariationSettings: '"opsz" 144' }}
+                >
+                  {t.installTitle.split(".")[1] || "."}
+                </span>
+              </h2>
+              <p className="mt-6 max-w-xl text-base leading-[1.8] text-chocolate/75 md:text-lg">
+                {t.installCopy}
+              </p>
+
+              <ul className="mt-8 grid gap-y-2 gap-x-6 text-sm text-chocolate/80 sm:grid-cols-2">
+                {t.installPerks.map((perk) => (
+                  <li key={perk} className="flex items-center gap-3">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-coral text-cream">
+                      <Check className="h-3 w-3" strokeWidth={2.5} />
+                    </span>
+                    {perk}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-9 flex flex-wrap items-center gap-4">
+                {isInstalled ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-chocolate/20 bg-cream px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-chocolate">
+                    <Check className="h-4 w-4 text-coral" strokeWidth={2.4} />
+                    {t.installInstalled}
+                  </span>
+                ) : installPrompt ? (
+                  <button
+                    type="button"
+                    onClick={triggerInstall}
+                    className="group inline-flex min-h-[3.5rem] items-center gap-3 rounded-full bg-coral px-7 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-cream shadow-[0_22px_44px_-18px_hsla(14,72%,40%,0.55)] transition-[transform,box-shadow,background-color] duration-300 ease-sunrise hover:-translate-y-0.5 hover:bg-wine active:scale-[0.98]"
+                  >
+                    <Download className="h-4 w-4" strokeWidth={2} />
+                    {t.installButton}
+                    <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </button>
+                ) : (
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-chocolate/55">
+                    {t.installNotSupported}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="relative mx-auto w-full max-w-sm">
+              <div className="relative aspect-[9/19] overflow-hidden rounded-[2rem] border border-chocolate/15 bg-chocolate p-3 shadow-[0_50px_120px_-40px_hsla(13,66%,28%,0.55)]">
+                <div className="flex h-full w-full flex-col items-center justify-center gap-6 rounded-[1.6rem] bg-[radial-gradient(circle_at_50%_30%,hsla(36,100%,85%,0.45),transparent_60%),linear-gradient(170deg,#EF704E_0%,#7B0000_100%)] p-6 text-cream">
+                  <img
+                    src="/icons/icon-256.png"
+                    alt="Sunrise Sunset"
+                    className="h-24 w-24 rounded-[1.4rem] shadow-[0_25px_50px_-15px_hsla(0,100%,18%,0.6)]"
+                  />
+                  <p
+                    className="font-heading text-2xl italic"
+                    style={{ fontVariationSettings: '"opsz" 144' }}
+                  >
+                    Sunrise
+                  </p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cream/70">
+                    Studio · Los Cabos
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative grid gap-px overflow-hidden border-t border-chocolate/10 bg-chocolate/10 md:grid-cols-3">
+            {t.installPlatforms.map((p) => (
+              <div key={p.device} className="bg-cream p-6">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-coral">
+                  {p.device}
+                </p>
+                <ol className="mt-4 space-y-2.5">
+                  {p.steps.map((step, i) => (
+                    <li key={step} className="flex items-start gap-3 text-sm text-chocolate/80">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-coral/12 text-[10px] font-bold tabular-nums text-coral">
+                        {i + 1}
+                      </span>
+                      <span className="leading-snug">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </section>
 
       {/* FINAL CTA */}
