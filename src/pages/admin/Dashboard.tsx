@@ -150,45 +150,45 @@ export default function AdminDashboard() {
 
                         <div className="relative grid gap-6 p-6 text-cream sm:p-8 md:grid-cols-[1.2fr_0.8fr] md:items-end md:gap-10">
                             <div>
-                                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-[0.24em] text-amber">
+                                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-[0.24em] text-cream">
                                     <span className="inline-flex items-center gap-2">
-                                        <span className="h-px w-6 bg-amber" />
+                                        <span className="h-px w-6 bg-cream" />
                                         Panel de control
                                     </span>
-                                    <span className="text-cream/40">·</span>
+                                    <span className="text-cream/45">·</span>
                                     <span className="text-cream/85">{greetingEyebrow}</span>
                                 </div>
-                                <h1 className="mt-4 font-heading text-[clamp(2rem,4.6vw,3.6rem)] font-light leading-[0.95] tracking-[-0.015em] text-cream">
+                                <h1 className="mt-4 font-heading text-[clamp(2rem,4.6vw,3.6rem)] font-light leading-[0.95] tracking-[-0.015em] text-cream drop-shadow-[0_2px_18px_hsla(0,100%,18%,0.35)]">
                                     <span
-                                        className="italic text-amber"
+                                        className="italic text-cream"
                                         style={{ fontVariationSettings: '"opsz" 144' }}
                                     >
                                         Hola,
                                     </span>{' '}
                                     {firstName}.
                                 </h1>
-                                <p className="mt-3 text-sm uppercase tracking-[0.18em] text-cream/65">
+                                <p className="mt-3 text-sm uppercase tracking-[0.18em] text-cream/85">
                                     {dateString}
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[1.2rem] bg-cream/15 md:justify-self-end">
-                                <div className="bg-wine/35 p-4">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber">
+                            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[1.2rem] bg-cream/25 md:justify-self-end">
+                                <div className="bg-wine/55 p-4">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-cream/80">
                                         Cabo
                                     </p>
                                     <p className="mt-2 font-heading text-2xl tabular-nums text-cream">
                                         {timeString}
                                     </p>
                                 </div>
-                                <div className="bg-wine/35 p-4">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber">
+                                <div className="bg-wine/55 p-4">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-cream/80">
                                         Estatus
                                     </p>
                                     <p className="mt-2 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-cream">
                                         <span className="relative flex h-2 w-2">
-                                            <span className="absolute inset-0 animate-ping rounded-full bg-amber/70" />
-                                            <span className="relative h-2 w-2 rounded-full bg-amber" />
+                                            <span className="absolute inset-0 animate-ping rounded-full bg-cream/70" />
+                                            <span className="relative h-2 w-2 rounded-full bg-cream" />
                                         </span>
                                         Abierto
                                     </p>

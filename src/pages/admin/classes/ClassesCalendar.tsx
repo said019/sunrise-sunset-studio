@@ -352,123 +352,218 @@ export default function ClassesCalendar({ initialGenerateOpen = false }: Classes
     return (
         <AuthGuard requiredRoles={['admin', 'instructor']}>
             <AdminLayout>
-                <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col">
-                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
-                        <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-heading font-bold capitalize">
-                                {safeFormat(currentDate, 'MMMM yyyy')}
-                            </h1>
-                            <div className="flex items-center border rounded-md bg-card ml-4">
-                                <Button variant="ghost" size="icon" onClick={handlePrevWeek}>
-                                    <ChevronLeft className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" className="px-3" onClick={handleToday}>
-                                    Hoy
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={handleNextWeek}>
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
+                <div className="flex h-[calc(100vh-140px)] flex-col space-y-6">
+                    {/* HEADER */}
+                    <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-coral">
+                                Calendario semanal
+                            </p>
+                            <div className="mt-2 flex flex-wrap items-end gap-4">
+                                <h1
+                                    className="font-heading text-4xl font-light leading-[1] tracking-[-0.01em] text-chocolate first-letter:capitalize md:text-5xl"
+                                    style={{ fontVariationSettings: '"opsz" 144' }}
+                                >
+                                    <span className="italic text-coral">
+                                        {safeFormat(currentDate, 'MMMM')}
+                                    </span>{' '}
+                                    {safeFormat(currentDate, 'yyyy')}
+                                </h1>
+                                <div className="inline-flex items-center overflow-hidden rounded-full border border-chocolate/15 bg-cream">
+                                    <button
+                                        type="button"
+                                        onClick={handlePrevWeek}
+                                        aria-label="Semana anterior"
+                                        className="flex h-9 w-9 items-center justify-center text-chocolate/65 transition-colors hover:bg-[#FAF1E6] hover:text-coral"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleToday}
+                                        className="border-x border-chocolate/12 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-chocolate transition-colors hover:bg-[#FAF1E6] hover:text-coral"
+                                    >
+                                        Hoy
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleNextWeek}
+                                        aria-label="Semana siguiente"
+                                        className="flex h-9 w-9 items-center justify-center text-chocolate/65 transition-colors hover:bg-[#FAF1E6] hover:text-coral"
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => setIsQrOpen(true)}>
-                                <QrCode className="mr-2 h-4 w-4" /> Check-in QR
-                            </Button>
-
-                            <Button
-                                variant="outline"
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsQrOpen(true)}
+                                className="inline-flex min-h-[2.5rem] items-center gap-2 rounded-full border border-chocolate/15 bg-cream px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-chocolate transition-[transform,background-color,border-color] duration-200 ease-sunrise hover:-translate-y-0.5 hover:border-coral/40 hover:text-coral active:scale-[0.97]"
+                            >
+                                <QrCode className="h-4 w-4" strokeWidth={1.7} /> Check-in QR
+                            </button>
+                            <button
+                                type="button"
                                 onClick={() => {
-                                    if (confirm('¿Estás seguro de BORRAR todas las clases vacías de esta semana visible?')) {
+                                    if (confirm('¿Borrar todas las clases vacías de esta semana visible?')) {
                                         bulkDeleteMutation.mutate();
                                     }
                                 }}
                                 disabled={bulkDeleteMutation.isPending}
+                                className="inline-flex min-h-[2.5rem] items-center gap-2 rounded-full border border-wine/25 bg-cream px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-wine transition-[transform,background-color,border-color] duration-200 ease-sunrise hover:-translate-y-0.5 hover:bg-wine/8 disabled:opacity-50 active:scale-[0.97]"
                             >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                {bulkDeleteMutation.isPending ? 'Borrando...' : 'Limpiar Semana'}
-                            </Button>
-
-                            <Button variant="outline" onClick={() => setIsGenerateOpen(true)}>
-                                <Repeat className="mr-2 h-4 w-4" /> Generar Semanal
-                            </Button>
-                            <Button onClick={() => handleDayClick(new Date())}>
-                                <Plus className="mr-2 h-4 w-4" /> Nueva Clase
-                            </Button>
+                                <Trash2 className="h-4 w-4" strokeWidth={1.7} />
+                                {bulkDeleteMutation.isPending ? 'Borrando' : 'Limpiar Semana'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsGenerateOpen(true)}
+                                className="inline-flex min-h-[2.5rem] items-center gap-2 rounded-full border border-chocolate/15 bg-cream px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-chocolate transition-[transform,background-color,border-color] duration-200 ease-sunrise hover:-translate-y-0.5 hover:border-coral/40 hover:text-coral active:scale-[0.97]"
+                            >
+                                <Repeat className="h-4 w-4" strokeWidth={1.7} /> Generar Semanal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleDayClick(new Date())}
+                                className="inline-flex min-h-[2.5rem] items-center gap-2 rounded-full bg-coral px-5 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-cream shadow-[0_18px_36px_-18px_hsla(14,72%,40%,0.55)] transition-[transform,background-color] duration-200 ease-sunrise hover:-translate-y-0.5 hover:bg-wine active:scale-[0.97]"
+                            >
+                                <Plus className="h-4 w-4" strokeWidth={2} /> Nueva Clase
+                            </button>
                         </div>
                     </div>
 
-                    <div className="flex-1 border rounded-lg bg-card overflow-hidden flex flex-col">
-                        {/* Header Days */}
-                        <div className="grid grid-cols-7 border-b divide-x">
+                    {/* GRID */}
+                    <div className="flex flex-1 flex-col overflow-hidden rounded-[1.4rem] border border-chocolate/12 bg-cream">
+                        {/* Day headers */}
+                        <div className="grid grid-cols-7 border-b border-chocolate/10 bg-[#FAF1E6]">
                             {Array.from({ length: 7 }).map((_, i) => {
                                 const day = addDays(weekStart, i);
                                 const isToday = isSameDay(day, new Date());
                                 const isClosed = closedDaySet.has(format(day, 'yyyy-MM-dd'));
                                 return (
-                                    <div key={i} className={cn("p-3 text-center", isToday && "bg-primary/5", isClosed && "bg-destructive/5")}>
-                                        <div className="text-sm font-medium text-muted-foreground">{DAYS[i]}</div>
-                                        <div className={cn("text-xl font-bold rounded-full w-8 h-8 mx-auto flex items-center justify-center mt-1", isToday && "bg-primary text-primary-foreground")}>
+                                    <div
+                                        key={i}
+                                        className={cn(
+                                            'flex flex-col items-center gap-1.5 px-3 py-4 text-center',
+                                            i < 6 && 'border-r border-chocolate/10',
+                                            isClosed && 'bg-wine/5'
+                                        )}
+                                    >
+                                        <span
+                                            className={cn(
+                                                'text-[10px] font-bold uppercase tracking-[0.22em]',
+                                                isToday ? 'text-coral' : 'text-chocolate/55'
+                                            )}
+                                        >
+                                            {DAYS[i]}
+                                        </span>
+                                        <span
+                                            className={cn(
+                                                'flex h-9 w-9 items-center justify-center rounded-full font-heading text-xl font-light tabular-nums',
+                                                isToday
+                                                    ? 'bg-coral text-cream shadow-[0_8px_22px_-10px_hsla(14,72%,40%,0.55)]'
+                                                    : 'text-chocolate'
+                                            )}
+                                        >
                                             {format(day, 'd')}
-                                        </div>
+                                        </span>
                                         {isClosed && (
-                                            <div className="text-[10px] font-semibold text-destructive mt-1">Cerrado</div>
+                                            <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-wine">
+                                                Cerrado
+                                            </span>
                                         )}
                                     </div>
                                 );
                             })}
                         </div>
 
-                        {/* Calendar Grid */}
-                        <div className="grid grid-cols-7 flex-1 divide-x overflow-y-auto">
+                        {/* Day cells */}
+                        <div className="grid flex-1 grid-cols-7 overflow-y-auto">
                             {Array.from({ length: 7 }).map((_, i) => {
                                 const day = addDays(weekStart, i);
                                 const dayClasses = getClassesForDay(day);
+                                const isToday = isSameDay(day, new Date());
                                 const isClosed = closedDaySet.has(format(day, 'yyyy-MM-dd'));
                                 const closedReason = getClosedReason(day);
                                 return (
-                                    <div key={i} className={cn("min-h-[500px] p-2 space-y-2 hover:bg-muted/10 transition-colors", isClosed && "bg-destructive/5")}>
+                                    <div
+                                        key={i}
+                                        className={cn(
+                                            'group/cell relative min-h-[500px] space-y-2 p-2.5 transition-colors duration-200',
+                                            i < 6 && 'border-r border-chocolate/10',
+                                            isToday ? 'bg-coral/[0.04]' : 'hover:bg-[#FAF1E6]',
+                                            isClosed && 'bg-wine/[0.04] hover:bg-wine/[0.06]'
+                                        )}
+                                    >
                                         {isClosed && (
-                                            <div className="text-xs text-destructive font-medium text-center py-1.5 bg-destructive/10 rounded-md">
+                                            <div className="rounded-lg border border-wine/20 bg-wine/8 px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-wine">
                                                 {closedReason || 'Cerrado'}
                                             </div>
                                         )}
-                                        {dayClasses.map(c => (
-                                            <div
-                                                key={c.id}
-                                                onClick={() => handleClassClick(c)}
-                                                className={cn(
-                                                    "p-2 rounded-md border text-sm shadow-sm transition-all hover:shadow-md cursor-pointer group hover:scale-[1.02]",
-                                                    c.status === 'cancelled' ? "opacity-50 bg-muted" : "bg-card"
-                                                )}
-                                                style={{ borderLeftColor: c.class_type_color || '#ccc', borderLeftWidth: '4px' }}
-                                            >
-                                                <div className="flex justify-between items-start">
-                                                    <div className="font-semibold">{c.start_time}</div>
-                                                    {c.status === 'cancelled' && (
-                                                        <Badge variant="destructive" className="text-[10px] h-4">Cancelada</Badge>
+                                        {dayClasses.map((c) => {
+                                            const isCancelled = c.status === 'cancelled';
+                                            const fillPct = c.max_capacity > 0
+                                                ? Math.min(1, c.current_bookings / c.max_capacity)
+                                                : 0;
+                                            return (
+                                                <button
+                                                    key={c.id}
+                                                    type="button"
+                                                    onClick={() => handleClassClick(c)}
+                                                    className={cn(
+                                                        'group/card w-full overflow-hidden rounded-[0.9rem] border border-chocolate/12 bg-cream p-2.5 text-left transition-[transform,border-color,box-shadow] duration-200 ease-sunrise hover:-translate-y-0.5 hover:border-coral/40 hover:shadow-[0_14px_30px_-16px_hsla(13,66%,28%,0.35)]',
+                                                        isCancelled && 'opacity-55'
                                                     )}
-                                                </div>
-                                                <div className="font-medium truncate mt-1">{c.class_type_name}</div>
-                                                <div className="text-xs text-muted-foreground truncate">{c.instructor_name}</div>
-                                                <div className="text-xs mt-2 flex items-center justify-between">
-                                                    <span className="flex items-center gap-1 text-muted-foreground">
-                                                        <Users className="h-3 w-3" /> {c.current_bookings}/{c.max_capacity}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))}
+                                                >
+                                                    <div className="flex items-baseline justify-between gap-2">
+                                                        <span className="font-heading text-lg font-light leading-none tabular-nums text-chocolate">
+                                                            {c.start_time?.slice(0, 5)}
+                                                        </span>
+                                                        {isCancelled ? (
+                                                            <span className="rounded-full bg-wine/12 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-wine">
+                                                                Cancelada
+                                                            </span>
+                                                        ) : (
+                                                            <span
+                                                                className="h-2 w-2 rounded-full"
+                                                                style={{ backgroundColor: c.class_type_color || '#E36F4C' }}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    <p className="mt-1.5 truncate text-[13px] font-semibold leading-snug text-chocolate">
+                                                        {c.class_type_name}
+                                                    </p>
+                                                    <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.16em] text-chocolate/55">
+                                                        {c.instructor_name}
+                                                    </p>
+                                                    <div className="mt-2 flex items-center justify-between gap-2">
+                                                        <span className="inline-flex items-center gap-1 text-[10px] tabular-nums text-chocolate/60">
+                                                            <Users className="h-3 w-3" strokeWidth={1.7} />
+                                                            {c.current_bookings}/{c.max_capacity}
+                                                        </span>
+                                                        <span className="h-1 flex-1 overflow-hidden rounded-full bg-chocolate/10">
+                                                            <span
+                                                                className="block h-full rounded-full bg-coral"
+                                                                style={{ width: `${fillPct * 100}%` }}
+                                                            />
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
 
-                                        <Button
-                                            variant="ghost"
-                                            className="w-full h-8 text-xs border-dashed border opacity-0 hover:opacity-100"
+                                        <button
+                                            type="button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleDayClick(day);
                                             }}
+                                            className="flex w-full items-center justify-center gap-1.5 rounded-[0.9rem] border border-dashed border-chocolate/15 px-2 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-chocolate/50 opacity-0 transition-[opacity,background-color,color,border-color] duration-200 hover:bg-[#FAF1E6] hover:text-coral group-hover/cell:opacity-100"
                                         >
-                                            <Plus className="h-3 w-3" />
-                                        </Button>
+                                            <Plus className="h-3 w-3" strokeWidth={2} /> Clase
+                                        </button>
                                     </div>
                                 );
                             })}
