@@ -382,15 +382,6 @@ export default function ClientDetail() {
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Editar Datos
                             </Button>
-                            <Button
-                                variant="outline"
-                                className="rounded-xl font-body border-border/60 hover:border-amber/50 hover:text-amber transition-colors"
-                                onClick={() => navigate(`/admin/members/${id}/assign-membership`)}
-                            >
-                                <User className="mr-2 h-4 w-4" />
-                                Inscripción Manual
-                            </Button>
-
                             <MonthBookingDialog
                                 userId={client.id}
                                 userName={client.display_name}

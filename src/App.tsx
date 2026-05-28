@@ -71,12 +71,8 @@ import WorkoutTemplates from "./pages/admin/classes/WorkoutTemplates";
 import BookingsList from "./pages/admin/bookings/BookingsList";
 import Waitlist from "./pages/admin/bookings/Waitlist";
 import MemberNew from "./pages/admin/members/MemberNew";
-import AssignMembership from "./pages/admin/members/AssignMembership";
 import PhysicalSale from "./pages/admin/members/PhysicalSale";
 import PaymentsHub from "./pages/admin/payments/PaymentsHub";
-
-// Migration pages - New complete system
-import { ClientMigrationPage } from "./pages/admin/ClientMigrationPage";
 
 // Settings pages
 import GeneralSettings from "./pages/admin/settings/GeneralSettings";
@@ -221,7 +217,6 @@ const App = () => (
 
             <Route path="/admin/members" element={<ClientsList />} />
             <Route path="/admin/members/new" element={<MemberNew />} />
-            <Route path="/admin/members/:userId/assign-membership" element={<AssignMembership />} />
             <Route path="/admin/members/:userId/physical-sale" element={<PhysicalSale />} />
             <Route path="/admin/members/:id" element={<ClientDetail />} />
 
@@ -262,9 +257,6 @@ const App = () => (
             <Route path="/admin/settings/closed-days" element={<ClosedDays />} />
             <Route path="/admin/settings/whatsapp" element={<WhatsAppSettings />} />
             <Route path="/admin/settings" element={<Navigate to="/admin/settings/general" replace />} />
-
-            {/* Migration History Route - Only for reports */}
-            <Route path="/admin/migrations/history" element={<ClientMigrationPage />} />
 
             <Route path="/admin/facilities" element={<FacilitiesList />} />
             <Route path="/admin/orders" element={<Navigate to="/admin/payments" replace />} />
