@@ -300,6 +300,29 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Plan no encontrado o no disponible' });
         }
 
+        // Clase Muestra is a one-time trial — one per person. Block a second
+        // purchase if the user already has a trial membership, or a trial order
+        // that's approved / awaiting verification (a still-pending unpaid order
+        // for the same plan is handled by the duplicate-order check below).
+        if (plan.name === 'Clase Muestra') {
+            const priorTrial = await queryOne<{ exists: boolean }>(
+                `SELECT EXISTS (
+                    SELECT 1 FROM memberships m JOIN plans p ON p.id = m.plan_id
+                     WHERE m.user_id = $1 AND p.name = 'Clase Muestra'
+                    UNION ALL
+                    SELECT 1 FROM orders o JOIN plans p ON p.id = o.plan_id
+                     WHERE o.user_id = $1 AND p.name = 'Clase Muestra'
+                       AND o.status IN ('approved', 'pending_verification')
+                 ) AS exists`,
+                [userId]
+            );
+            if (priorTrial?.exists) {
+                return res.status(409).json({
+                    error: 'La clase muestra es una sola vez por persona y ya tienes una registrada.',
+                });
+            }
+        }
+
         // Detect same-day trial → inscription discount.
         // Applies when the client is enrolling (Inscripción) and already has a
         // Clase Muestra membership created today in Mexico City time.
