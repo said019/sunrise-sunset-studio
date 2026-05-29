@@ -949,9 +949,7 @@ const Index = () => {
       >
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-3" aria-label="Sunrise Sunset inicio">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-coral text-cream">
-              <SunGlyph className="h-6 w-6" />
-            </span>
+            <img src="/logo.svg" alt="Sunrise Sunset" className="h-10 w-10 rounded-xl object-cover" />
             <span className="font-heading text-lg leading-none text-chocolate">
               Sunrise <span className="italic font-light text-coral">Sunset</span>
             </span>
@@ -1995,9 +1993,7 @@ const Index = () => {
           <div className="grid gap-12 lg:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr]">
             <div>
               <Link to="/" className="flex items-center gap-3" aria-label="Sunrise Sunset">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-cream text-coral">
-                  <SunGlyph className="h-7 w-7" />
-                </span>
+                <img src="/logo.svg" alt="Sunrise Sunset" className="h-12 w-12 rounded-xl object-cover" />
                 <span className="font-heading text-2xl leading-none">
                   Sunrise{" "}
                   <span className="italic font-light text-amber">Sunset</span>
