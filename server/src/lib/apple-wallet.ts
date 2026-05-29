@@ -572,12 +572,16 @@ export async function buildApplePassBuffer(membershipId: string): Promise<Buffer
     if (!WALLET_ELIGIBLE_STATUSES.has(m.status)) throw new Error('Membresia no elegible para wallet: ' + m.status);
     if (!APPLE_TEAM_ID || !APPLE_PASS_TYPE_ID) throw new Error('Faltan APPLE_TEAM_ID o APPLE_PASS_TYPE_ID');
     const assetsDir = path.resolve(process.cwd(), 'wallet-assets');
-    const certPath = process.env.APPLE_PASS_CERT || path.join(assetsDir, 'pass.pem');
+    // Certs/key may come from base64 env vars (Railway-friendly — no private keys
+    // committed to git) or fall back to PEM files in wallet-assets/.
+    const fromB64 = (v?: string) => (v ? Buffer.from(v, 'base64').toString('utf8') : null);
     const keyPath = process.env.APPLE_PASS_KEY || path.join(assetsDir, 'pass.key');
-    const wwdrPath = process.env.APPLE_WWDR || path.join(assetsDir, 'wwdr.pem');
-    const signerCert = readPemFile(certPath);
-    const signerKey = fs.readFileSync(path.isAbsolute(keyPath) ? keyPath : path.resolve(process.cwd(), keyPath), 'utf8');
-    const wwdr = readPemFile(wwdrPath);
+    const signerCert = fromB64(process.env.APPLE_PASS_CERT_BASE64)
+        || readPemFile(process.env.APPLE_PASS_CERT || path.join(assetsDir, 'pass.pem'));
+    const signerKey = fromB64(process.env.APPLE_PASS_KEY_BASE64)
+        || fs.readFileSync(path.isAbsolute(keyPath) ? keyPath : path.resolve(process.cwd(), keyPath), 'utf8');
+    const wwdr = fromB64(process.env.APPLE_WWDR_BASE64)
+        || readPemFile(process.env.APPLE_WWDR || path.join(assetsDir, 'wwdr.pem'));
     const modelDir = buildTempModelDir(m);
     const buffers: { [key: string]: Buffer } = {};
     for (const file of fs.readdirSync(modelDir)) {
@@ -672,9 +676,11 @@ export async function checkAppleWalletConfig(): Promise<{
         result.hasAPNsKey = !!APPLE_APNS_KEY_BASE64;
         result.hasKeyId = !!APPLE_KEY_ID;
         const assetsDir = path.resolve(process.cwd(), 'wallet-assets');
-        result.hasCertificates = fs.existsSync(path.join(assetsDir, 'pass.pem'))
+        const certB64 = !!(process.env.APPLE_PASS_CERT_BASE64 && process.env.APPLE_PASS_KEY_BASE64 && process.env.APPLE_WWDR_BASE64);
+        result.hasCertificates = certB64 || (
+            fs.existsSync(path.join(assetsDir, 'pass.pem'))
             && fs.existsSync(path.join(assetsDir, 'pass.key'))
-            && fs.existsSync(path.join(assetsDir, 'wwdr.pem'));
+            && fs.existsSync(path.join(assetsDir, 'wwdr.pem')));
         result.configured = !!(result.teamId && result.passTypeId && result.hasAuthToken && result.hasCertificates);
         result.canSendPush = !!(result.teamId && result.hasAPNsKey && result.hasKeyId);
     } catch (error) {
