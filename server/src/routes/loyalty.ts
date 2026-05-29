@@ -253,7 +253,7 @@ router.get('/redemptions', authenticate, requireRole('admin'), async (req: Reque
     try {
         const redemptions = await query(
             `SELECT lr.*, 
-                    u.first_name || ' ' || u.last_name as user_name,
+                    u.display_name as user_name,
                     u.email as user_email,
                     lrw.name as reward_name
              FROM loyalty_redemptions lr

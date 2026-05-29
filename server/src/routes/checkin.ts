@@ -229,7 +229,7 @@ const awardCheckinPoints = async (userId: string, bookingId: string): Promise<vo
     // Send WhatsApp notification for points earned
     try {
       const notifSettings = await queryOne<{ value: any }>(
-        "SELECT value FROM settings WHERE key = 'notification_settings'"
+        "SELECT value FROM system_settings WHERE key = 'notification_settings'"
       );
       if (notifSettings?.value?.send_points_earned !== false) {
         const user = await queryOne<{ display_name: string; phone: string; loyalty_points: number }>(

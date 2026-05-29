@@ -596,7 +596,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
         // Send WhatsApp confirmation (async, don't block response)
         try {
             const notifSettings = await queryOne(
-                "SELECT value FROM settings WHERE key = 'notification_settings'"
+                "SELECT value FROM system_settings WHERE key = 'notification_settings'"
             );
             const shouldSend = notifSettings?.value?.send_booking_confirmation !== false;
 
@@ -1425,7 +1425,7 @@ router.post('/:id/cancel', authenticate, async (req: Request, res: Response) => 
         // Send WhatsApp cancellation notice
         try {
             const notifSettings = await queryOne(
-                "SELECT value FROM settings WHERE key = 'notification_settings'"
+                "SELECT value FROM system_settings WHERE key = 'notification_settings'"
             );
             const shouldNotify = notifSettings?.value?.send_cancellation_notice !== false;
 

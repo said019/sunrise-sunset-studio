@@ -711,8 +711,8 @@ router.post('/instructor/request-access', async (req: Request, res: Response) =>
 
         // Check if instructor exists with this email
         const instructor = await queryOne<{ id: string; display_name: string; email: string }>(
-            'SELECT id, display_name, email FROM instructors WHERE email = $1 AND status = $2',
-            [email.toLowerCase(), 'active']
+            'SELECT id, display_name, email FROM instructors WHERE email = $1 AND is_active = true',
+            [email.toLowerCase()]
         );
 
         // Always return success even if instructor doesn't exist (security)
@@ -780,13 +780,13 @@ router.post('/instructor/verify-magic-link', async (req: Request, res: Response)
             email: string;
             display_name: string;
             role: string;
-            status: string;
+            is_active: boolean;
         }>(
-            'SELECT id, email, display_name, role, status FROM instructors WHERE email = $1',
+            "SELECT id, email, display_name, is_active, 'instructor'::text AS role FROM instructors WHERE email = $1",
             [payload.email]
         );
 
-        if (!instructor || instructor.status !== 'active') {
+        if (!instructor || !instructor.is_active) {
             return res.status(404).json({
                 error: 'Instructor no encontrado',
                 message: 'No se encontró un instructor activo con este correo.',

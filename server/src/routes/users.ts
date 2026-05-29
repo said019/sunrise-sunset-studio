@@ -802,7 +802,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
         const historyChecks = await Promise.all([
             queryOne<{ count: string }>('SELECT COUNT(*) as count FROM bookings WHERE user_id = $1', [id]),
             queryOne<{ count: string }>('SELECT COUNT(*) as count FROM memberships WHERE user_id = $1', [id]),
-            queryOne<{ count: string }>('SELECT COUNT(*) as count FROM transactions WHERE user_id = $1', [id]),
+            queryOne<{ count: string }>('SELECT COUNT(*) as count FROM payments WHERE user_id = $1', [id]),
         ]);
         const hasHistory = historyChecks.some(check => parseInt(check?.count || '0', 10) > 0);
 
