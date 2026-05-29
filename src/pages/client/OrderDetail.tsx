@@ -57,6 +57,61 @@ const statusConfig: Record<OrderStatus, { label: string; icon: typeof Clock; var
   cancelled: { label: 'Cancelado', icon: XCircle, variant: 'secondary' },
 };
 
+// Prepare a file for upload. Large images (especially full-res iPhone photos)
+// are downscaled + re-encoded as JPEG so the base64 payload stays small enough
+// to upload reliably on mobile — sending a multi-MB photo as inline base64 over
+// cellular is what made the upload hang. PDFs are sent unchanged.
+async function prepareProofUpload(
+  file: File,
+): Promise<{ dataUrl: string; type: string; name: string }> {
+  const readAsDataUrl = (f: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(f);
+    });
+
+  const original = await readAsDataUrl(file);
+  if (!file.type.startsWith('image/')) {
+    return { dataUrl: original, type: file.type, name: file.name };
+  }
+
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = reject;
+      im.src = original;
+    });
+
+    const MAX = 1600;
+    let width = img.naturalWidth || img.width;
+    let height = img.naturalHeight || img.height;
+    if (Math.max(width, height) > MAX) {
+      const scale = MAX / Math.max(width, height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return { dataUrl: original, type: file.type, name: file.name };
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const compressed = canvas.toDataURL('image/jpeg', 0.82);
+    if (compressed.length < original.length) {
+      const name = file.name.replace(/\.[a-z0-9]+$/i, '') + '.jpg';
+      return { dataUrl: compressed, type: 'image/jpeg', name };
+    }
+  } catch {
+    // Fall back to the original on any decode/canvas failure.
+  }
+  return { dataUrl: original, type: file.type, name: file.name };
+}
+
 export default function OrderDetail() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
@@ -90,26 +145,31 @@ export default function OrderDetail() {
   const uploadProof = useMutation({
     mutationFn: async () => {
       if (!orderId) throw new Error('No order selected');
-      
-      // Convert file to base64 if present
-      let fileData = null;
+
+      // Downscale/compress images client-side so the payload stays small and
+      // uploads reliably on mobile (a raw iPhone photo as base64 made it hang).
+      let fileData: string | null = null;
+      let fileName: string | null = null;
+      let fileType: string | null = null;
       if (selectedFile) {
-        fileData = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(selectedFile);
-        });
+        const prepared = await prepareProofUpload(selectedFile);
+        fileData = prepared.dataUrl;
+        fileName = prepared.name;
+        fileType = prepared.type;
       }
-      
-      const res = await api.post(`/orders/${orderId}/upload-proof`, {
-        transfer_reference: transferReference || '',
-        transfer_date: transferDate || null,
-        notes: proofNotes || '',
-        file_data: fileData,
-        file_name: selectedFile?.name || null,
-        file_type: selectedFile?.type || null,
-      });
+
+      const res = await api.post(
+        `/orders/${orderId}/upload-proof`,
+        {
+          transfer_reference: transferReference || '',
+          transfer_date: transferDate || null,
+          notes: proofNotes || '',
+          file_data: fileData,
+          file_name: fileName,
+          file_type: fileType,
+        },
+        { timeout: 60000 }, // safety net so a stalled upload fails instead of spinning forever
+      );
       return res.data;
     },
     onSuccess: () => {
@@ -164,21 +224,25 @@ export default function OrderDetail() {
     if (!file) return;
     
     // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'application/pdf'];
-    if (!validTypes.includes(file.type)) {
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/heic', 'image/heif', 'application/pdf'];
+    if (file.type && !validTypes.includes(file.type)) {
       toast({
         title: 'Tipo de archivo no válido',
-        description: 'Solo se permiten imágenes (JPG, PNG, WebP) o PDF',
+        description: 'Solo se permiten imágenes (JPG, PNG, WebP, HEIC) o PDF',
         variant: 'destructive',
       });
       return;
     }
-    
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
+
+    // Size cap. Images are downscaled/compressed before upload, so we allow
+    // large originals (full-res phone photos). PDFs are sent as-is → capped lower.
+    const maxBytes = file.type === 'application/pdf' ? 8 * 1024 * 1024 : 25 * 1024 * 1024;
+    if (file.size > maxBytes) {
       toast({
         title: 'Archivo demasiado grande',
-        description: 'El archivo no debe superar los 5MB',
+        description: file.type === 'application/pdf'
+          ? 'El PDF no debe superar los 8MB'
+          : 'La imagen no debe superar los 25MB',
         variant: 'destructive',
       });
       return;
