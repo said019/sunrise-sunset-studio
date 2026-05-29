@@ -49,22 +49,13 @@ railway domain --service sunrise-web
 railway up --service sunrise-api --ci
 railway up --service sunrise-web --ci
 
-# 7. Seed the production DB (one-time, from local against the Railway Postgres)
-#    NOTE: schema_complete.sql is an older consolidated snapshot — it's missing
-#    columns that the code references (e.g. users.password_hash, users.is_prospect).
-#    You MUST apply EVERY migration in database/migrations/ after schema_complete,
-#    not just 022/023. All migrations are idempotent (IF NOT EXISTS guards).
+# 7. Seed the production DB (one-time, from local against the Railway Postgres).
+#    database/schema.prod.sql is the AUTHORITATIVE full schema (pg_dump --schema-only
+#    from prod, PostgreSQL 18). It already includes everything — do NOT replay the
+#    old schema_complete.sql/schema.sql (removed) or the migrations on top of it.
 #    Use the proxy DATABASE_URL from `railway variables --service Postgres`.
 DB_PROXY="<paste from `railway variables --service Postgres`>"
-psql "$DB_PROXY" -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; CREATE EXTENSION IF NOT EXISTS pgcrypto;'
-# Schema snapshot. Use psql WITHOUT -v ON_ERROR_STOP=1; the snapshot contains a
-# bad ADD CONSTRAINT IF NOT EXISTS line that errors on PG18 but is harmless.
-psql "$DB_PROXY" -f database/schema_complete.sql 2>&1 | tail -5
-# All migrations in numeric order (the loop handles the 001/002/003 duplicates fine).
-for f in database/migrations/*.sql; do
-  echo "→ $(basename "$f")"
-  psql "$DB_PROXY" -f "$f" 2>&1 | grep -E "^(ALTER|CREATE|INSERT|UPDATE|DELETE|ERROR)" | tail -2
-done
+psql "$DB_PROXY" -f database/schema.prod.sql 2>&1 | tail -5
 # Sunrise catalog seeds.
 psql "$DB_PROXY" -f database/seeds/sunrise_class_types.sql
 psql "$DB_PROXY" -f database/seeds/sunrise_packages.sql
