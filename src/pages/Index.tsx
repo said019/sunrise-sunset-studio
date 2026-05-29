@@ -45,6 +45,15 @@ const fadeUp = {
 
 const navTargets = ["#ritual", "#practica", "#manifiesto", "#coaches", "#paquetes", "#visita"];
 
+// Round face-crops for the schedule's COACH column. Keyed by the coach name
+// used in the (demo) schedule data; cropped from the Coaches section photos.
+const COACH_PHOTOS: Record<string, string> = {
+  Adri: "/coach-avatars/adri.jpg",
+  Amber: "/coach-avatars/amber.jpg",
+  Khalia: "/coach-avatars/khalia.jpg",
+  Ceci: "/coach-avatars/ceci.jpg",
+};
+
 const content = {
   es: {
     nav: ["Ritual", "Práctica", "Manifiesto", "Coaches", "Paquetes", "Visita"],
@@ -1267,7 +1276,17 @@ const Index = () => {
                           </p>
                           {/* mobile-only meta below title */}
                           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] uppercase tracking-[0.18em] text-chocolate/60 lg:hidden">
-                            <span>{slot.coach}</span>
+                            <span className="inline-flex items-center gap-1.5">
+                              {COACH_PHOTOS[slot.coach] ? (
+                                <img
+                                  src={COACH_PHOTOS[slot.coach]}
+                                  alt={slot.coach}
+                                  loading="lazy"
+                                  className="h-5 w-5 rounded-full object-cover"
+                                />
+                              ) : null}
+                              {slot.coach}
+                            </span>
                             <span className="text-chocolate/25">·</span>
                             <IntensityDots
                               level={slot.intensity}
@@ -1276,9 +1295,19 @@ const Index = () => {
                           </div>
                         </div>
 
-                        <span className="hidden text-[11px] font-semibold uppercase tracking-[0.18em] text-chocolate/75 lg:inline">
-                          {slot.coach}
-                        </span>
+                        <div className="hidden items-center gap-2.5 lg:flex">
+                          {COACH_PHOTOS[slot.coach] ? (
+                            <img
+                              src={COACH_PHOTOS[slot.coach]}
+                              alt={slot.coach}
+                              loading="lazy"
+                              className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-chocolate/10"
+                            />
+                          ) : null}
+                          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-chocolate/75">
+                            {slot.coach}
+                          </span>
+                        </div>
 
                         <div className="hidden lg:inline-flex">
                           <IntensityDots
