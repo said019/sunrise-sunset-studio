@@ -31,16 +31,28 @@
 
 - `user_role`: client, instructor, admin, super_admin, reception
 - `membership_status`: pending_payment, pending_activation, active, expired, paused, cancelled
-- `payment_method`: cash, transfer, card, online
+- `payment_method`: cash, transfer, card, online, bank_transfer
 - `class_status`: scheduled, in_progress, completed, cancelled
 - `booking_status`: confirmed, waitlist, checked_in, no_show, cancelled
 - `wallet_platform`: apple, google
 
 ## Aplicación de migraciones
 
-El orden de despliegue está documentado en `docs/superpowers/deploy.md`.
-Resumen: aplica `schema_complete.sql` (o las migraciones en orden numérico)
-+ los seeds Sunrise.
+**`schema.prod.sql` es el snapshot autoritativo del esquema de PRODUCCIÓN**
+(`pg_dump --schema-only` desde Railway, server PostgreSQL 18). Aplicarlo
+reproduce el esquema de prod EXACTAMENTE — úsalo para cualquier setup nuevo
+o staging, y luego los seeds Sunrise.
+
+> ⚠️ `schema_complete.sql` y `schema.sql` están **OBSOLETOS** (snapshots viejos
+> heredados del fork de Catarsis, incompletos). Fueron la causa del "schema
+> drift" reconciliado en las migraciones 026–028. **No los uses.**
+>
+> Regenerar el snapshot tras aplicar cualquier migración nueva a prod:
+> ```bash
+> railway run --service Postgres -- bash -c \
+>   '/opt/homebrew/opt/postgresql@18/bin/pg_dump --schema-only --no-owner --no-privileges "$DATABASE_PUBLIC_URL"' \
+>   > database/schema.prod.sql
+> ```
 
 ### Comandos útiles (local)
 
@@ -48,13 +60,9 @@ Resumen: aplica `schema_complete.sql` (o las migraciones en orden numérico)
 # Crear DB
 createdb sunrise_sunset
 
-# Aplicar esquema base
-psql -d sunrise_sunset -f database/schema_complete.sql
-
-# Aplicar migraciones posteriores en orden
-for f in database/migrations/0*.sql; do
-  psql -d sunrise_sunset -f "$f"
-done
+# Aplicar el esquema base (snapshot autoritativo de prod — ya incluye TODO,
+# no hace falta aplicar migraciones encima)
+psql -d sunrise_sunset -f database/schema.prod.sql
 
 # Aplicar seeds Sunrise (catálogo de planes + clases)
 psql -d sunrise_sunset -f database/seeds/sunrise_class_types.sql
