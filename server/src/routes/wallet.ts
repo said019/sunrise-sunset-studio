@@ -291,8 +291,15 @@ router.post('/pass/apple', authenticate, requireRole('client'), async (req: Requ
 
         // Generate temporary download token
         const token = generateDownloadToken(membership.id);
-        let baseUrl = process.env.BASE_URL || 'https://valiant-imagination-production-0462.up.railway.app';
-        if (!baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
+        // Only accept a real http(s) BASE_URL; ignore a misconfigured value (e.g.
+        // DATABASE_URL) and fall back to the service's own public domain so we never
+        // build a broken link or leak credentials into a user-facing pass URL.
+        let baseUrl = process.env.BASE_URL || '';
+        if (!/^https?:\/\//.test(baseUrl)) {
+            baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN
+                ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+                : 'https://sunrise-api-production-40bb.up.railway.app';
+        }
         const downloadUrl = `${baseUrl}/api/wallet/download/apple/${token}`;
 
         res.json({ downloadUrl, membershipId: membership.id });

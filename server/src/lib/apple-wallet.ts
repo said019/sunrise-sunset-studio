@@ -403,8 +403,12 @@ function buildTempModelDir(m: MembershipData): string {
     const base = fs.mkdtempSync(path.join(os.tmpdir(), 'sunrise-pass-'));
     const dir = base + '.pass';
     fs.mkdirSync(dir, { recursive: true });
-    let baseUrl = process.env.BASE_URL || 'https://sunrise-api-production.up.railway.app';
-    if (!baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
+    let baseUrl = process.env.BASE_URL || '';
+    if (!/^https?:\/\//.test(baseUrl)) {
+        baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN
+            ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+            : 'https://sunrise-api-production-40bb.up.railway.app';
+    }
     const frontendUrl = process.env.FRONTEND_URL || 'https://sunrise-web-production.up.railway.app';
 
     const endDate = getValidDate(m.end_date);

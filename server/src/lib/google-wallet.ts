@@ -266,8 +266,12 @@ export async function createGoogleLoyaltyClass(): Promise<{ success: boolean; cl
 
         const classId = `${creds.issuerId}.${CLASS_SUFFIX}`;
         const frontendUrl = (process.env.FRONTEND_URL || 'https://sunrise-web-production.up.railway.app').replace(/\/$/, '');
-        let baseUrl = process.env.BASE_URL || 'https://sunrise-api-production.up.railway.app';
-        if (!baseUrl.startsWith('http')) baseUrl = 'https://' + baseUrl;
+        let baseUrl = process.env.BASE_URL || '';
+        if (!/^https?:\/\//.test(baseUrl)) {
+            baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN
+                ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+                : 'https://sunrise-api-production-40bb.up.railway.app';
+        }
 
         const logoUrl = `${frontendUrl}/wallet/sunrise-logo.png`;
         const heroUrl = `${frontendUrl}/wallet/sunset-hero.png`;
