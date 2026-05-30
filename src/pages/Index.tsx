@@ -62,6 +62,28 @@ const CLASS_COLORS: Record<string, string> = {
   yoga: "#D99A3C",
 };
 
+// Surfboard glyph for Surf-Pilates classes (lucide has no surfboard icon).
+// A clean longboard silhouette with a center stringer line.
+function SurfboardIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      {/* board outline: pointed nose, rounded tail, tilted 45° */}
+      <path d="M4.2 19.8C1.6 17.2 5 8 9.8 4.2 14.6.4 19.6 1.4 20.6 2.4c1 1 2 6-1.8 10.8C15 18 7 21.4 4.2 19.8Z" />
+      {/* center stringer */}
+      <path d="M7.2 16.8 16.8 7.2" />
+    </svg>
+  );
+}
+
 const content = {
   es: {
     nav: ["Horarios", "Práctica", "Manifiesto", "Coaches", "Paquetes", "Visita"],
@@ -1318,9 +1340,12 @@ const Index = () => {
                       <div className="lg:contents">
                         <div>
                           <p
-                            className="font-heading text-xl font-light leading-tight md:text-2xl"
+                            className="flex items-center gap-2 font-heading text-xl font-light leading-tight md:text-2xl"
                             style={{ color: CLASS_COLORS[slot.type] ?? "#6E4528" }}
                           >
+                            {slot.type === "surf" ? (
+                              <SurfboardIcon className="h-5 w-5 shrink-0 md:h-[22px] md:w-[22px]" />
+                            ) : null}
                             {slot.title}
                             {slot.modifier ? (
                               <>
