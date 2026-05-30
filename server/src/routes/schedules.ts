@@ -19,6 +19,27 @@ const ScheduleSchema = z.object({
 });
 
 // ============================================
+// GET /api/schedules/public - Public weekly schedule for the landing page (no auth)
+// ============================================
+router.get('/public', async (_req: Request, res: Response) => {
+    try {
+        const rows = await query(`
+            SELECT s.day_of_week, s.start_time, s.end_time, s.max_capacity,
+                   ct.name AS class_type, i.display_name AS coach
+            FROM schedules s
+            JOIN class_types ct ON ct.id = s.class_type_id
+            JOIN instructors i ON i.id = s.instructor_id
+            WHERE s.is_active = true AND s.is_recurring = true
+            ORDER BY s.day_of_week, s.start_time
+        `);
+        res.json(rows);
+    } catch (error) {
+        console.error('Public schedule error:', error);
+        res.status(500).json({ error: 'Error al obtener el horario' });
+    }
+});
+
+// ============================================
 // GET /api/schedules - List all schedules (Usually Admin)
 // ============================================
 router.get('/', authenticate, requireRole('admin', 'instructor'), async (req: Request, res: Response) => {

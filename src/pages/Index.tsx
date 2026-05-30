@@ -16,6 +16,8 @@ import {
 import heroImage from "@/assets/hero.jpeg";
 import pilatesImage from "@/assets/hero-pilates.jpg";
 import { nowInStudioTz, formatStudioTime } from "@/lib/date";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/api";
 
 type Lang = "es" | "en";
 interface BeforeInstallPromptEvent extends Event {
@@ -897,7 +899,50 @@ const Index = () => {
     });
   }, [now]);
 
-  const daySlots = t.weekSchedule[selectedDay] ?? [];
+  // Live weekly schedule from the studio's real recurring classes (public
+  // endpoint). Falls back to the static sample while loading / if unavailable.
+  const { data: liveSchedule } = useQuery<Array<{
+    day_of_week: number; start_time: string; end_time: string;
+    max_capacity: number; class_type: string; coach: string;
+  }>>({
+    queryKey: ["public-schedule"],
+    queryFn: async () => (await api.get("/schedules/public")).data,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const realWeekSchedule = useMemo(() => {
+    if (!liveSchedule || liveSchedule.length === 0) return null;
+    const typeMap: Record<string, { type: ClassType; intensity: 1 | 2 | 3 }> = {
+      "Sculpt-Funcional": { type: "sculpt", intensity: 2 },
+      "Surf-Pilates": { type: "surf", intensity: 3 },
+      Yoga: { type: "yoga", intensity: 1 },
+    };
+    const week: any[][] = [[], [], [], [], [], [], []];
+    for (const r of liveSchedule) {
+      const m = typeMap[r.class_type];
+      if (!m) continue;
+      const idx = (r.day_of_week + 6) % 7; // DB 0=Dom..6=Sáb → 0=Lun..6=Dom
+      const start = String(r.start_time).slice(0, 5);
+      const end = String(r.end_time).slice(0, 5);
+      const [sh, sm] = start.split(":").map(Number);
+      const [eh, em] = end.split(":").map(Number);
+      week[idx].push({
+        time: start,
+        duration: eh * 60 + em - (sh * 60 + sm),
+        title: r.class_type,
+        type: m.type,
+        coach: String(r.coach).split(" ")[0],
+        intensity: m.intensity,
+        spots: r.max_capacity,
+        capacity: r.max_capacity,
+      });
+    }
+    week.forEach((d) => d.sort((a, b) => a.time.localeCompare(b.time)));
+    return week;
+  }, [liveSchedule]);
+
+  const weekSchedule = realWeekSchedule ?? t.weekSchedule;
+  const daySlots = weekSchedule[selectedDay] ?? [];
   const visibleSlots = selectedFilter
     ? daySlots.filter((s) => s.type === selectedFilter)
     : daySlots;
