@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuthStore } from '@/stores/authStore';
 import api from '@/lib/api';
-import { safeFormat } from '@/lib/date';
+import { safeFormat, parseDbDateLocal } from '@/lib/date';
 import type { User } from '@/types/auth';
 import { Calendar, Phone, Shield, User as UserIcon, KeyRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -84,7 +84,7 @@ export default function Profile() {
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span>
                         {profile.date_of_birth
-                          ? safeFormat(new Date(profile.date_of_birth), 'dd MMM yyyy')
+                          ? safeFormat(parseDbDateLocal(profile.date_of_birth), 'dd MMM yyyy')
                           : 'Sin fecha de nacimiento'}
                       </span>
                     </div>

@@ -17,7 +17,7 @@ import {
     UserPlus,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { safeFormat } from '@/lib/date';
+import { safeFormat, parseDbDateLocal } from '@/lib/date';
 
 const SunGlyph = ({ className = '' }: { className?: string }) => (
     <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
@@ -527,8 +527,8 @@ export default function AdminDashboard() {
                             </div>
                             <ul className="grid gap-px bg-chocolate/10 sm:grid-cols-2 lg:grid-cols-3">
                                 {birthdays.map((b: any) => {
-                                    const bday = new Date(b.date_of_birth);
-                                    const day = bday.getUTCDate();
+                                    const bday = parseDbDateLocal(b.date_of_birth) ?? new Date(b.date_of_birth);
+                                    const day = bday.getDate();
                                     const today = now;
                                     const isToday = day === today.getDate();
                                     const isPast = day < today.getDate();

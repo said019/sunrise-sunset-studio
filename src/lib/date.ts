@@ -59,6 +59,28 @@ export function formatStudioTime(
     return now.toLocaleTimeString(locale, { ...options, timeZone: STUDIO_TZ });
 }
 
+/**
+ * Parses a DB `date`-column value (e.g. `"2005-04-19"` or `"2005-04-19T00:00:00Z"`)
+ * into a `Date` anchored at LOCAL midnight, NOT UTC midnight.
+ *
+ * `new Date("2005-04-19")` is interpreted by JS as UTC midnight, which then
+ * rolls back to the previous calendar day for any visitor west of UTC (México,
+ * US, etc.) — so April 19 displays as April 18. Building the Date from its
+ * Y/M/D components keeps the calendar day stable everywhere. Always use this
+ * for date-only values (birthdays, etc.); never `new Date(string)` directly.
+ */
+export function parseDbDateLocal(value: string | Date | null | undefined): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) {
+    const d = new Date(value);
+    return isValid(d) ? d : null;
+  }
+  const [, y, m, d] = match;
+  return new Date(Number(y), Number(m) - 1, Number(d));
+}
+
 export function formatDbDate(value: string | Date | null | undefined): string {
   if (!value) return 'Sin fecha';
   const iso = value instanceof Date ? value.toISOString() : String(value);

@@ -618,7 +618,7 @@ export default function ClientDetail() {
                                                         setEditingBirthday(true);
                                                     }}
                                                 >
-                                                    {client.date_of_birth ? new Date(client.date_of_birth).toLocaleDateString() : 'Sin fecha nac.'}
+                                                    {client.date_of_birth ? formatDbDate(client.date_of_birth) : 'Sin fecha nac.'}
                                                     <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </span>
                                             )}
