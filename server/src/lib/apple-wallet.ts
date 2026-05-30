@@ -39,9 +39,9 @@ const STUDIO_TZ_OFFSET = '-07:00';
 // Pass color scheme — cream surface + chocolate body + rose label.
 // The sunset strip supplies all the warmth; everything else stays calm.
 const PASS_STYLE = {
-    backgroundColor: 'rgb(239, 231, 217)',   // #EFE7D9 cream
-    foregroundColor: 'rgb(110, 69, 40)',     // #6E4528 chocolate
-    labelColor: 'rgb(199, 126, 111)',        // #C67E6F rose
+    backgroundColor: 'rgb(247, 237, 222)',   // #F7EDDE warm cream (seamless with strip)
+    foregroundColor: 'rgb(92, 52, 28)',      // #5C341C deep chocolate (AAA over the dawn strip)
+    labelColor: 'rgb(193, 106, 74)',         // #C16A4A burnt coral
 };
 
 interface MembershipData {
@@ -96,11 +96,14 @@ function formatDate(date: Date | string | null | undefined): string {
     if (!date) return '—';
     const parsed = new Date(date);
     if (Number.isNaN(parsed.getTime())) return '—';
-    return parsed.toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' });
+    // "28 may. 2026" → "28 May 2026" (drop the abbreviation dot, capitalize month)
+    return parsed.toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })
+        .replace('.', '')
+        .replace(/ ([a-zà-ÿ])/, (_, c: string) => ' ' + c.toUpperCase());
 }
 
 function formatClassesRemaining(classes: number | null): string {
-    if (classes === null || classes === -1) return 'ILIMITADAS';
+    if (classes === null || classes === -1) return 'Ilimitadas';
     if (classes === 0) return 'Sin créditos';
     if (classes === 1) return '1 clase';
     return `${classes} clases`;
@@ -462,7 +465,7 @@ function buildTempModelDir(m: MembershipData): string {
                 {
                     key: 'points',
                     label: 'PUNTOS',
-                    value: `${m.loyalty_points} pts`,
+                    value: `${m.loyalty_points}`,
                 },
             ],
             // Back — editorial copy + studio info + terms
