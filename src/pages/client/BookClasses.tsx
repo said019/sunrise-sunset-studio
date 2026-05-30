@@ -325,7 +325,7 @@ export default function BookClasses() {
                                                     <div className="absolute inset-0 flex items-center justify-center">
                                                         <span className="material-symbols-outlined text-cream/90 text-5xl filled">
                                                             {c.class_type_name?.toLowerCase().includes('surf')
-                                                                ? 'pool'
+                                                                ? 'surfing'
                                                                 : c.class_type_name?.toLowerCase().includes('yoga')
                                                                     ? 'self_improvement'
                                                                     : 'fitness_center'}
