@@ -39,9 +39,9 @@ const STUDIO_TZ_OFFSET = '-07:00';
 // Pass color scheme — cream surface + chocolate body + rose label.
 // The sunset strip supplies all the warmth; everything else stays calm.
 const PASS_STYLE = {
-    backgroundColor: 'rgb(247, 237, 222)',   // #F7EDDE warm cream (seamless with strip)
-    foregroundColor: 'rgb(92, 52, 28)',      // #5C341C deep chocolate (AAA over the dawn strip)
-    labelColor: 'rgb(193, 106, 74)',         // #C16A4A burnt coral
+    backgroundColor: 'rgb(227, 111, 76)',    // #E36F4C brand coral — fully orange card
+    foregroundColor: 'rgb(247, 237, 222)',   // #F7EDDE cream (name + values, reads on coral)
+    labelColor: 'rgb(251, 222, 184)',        // #FBDEB8 amber-cream labels
 };
 
 interface MembershipData {

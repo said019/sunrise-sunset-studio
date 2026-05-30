@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Sunrise Sunset — Wallet Assets Generator  ("Sunrise Glow" design)
+ * Sunrise Sunset — Wallet Assets Generator  ("Sunset" — coral-forward)
  *
  * Generates Apple Wallet (.pkpass) and Google Wallet (LoyaltyObject) image
  * assets from SVG primitives. Run from project root:
@@ -8,9 +8,9 @@
  *   node scripts/build-wallet-assets.mjs
  *
  * Outputs:
- *   server/wallet-assets/strip.png   (1x/2x/3x)   Apple sunrise-glow hero band
+ *   server/wallet-assets/strip.png   (1x/2x/3x)   Apple sunset hero band
  *   server/wallet-assets/icon.png    (1x/2x/3x)   Apple icon (sun tile)
- *   server/wallet-assets/logo.png    (1x/2x/3x)   Apple logo (coral wordmark)
+ *   server/wallet-assets/logo.png    (1x/2x/3x)   Apple logo (cream wordmark)
  *   public/wallet/sunset-hero.png                 Google heroImage (3:1)
  *   public/wallet/sunrise-logo.png                Google programLogo (square)
  */
@@ -27,63 +27,51 @@ const APPLE_ASSETS = path.join(ROOT, 'server/wallet-assets');
 const GOOGLE_ASSETS = path.join(ROOT, 'public/wallet');
 
 // ---------------------------------------------------------------------------
-// Strip / hero — "Sunrise Glow": a warm dawn wash with a rising sun disc on the
-// right, a concentric morning-light halo, a coral horizon line, a faint wine
-// sky-bloom top-right, and a left→center cream "leftguard" so the member's name
-// (rendered over the strip in chocolate) stays legible. Designed in a fixed
-// 1125x369 space; preserveAspectRatio="none" fills the requested w×h (all
-// targets are ~3:1 so the sun disc stays visually round).
+// Strip / hero — vivid SUNSET sky: deep-coral top → coral → amber bottom, with
+// a luminous low sun + halo on the right and a soft horizon line. Pairs with a
+// coral card so the member's CREAM name (left) and the bright sun (right) both
+// pop. Fixed 1125x369 design; preserveAspectRatio="none" fills the target w×h
+// (all targets ~3:1, so the sun stays round).
 // ---------------------------------------------------------------------------
-function sunriseGlowSvg(w, h) {
+function sunsetGlowSvg(w, h) {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 1125 369" preserveAspectRatio="none">
   <defs>
-    <linearGradient id="dawn" x1="0" y1="0.3" x2="1" y2="0.75">
-      <stop offset="0" stop-color="#FBEAD0"/>
-      <stop offset="0.5" stop-color="#F8DDAE"/>
-      <stop offset="1" stop-color="#F4C277"/>
+    <linearGradient id="sky" x1="0.1" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#B83C24"/>
+      <stop offset="0.42" stop-color="#E36F4C"/>
+      <stop offset="1" stop-color="#F6A85B"/>
     </linearGradient>
-    <radialGradient id="sky" cx="0.96" cy="0.04" r="0.85">
-      <stop offset="0" stop-color="#7B0000" stop-opacity="0.14"/>
-      <stop offset="0.6" stop-color="#7B0000" stop-opacity="0"/>
-    </radialGradient>
     <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#FFE7B2"/>
-      <stop offset="0.45" stop-color="#FAD089"/>
-      <stop offset="1" stop-color="#E36F4C"/>
+      <stop offset="0" stop-color="#FFF2D2"/>
+      <stop offset="0.45" stop-color="#FBD089"/>
+      <stop offset="1" stop-color="#EF8A4E"/>
     </radialGradient>
     <radialGradient id="bloom" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#FAD089" stop-opacity="0.5"/>
-      <stop offset="1" stop-color="#FAD089" stop-opacity="0"/>
+      <stop offset="0" stop-color="#FBD089" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#FBD089" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="horizon" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#E36F4C" stop-opacity="0"/>
-      <stop offset="0.5" stop-color="#E36F4C" stop-opacity="0"/>
-      <stop offset="0.72" stop-color="#E36F4C" stop-opacity="0.5"/>
-      <stop offset="1" stop-color="#E36F4C" stop-opacity="0.18"/>
-    </linearGradient>
-    <linearGradient id="leftguard" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#FBEAD0" stop-opacity="0.65"/>
-      <stop offset="0.45" stop-color="#FBEAD0" stop-opacity="0.15"/>
-      <stop offset="0.62" stop-color="#FBEAD0" stop-opacity="0"/>
+    <linearGradient id="nameguard" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8E2E1B" stop-opacity="0.28"/>
+      <stop offset="0.5" stop-color="#8E2E1B" stop-opacity="0.06"/>
+      <stop offset="0.66" stop-color="#8E2E1B" stop-opacity="0"/>
     </linearGradient>
   </defs>
-  <rect width="1125" height="369" fill="url(#dawn)"/>
   <rect width="1125" height="369" fill="url(#sky)"/>
-  <g fill="none" stroke="#F2A766">
-    <circle cx="872" cy="300" r="205" stroke-opacity="0.13" stroke-width="3"/>
-    <circle cx="872" cy="300" r="180" stroke-opacity="0.26" stroke-width="3"/>
-    <circle cx="872" cy="300" r="160" stroke-opacity="0.46" stroke-width="2.5"/>
+  <g fill="none" stroke="#FBD089">
+    <circle cx="872" cy="304" r="208" stroke-opacity="0.16" stroke-width="3"/>
+    <circle cx="872" cy="304" r="182" stroke-opacity="0.30" stroke-width="3"/>
+    <circle cx="872" cy="304" r="162" stroke-opacity="0.52" stroke-width="2.5"/>
   </g>
-  <circle cx="872" cy="300" r="222" fill="url(#bloom)"/>
-  <circle cx="872" cy="300" r="150" fill="url(#sun)"/>
-  <rect x="0" y="298" width="1125" height="3.5" fill="url(#horizon)"/>
-  <rect width="1125" height="369" fill="url(#leftguard)"/>
+  <circle cx="872" cy="304" r="232" fill="url(#bloom)"/>
+  <circle cx="872" cy="304" r="150" fill="url(#sun)"/>
+  <rect x="0" y="302" width="1125" height="3" fill="#FBD089" opacity="0.4"/>
+  <rect width="1125" height="369" fill="url(#nameguard)"/>
 </svg>`;
 }
 
 // ---------------------------------------------------------------------------
-// Icon — filled rising-sun tile: amber→coral rounded square, cream half-sun disc
-// + rays + horizon line. Filled reads far better than a thin stroke at 29px.
+// Icon — filled rising-sun tile: amber→coral rounded square, cream half-sun
+// disc + rays + horizon line. Reads at 29px.
 // ---------------------------------------------------------------------------
 function iconSvg(size) {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 29 29">
@@ -106,13 +94,12 @@ function iconSvg(size) {
 }
 
 // ---------------------------------------------------------------------------
-// Apple logo — wide coral serif wordmark on transparent, for the pass top bar.
-// (public/logo-wordmark.svg is now a square baked raster, so we draw the
-// wordmark inline; the local serif font is baked into the PNG at build time.)
+// Apple logo — wide CREAM serif wordmark on transparent, for the coral top bar.
+// (Local serif font is baked into the PNG at build time.)
 // ---------------------------------------------------------------------------
 async function logoBuffer(w, h) {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="104" viewBox="0 0 300 104">
-  <g fill="#E36F4C" text-anchor="middle" font-family="Didot, 'Bodoni 72', 'Hoefler Text', 'Times New Roman', serif" font-weight="400" letter-spacing="1.5">
+  <g fill="#F7EDDE" text-anchor="middle" font-family="Didot, 'Bodoni 72', 'Hoefler Text', 'Times New Roman', serif" font-weight="400" letter-spacing="1.5">
     <text x="150" y="46" font-size="42">SUNRISE</text>
     <text x="150" y="94" font-size="42">SUNSET</text>
   </g>
@@ -123,8 +110,7 @@ async function logoBuffer(w, h) {
         .toBuffer();
 }
 
-// Square version for Google Wallet programLogo (cream wordmark on coral tile —
-// echoes the icon). Uses the official baked wordmark on a coral background.
+// Square version for Google Wallet programLogo (cream wordmark on coral tile).
 async function logoSquareBuffer(size) {
     const svgPath = path.join(ROOT, 'public/logo-wordmark.svg');
     const svg = await fs.readFile(svgPath, 'utf8');
@@ -149,23 +135,23 @@ async function writeBuffer(buf, outPath) {
 await fs.mkdir(APPLE_ASSETS, { recursive: true });
 await fs.mkdir(GOOGLE_ASSETS, { recursive: true });
 
-console.log('\nApple Wallet — strip (sunrise glow):');
-await writePng(sunriseGlowSvg(375, 123), path.join(APPLE_ASSETS, 'strip.png'));
-await writePng(sunriseGlowSvg(750, 246), path.join(APPLE_ASSETS, 'strip@2x.png'));
-await writePng(sunriseGlowSvg(1125, 369), path.join(APPLE_ASSETS, 'strip@3x.png'));
+console.log('\nApple Wallet — strip (sunset):');
+await writePng(sunsetGlowSvg(375, 123), path.join(APPLE_ASSETS, 'strip.png'));
+await writePng(sunsetGlowSvg(750, 246), path.join(APPLE_ASSETS, 'strip@2x.png'));
+await writePng(sunsetGlowSvg(1125, 369), path.join(APPLE_ASSETS, 'strip@3x.png'));
 
 console.log('\nApple Wallet — icon (sun tile):');
 await writePng(iconSvg(29), path.join(APPLE_ASSETS, 'icon.png'));
 await writePng(iconSvg(58), path.join(APPLE_ASSETS, 'icon@2x.png'));
 await writePng(iconSvg(87), path.join(APPLE_ASSETS, 'icon@3x.png'));
 
-console.log('\nApple Wallet — logo (coral wordmark, transparent):');
+console.log('\nApple Wallet — logo (cream wordmark, transparent):');
 await writeBuffer(await logoBuffer(160, 50), path.join(APPLE_ASSETS, 'logo.png'));
 await writeBuffer(await logoBuffer(320, 100), path.join(APPLE_ASSETS, 'logo@2x.png'));
 await writeBuffer(await logoBuffer(480, 150), path.join(APPLE_ASSETS, 'logo@3x.png'));
 
 console.log('\nGoogle Wallet — heroImage (3:1) + programLogo (square):');
-await writePng(sunriseGlowSvg(1032, 336), path.join(GOOGLE_ASSETS, 'sunset-hero.png'));
+await writePng(sunsetGlowSvg(1032, 336), path.join(GOOGLE_ASSETS, 'sunset-hero.png'));
 await writeBuffer(await logoSquareBuffer(660), path.join(GOOGLE_ASSETS, 'sunrise-logo.png'));
 
 console.log('\nDone.\n');

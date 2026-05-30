@@ -68,7 +68,7 @@ const STUDIO_LNG = -109.9120;
 const STUDIO_TZ_OFFSET = '-07:00';
 
 // Pass color — cream surface so the sunset hero photo carries the warmth.
-const PASS_HEX_BG = '#F7EDDE';
+const PASS_HEX_BG = '#E36F4C';
 
 const WALLET_ELIGIBLE_STATUSES = new Set([
     'active',
