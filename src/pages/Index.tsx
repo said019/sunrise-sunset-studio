@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowUpRight,
-  Check,
-  Download,
   Instagram,
   MapPin,
   Phone,
@@ -56,9 +54,17 @@ const COACH_PHOTOS: Record<string, string> = {
   Ceci: "/coach-avatars/ceci.jpg",
 };
 
+// Per-class-type accent colors for the schedule. Surf = royal blue (the studio's
+// color code), Sculpt = brand coral, Yoga = warm amber.
+const CLASS_COLORS: Record<string, string> = {
+  sculpt: "#E36F4C",
+  surf: "#3B5BA5",
+  yoga: "#D99A3C",
+};
+
 const content = {
   es: {
-    nav: ["Ritual", "Práctica", "Manifiesto", "Coaches", "Paquetes", "Visita"],
+    nav: ["Horarios", "Práctica", "Manifiesto", "Coaches", "Paquetes", "Visita"],
     login: "Entrar",
     reserve: "Reservar",
     sunMeta: ["Amanecer", "Atardecer", "Studio abierto"],
@@ -344,7 +350,7 @@ const content = {
     rights: "Sunrise Sunset · Movimiento consciente en Los Cabos",
   },
   en: {
-    nav: ["Ritual", "Practice", "Manifesto", "Coaches", "Packages", "Visit"],
+    nav: ["Schedule", "Practice", "Manifesto", "Coaches", "Packages", "Visit"],
     login: "Login",
     reserve: "Book",
     sunMeta: ["Sunrise", "Sunset", "Studio open"],
@@ -1230,17 +1236,25 @@ const Index = () => {
           <div className="mt-6 flex flex-wrap items-center gap-2">
             {t.scheduleFilters.map((f) => {
               const isActive = f.type === selectedFilter;
+              const c = f.type ? CLASS_COLORS[f.type] : "#E36F4C";
               return (
                 <button
                   key={f.label}
                   type="button"
                   onClick={() => setSelectedFilter(f.type)}
-                  className={`rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition-[background-color,border-color,color] duration-200 ease-sunrise ${
+                  style={isActive ? { backgroundColor: c, borderColor: c, color: "#F7EDDE" } : undefined}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition-[background-color,border-color,color] duration-200 ease-sunrise ${
                     isActive
-                      ? "border-coral bg-coral text-cream"
-                      : "border-chocolate/15 bg-cream/60 text-chocolate/65 hover:border-coral/40 hover:text-chocolate"
+                      ? ""
+                      : "border-chocolate/15 bg-cream/60 text-chocolate/65 hover:border-chocolate/40 hover:text-chocolate"
                   }`}
                 >
+                  {f.type ? (
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: isActive ? "#F7EDDE" : c }}
+                    />
+                  ) : null}
                   {f.label}
                 </button>
               );
@@ -1303,7 +1317,10 @@ const Index = () => {
                       {/* Title (col 3) */}
                       <div className="lg:contents">
                         <div>
-                          <p className="font-heading text-xl font-light leading-tight text-chocolate md:text-2xl">
+                          <p
+                            className="font-heading text-xl font-light leading-tight md:text-2xl"
+                            style={{ color: CLASS_COLORS[slot.type] ?? "#6E4528" }}
+                          >
                             {slot.title}
                             {slot.modifier ? (
                               <>
@@ -1894,116 +1911,6 @@ const Index = () => {
             </div>
           </motion.div>
         </div>
-      </section>
-
-      {/* INSTALL APP */}
-      <section id="instalar" className="scroll-mt-24 bg-[#FAF1E6] px-4 pb-20 md:pb-28">
-        <motion.div
-          initial={{ opacity: 0, y: 24, filter: "blur(10px)" }}
-          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.95, ease: easeBreath }}
-          className="relative isolate mx-auto max-w-[1400px] overflow-hidden rounded-[2rem] shadow-[0_45px_120px_-50px_hsla(13,66%,28%,0.45)]"
-        >
-          <div className="absolute inset-0 -z-10 bg-orange-glow-soft" />
-          <div className="orange-grain -z-10" />
-
-          <div className="relative grid gap-12 p-7 md:grid-cols-[1.05fr_0.95fr] md:items-center md:gap-16 md:p-12 lg:p-16">
-            <div>
-              <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.24em] text-wine">
-                <span className="h-px w-8 bg-wine" />
-                {t.installLabel}
-              </div>
-              <h2 className="mt-5 font-heading text-4xl font-light leading-[1.05] tracking-[-0.01em] text-chocolate md:text-5xl lg:text-6xl">
-                {t.installTitle.split(".")[0]}
-                <span
-                  className="block italic text-coral"
-                  style={{ fontVariationSettings: '"opsz" 144' }}
-                >
-                  {t.installTitle.split(".")[1] || "."}
-                </span>
-              </h2>
-              <p className="mt-6 max-w-xl text-base leading-[1.8] text-chocolate/75 md:text-lg">
-                {t.installCopy}
-              </p>
-
-              <ul className="mt-8 grid gap-y-2 gap-x-6 text-sm text-chocolate/80 sm:grid-cols-2">
-                {t.installPerks.map((perk) => (
-                  <li key={perk} className="flex items-center gap-3">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-coral text-cream">
-                      <Check className="h-3 w-3" strokeWidth={2.5} />
-                    </span>
-                    {perk}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-9 flex flex-wrap items-center gap-4">
-                {isInstalled ? (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-chocolate/20 bg-cream px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-chocolate">
-                    <Check className="h-4 w-4 text-coral" strokeWidth={2.4} />
-                    {t.installInstalled}
-                  </span>
-                ) : installPrompt ? (
-                  <button
-                    type="button"
-                    onClick={triggerInstall}
-                    className="group inline-flex min-h-[3.5rem] items-center gap-3 rounded-full bg-coral px-7 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-cream shadow-[0_22px_44px_-18px_hsla(14,72%,40%,0.55)] transition-[transform,box-shadow,background-color] duration-300 ease-sunrise hover:-translate-y-0.5 hover:bg-wine active:scale-[0.98]"
-                  >
-                    <Download className="h-4 w-4" strokeWidth={2} />
-                    {t.installButton}
-                    <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </button>
-                ) : (
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-chocolate/55">
-                    {t.installNotSupported}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="relative mx-auto w-full max-w-sm">
-              <div className="relative aspect-[9/19] overflow-hidden rounded-[2rem] border border-chocolate/15 bg-chocolate p-3 shadow-[0_50px_120px_-40px_hsla(13,66%,28%,0.55)]">
-                <div className="flex h-full w-full flex-col items-center justify-center gap-6 rounded-[1.6rem] bg-[radial-gradient(circle_at_50%_30%,hsla(36,100%,85%,0.45),transparent_60%),linear-gradient(170deg,#EF704E_0%,#7B0000_100%)] p-6 text-cream">
-                  <img
-                    src="/icons/icon-256.png"
-                    alt="Sunrise Sunset"
-                    className="h-24 w-24 rounded-[1.4rem] shadow-[0_25px_50px_-15px_hsla(0,100%,18%,0.6)]"
-                  />
-                  <p
-                    className="font-heading text-2xl italic"
-                    style={{ fontVariationSettings: '"opsz" 144' }}
-                  >
-                    Sunrise
-                  </p>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cream/70">
-                    Studio · Los Cabos
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative grid gap-px overflow-hidden border-t border-chocolate/10 bg-chocolate/10 md:grid-cols-3">
-            {t.installPlatforms.map((p) => (
-              <div key={p.device} className="bg-cream p-6">
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-coral">
-                  {p.device}
-                </p>
-                <ol className="mt-4 space-y-2.5">
-                  {p.steps.map((step, i) => (
-                    <li key={step} className="flex items-start gap-3 text-sm text-chocolate/80">
-                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-coral/12 text-[10px] font-bold tabular-nums text-coral">
-                        {i + 1}
-                      </span>
-                      <span className="leading-snug">{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            ))}
-          </div>
-        </motion.div>
       </section>
 
       {/* FINAL CTA */}
