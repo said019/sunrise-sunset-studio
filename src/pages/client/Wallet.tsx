@@ -51,6 +51,11 @@ export default function WalletClub() {
         queryKey: ['wallet-pass'],
         queryFn: async () => (await api.get('/wallet/pass')).data,
         retry: false,
+        // Keep the card fresh: re-pull when the user returns to the tab / remounts
+        // so a plan activation or credit change shows up without a hard reload.
+        staleTime: 0,
+        refetchOnMount: 'always',
+        refetchOnWindowFocus: true,
     });
 
     const { data: loyaltyData } = useQuery<{

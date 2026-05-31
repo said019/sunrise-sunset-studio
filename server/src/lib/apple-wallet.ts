@@ -426,7 +426,11 @@ function buildTempModelDir(m: MembershipData): string {
         authenticationToken: APPLE_AUTH_TOKEN || m.id,
         organizationName: APPLE_ORG_NAME,
         description: `Pase ${m.plan_name} · Sunrise Sunset`,
-        logoText: 'Sunrise Sunset',
+        // NOTE: no logoText — the logo.png is already the "SUNRISE SUNSET"
+        // wordmark, so a logoText here renders a SECOND wordmark in the top bar
+        // that collides with the PLAN header field on the right ("Sunrise
+        // Su…SE MUESTRA" overlap). The image carries the brand; the right side
+        // is reserved for the plan badge.
         storeCard: {
             // Header — plan badge, top-right of the logo bar
             headerFields: [

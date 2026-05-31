@@ -4,6 +4,7 @@ import { authenticate, requireRole } from '../middleware/auth.js';
 import { z } from 'zod';
 import { isGoogleDriveConfigured, uploadBufferToGoogleDrive } from '../lib/googleDrive.js';
 import { copyPlanBucketsToMembership } from '../lib/memberships.js';
+import { notifyMembershipRenewed } from '../lib/notifications.js';
 
 const router = Router();
 
@@ -352,6 +353,10 @@ router.post('/physical-sale', async (req: Request, res: Response) => {
         // Copy plan credit buckets into membership_credits (no-op if plan has no buckets)
         if (membership) {
             await copyPlanBucketsToMembership(pool, membership.id, planId);
+            // Refresh Apple + Google wallet passes for the new membership (if the
+            // member already has the pass installed, it updates with the new plan).
+            notifyMembershipRenewed(membership.id)
+                .catch(e => console.error('Wallet physical-sale notification error:', e));
         }
 
         // Create order record for reporting

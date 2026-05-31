@@ -194,10 +194,14 @@ async function notifyApple(
     body: string
 ): Promise<boolean> {
     try {
-        // Record update if classes changed
-        if (oldClasses !== null && newClasses !== null) {
-            await recordPassUpdate(membershipId, oldClasses, newClasses);
-        }
+        // ALWAYS record a pass update. iOS only re-downloads a pass whose serial
+        // appears in apple_wallet_updates (via getUpdatedPassesSince); if we skip
+        // this, the silent push wakes the device but its poll finds no changed
+        // serial, so the new plan/dates/points never land. We are inside
+        // notifyApple precisely because the pass content changed — so the update
+        // must be recorded every time, not only when class counts are passed.
+        // (classes_old/new are just for the historical log.)
+        await recordPassUpdate(membershipId, oldClasses, newClasses);
 
         // Get all devices for this membership
         const devices = await getDevicesForMembership(membershipId);

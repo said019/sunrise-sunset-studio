@@ -89,6 +89,9 @@ export default function ClientDashboard() {
   const { data: walletSummary } = useQuery<WalletSummary>({
     queryKey: ['wallet-pass'],
     queryFn: async () => (await api.get('/wallet/pass')).data,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   const upcomingClasses = useMemo(() => {

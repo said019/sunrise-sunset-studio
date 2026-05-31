@@ -5,7 +5,7 @@ import { authenticate, requireRole } from '../middleware/auth.js';
 import { z } from 'zod';
 import { sendMembershipActivatedEmail } from '../services/email.js';
 import { sendMembershipActivatedNotice } from '../lib/whatsapp.js';
-import { notifyMembershipRenewed } from '../lib/notifications.js';
+import { notifyMembershipRenewed, notifyClassAttended } from '../lib/notifications.js';
 import { createMembershipWithPayment, copyPlanBucketsToMembership } from '../lib/memberships.js';
 
 const router = Router();
@@ -542,10 +542,17 @@ router.patch('/:id/credits', authenticate, requireRole('admin'), async (req: Req
             return res.status(404).json({ error: 'Membresía no encontrada' });
         }
 
+        const oldClasses = (membership as { classes_remaining: number | null }).classes_remaining ?? 0;
+
         const updated = await queryOne(
             `UPDATE memberships SET classes_remaining = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
             [classes_remaining, id]
         );
+
+        // Refresh the Apple + Google wallet passes so the new credit count lands
+        // on the member's device (otherwise the pass stays frozen at the old count).
+        notifyClassAttended(id, oldClasses, classes_remaining)
+            .catch(e => console.error('Wallet credit-adjust notification error:', e));
 
         res.json(updated);
     } catch (error) {
