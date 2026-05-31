@@ -14,6 +14,7 @@ import {
 import heroImage from "@/assets/hero.jpeg";
 import pilatesImage from "@/assets/hero-pilates.jpg";
 import { nowInStudioTz, formatStudioTime } from "@/lib/date";
+import { CLASS_COLORS, SurfboardIcon } from "@/lib/classStyles";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 
@@ -54,35 +55,8 @@ const COACH_PHOTOS: Record<string, string> = {
   Ceci: "/coach-avatars/ceci.jpg",
 };
 
-// Per-class-type accent colors for the schedule. Surf = royal blue (the studio's
-// color code), Sculpt = brand coral, Yoga = warm amber.
-const CLASS_COLORS: Record<string, string> = {
-  sculpt: "#E36F4C",
-  surf: "#3B5BA5",
-  yoga: "#D99A3C",
-};
-
-// Surfboard glyph for Surf-Pilates classes (lucide has no surfboard icon).
-// A clean longboard silhouette with a center stringer line.
-function SurfboardIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.6}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      {/* board outline: pointed nose, rounded tail, tilted 45° */}
-      <path d="M4.2 19.8C1.6 17.2 5 8 9.8 4.2 14.6.4 19.6 1.4 20.6 2.4c1 1 2 6-1.8 10.8C15 18 7 21.4 4.2 19.8Z" />
-      {/* center stringer */}
-      <path d="M7.2 16.8 16.8 7.2" />
-    </svg>
-  );
-}
+// Per-class-type accent colors + the surfboard glyph live in a shared module
+// so the landing schedule and the client booking cards stay in sync.
 
 const content = {
   es: {

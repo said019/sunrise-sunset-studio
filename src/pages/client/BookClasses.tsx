@@ -10,6 +10,7 @@ import { AuthGuard } from '@/components/layout/AuthGuard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { SURF_BLUE, SurfboardIcon, isSurfClass, isYogaClass } from '@/lib/classStyles';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -298,7 +299,10 @@ export default function BookClasses() {
                                     const isSel = selected.has(c.id);
                                     const selectable = isSelectable(c);
                                     const spotsLeft = c.max_capacity - c.current_bookings;
-                                    const color = c.class_type_color || 'hsl(14, 47%, 60%)';
+                                    const isSurf = isSurfClass(c.class_type_name);
+                                    const color = isSurf
+                                        ? SURF_BLUE
+                                        : c.class_type_color || 'hsl(14, 47%, 60%)';
 
                                     return (
                                         <article
@@ -323,13 +327,15 @@ export default function BookClasses() {
                                                     }}
                                                 >
                                                     <div className="absolute inset-0 flex items-center justify-center">
-                                                        <span className="material-symbols-outlined text-cream/90 text-5xl filled">
-                                                            {c.class_type_name?.toLowerCase().includes('surf')
-                                                                ? 'surfing'
-                                                                : c.class_type_name?.toLowerCase().includes('yoga')
+                                                        {isSurf ? (
+                                                            <SurfboardIcon className="h-12 w-12 text-cream/90" />
+                                                        ) : (
+                                                            <span className="material-symbols-outlined text-cream/90 text-5xl filled">
+                                                                {isYogaClass(c.class_type_name)
                                                                     ? 'self_improvement'
                                                                     : 'fitness_center'}
-                                                        </span>
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 {/* Mobile: thin top color bar */}
